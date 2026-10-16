@@ -20,6 +20,7 @@ export function Header({ locale }: { locale: Locale }) {
   }, []);
 
   const links = [
+    { href: "#for-you", label: t.nav.audiences },
     { href: "#suites", label: t.nav.suites },
     { href: "#amenities", label: t.nav.amenities },
     { href: "#gallery", label: t.nav.gallery },

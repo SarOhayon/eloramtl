@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BUILDING_PHOTO,
   CORES,
@@ -10,8 +10,11 @@ import {
   FLOORS,
   PHONE_MAIN,
   PLATE_OUTLINE,
+  PRICE_FROM,
+  SHOW_TYPE_EVENT,
   UNITS,
   UNIT_TYPES,
+  formatPrice,
   whatsappLink,
   type Unit,
   type UnitType,
@@ -53,11 +56,56 @@ export function Explorer({ locale }: { locale: Locale }) {
     }
   };
 
+  // Audience and price cards elsewhere on the page jump straight to a suite type.
+  useEffect(() => {
+    const onShow = (e: Event) => {
+      const type = (e as CustomEvent<UnitType>).detail;
+      setFilter(type);
+      const first = UNITS.find((u) => u.floor === floor && u.type === type) ?? UNITS.find((u) => u.type === type);
+      if (first) {
+        setFloor(first.floor);
+        setSelectedId(first.id);
+      }
+    };
+    window.addEventListener(SHOW_TYPE_EVENT, onShow);
+    return () => window.removeEventListener(SHOW_TYPE_EVENT, onShow);
+  }, [floor]);
+
   const floorLabel = (f: number) => (f === 1 ? t.explorer.ground : `${t.explorer.floor} ${f}`);
   const shownFloor = hoverFloor ?? floor;
   const dateFmt = new Intl.DateTimeFormat(locale === "fr" ? "fr-CA" : "en-CA", { dateStyle: "long", timeZone: "UTC" });
 
   return (
+    <div className="flex flex-col gap-6 lg:gap-8">
+      {/* Suite types with starting prices; doubles as the filter */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6" role="group" aria-label={t.explorer.filterLabel}>
+        {(["all", ...UNIT_TYPES] as const).map((k) => {
+          const active = filter === k;
+          return (
+            <button
+              key={k}
+              type="button"
+              aria-pressed={active}
+              onClick={() => changeFilter(k)}
+              className={`flex flex-col items-start rounded-2xl px-4 py-3.5 text-left transition ${
+                active ? "bg-brown text-cream shadow-lg shadow-brown/20" : "bg-cream text-brown ring-1 ring-brown/10 hover:ring-brown/30"
+              }`}
+            >
+              <span className="text-sm font-medium">{k === "all" ? t.explorer.all : t.types[k]}</span>
+              {k === "all" ? (
+                <span className={`mt-1 text-xs ${active ? "text-cream/75" : "text-brown-soft"}`}>{UNIT_TYPES.length} types</span>
+              ) : (
+                <span className={`mt-1 text-xs ${active ? "text-cream/75" : "text-brown-soft"}`}>
+                  {t.explorer.from}{" "}
+                  <span className={`font-display text-lg ${active ? "text-cream" : "text-brown"}`}>{formatPrice(PRICE_FROM[k], locale)}</span>
+                  {t.explorer.perMonth}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
     <div className="grid gap-6 lg:grid-cols-[1.05fr_1fr] lg:gap-8">
       {/* Building */}
       <div className="flex min-w-0 flex-col gap-4">
@@ -160,22 +208,6 @@ export function Explorer({ locale }: { locale: Locale }) {
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-2 border-b border-brown/10 px-5 py-4" role="group" aria-label={t.explorer.filterLabel}>
-          {(["all", ...UNIT_TYPES] as const).map((k) => (
-            <button
-              key={k}
-              type="button"
-              aria-pressed={filter === k}
-              onClick={() => changeFilter(k)}
-              className={`rounded-full px-3.5 py-1.5 text-sm transition ${
-                filter === k ? "bg-green text-cream" : "bg-cream-deep text-brown hover:bg-sand/60"
-              }`}
-            >
-              {k === "all" ? t.explorer.all : t.types[k]}
-            </button>
-          ))}
-        </div>
-
         <div className="px-4 pt-4 sm:px-5">
           <svg viewBox="0 0 617 340" className="h-auto w-full" aria-label={floorLabel(floor)}>
             <polygon points={pts(PLATE_OUTLINE)} fill="#ece2d2" stroke="#33241a" strokeWidth={4} />
@@ -259,6 +291,11 @@ export function Explorer({ locale }: { locale: Locale }) {
                     {selected.sqft.toLocaleString(locale === "fr" ? "fr-CA" : "en-CA")} {t.explorer.sqft}
                   </li>
                 </ul>
+                <p className="mt-3 text-brown">
+                  <span className="text-sm text-brown-soft">{t.explorer.from} </span>
+                  <span className="font-display text-2xl">{formatPrice(PRICE_FROM[selected.type], locale)}</span>
+                  <span className="text-sm text-brown-soft">{t.explorer.perMonth}</span>
+                </p>
                 {selected.availableOn && (
                   <p className="mt-3 inline-block rounded-full bg-green-soft/40 px-3 py-1 text-sm text-green-deep">
                     {t.explorer.availableOn} {dateFmt.format(new Date(selected.availableOn))}
@@ -296,6 +333,7 @@ export function Explorer({ locale }: { locale: Locale }) {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

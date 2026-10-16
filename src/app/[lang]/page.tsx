@@ -1,16 +1,19 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { Audiences } from "@/components/Audiences";
 import { Explorer } from "@/components/Explorer";
 import { Gallery } from "@/components/Gallery";
 import { Header } from "@/components/Header";
 import { NeighbourhoodMap } from "@/components/NeighbourhoodMap";
+import { VisitForm } from "@/components/VisitForm";
 import { Wordmark } from "@/components/Wordmark";
-import { CheckIcon, PhoneIcon, PinIcon, WhatsAppIcon } from "@/components/icons";
+import { CheckIcon, ChevronIcon, PhoneIcon, PinIcon, WhatsAppIcon } from "@/components/icons";
 import {
   ADDRESS,
   PHONE_MAIN,
   PHONE_MAIN_DISPLAY,
   PHONE_WHATSAPP_DISPLAY,
+  TOURS_3D,
   whatsappLink,
 } from "@/data/building";
 import { PHOTOS, type Photo } from "@/data/photos";
@@ -82,12 +85,9 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
                 {t.hero.primary}
               </a>
               <a
-                href={whatsappLink(t.contact.whatsappText)}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="#visit"
                 className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 font-medium text-cream ring-1 ring-cream/50 transition hover:bg-cream/10"
               >
-                <WhatsAppIcon className="size-5" />
                 {t.hero.secondary}
               </a>
             </div>
@@ -100,6 +100,14 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
                 </div>
               ))}
             </dl>
+          </div>
+        </section>
+
+        {/* Who it's for */}
+        <section id="for-you" className="py-20 lg:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <SectionHeading eyebrow={t.audiences.eyebrow} title={t.audiences.title} lead={t.audiences.lead} />
+            <Audiences locale={locale} />
           </div>
         </section>
 
@@ -155,6 +163,26 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading eyebrow={t.gallery.eyebrow} title={t.gallery.title} />
             <Gallery locale={locale} />
+            <div className="mt-10 flex flex-col gap-4 rounded-3xl bg-brown p-6 text-cream sm:flex-row sm:items-center sm:justify-between sm:p-8">
+              <div>
+                <p className="font-display text-3xl">{t.tours.title}</p>
+                <p className="mt-1 text-cream/80">{t.tours.text}</p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {TOURS_3D.map((href, i) => (
+                  <a
+                    key={href}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-full bg-cream px-5 py-3 text-sm font-medium text-brown transition hover:bg-white"
+                  >
+                    {t.tours.model(i + 1)}
+                    <ChevronIcon className="size-4" />
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -174,6 +202,18 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
             </div>
             <NeighbourhoodMap locale={locale} />
           </div>
+          <div className="mx-auto mt-12 max-w-7xl px-4 sm:px-6 lg:px-8">
+            <h3 className="mb-4 text-sm font-medium uppercase tracking-[0.2em] text-brown-soft">{t.commute.title}</h3>
+            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {t.commute.items.map((c) => (
+                <div key={c.label} className="rounded-2xl bg-cream-deep px-5 py-4 ring-1 ring-brown/10">
+                  <dt className="sr-only">{c.label}</dt>
+                  <dd className="font-display text-3xl text-brown">{c.value}</dd>
+                  <dd className="mt-1 text-sm text-brown/75">{c.label}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </section>
 
         {/* Contact */}
@@ -184,9 +224,8 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
               <p className="flex items-center gap-2 text-cream/80">
                 <PinIcon className="size-5" /> {ADDRESS}
               </p>
-              <p className="mt-2 text-cream/60">{t.contact.visit}</p>
-            </div>
-            <div className="flex flex-col gap-4 lg:justify-center">
+              <p className="mt-2 text-cream/60">{t.contact.hours}</p>
+              <div className="mt-8 flex flex-col gap-4">
               <a
                 href={whatsappLink(t.contact.whatsappText)}
                 target="_blank"
@@ -213,6 +252,10 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
                   <span className="block font-display text-3xl">{PHONE_MAIN_DISPLAY}</span>
                 </span>
               </a>
+              </div>
+            </div>
+            <div className="lg:pt-6">
+              <VisitForm locale={locale} />
             </div>
           </div>
         </section>

@@ -17,7 +17,7 @@ npm run build
 | What | File |
 | --- | --- |
 | Text (FR and EN) | `src/i18n/dictionaries.ts` |
-| Suites, floor outlines, phone numbers | `src/data/building.ts` |
+| Suites, prices, 3D tour links, floor outlines, phone numbers | `src/data/building.ts` |
 | Map points | `src/data/places.ts` |
 | Photos and captions | `src/data/photos.ts`, `public/photos/` |
 | Logo (stand-in) | `src/components/Wordmark.tsx` |

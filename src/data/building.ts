@@ -120,3 +120,31 @@ function buildUnits(): Unit[] {
 
 export const UNITS = buildUnits();
 export const UNIT_TYPES: UnitType[] = ["studio", "1br", "1br-den", "2br", "3br"];
+
+// "Starting at" monthly rents, as published on eloramtl.com.
+export const PRICE_FROM: Record<UnitType, number> = {
+  studio: 1470,
+  "1br": 1650,
+  "1br-den": 1900,
+  "2br": 2135,
+  "3br": 2695,
+};
+
+export const formatPrice = (amount: number, locale: "fr" | "en") =>
+  new Intl.NumberFormat(locale === "fr" ? "fr-CA" : "en-CA", {
+    style: "currency",
+    currency: "CAD",
+    maximumFractionDigits: 0,
+  }).format(amount);
+
+export const TOURS_3D = [
+  "https://3drenderingservices.ca/eloramtl-c1/",
+  "https://3drenderingservices.ca/eloramtl-c2/",
+];
+
+// Lets other sections (audience cards, price cards) drive the explorer filter.
+export const SHOW_TYPE_EVENT = "elora:show-type";
+export const showType = (type: UnitType) => {
+  window.dispatchEvent(new CustomEvent<UnitType>(SHOW_TYPE_EVENT, { detail: type }));
+  document.getElementById("suites")?.scrollIntoView({ behavior: "smooth" });
+};
