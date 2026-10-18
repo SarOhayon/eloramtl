@@ -5,7 +5,8 @@ import { Explorer } from "@/components/Explorer";
 import { Gallery } from "@/components/Gallery";
 import { Header } from "@/components/Header";
 import { NeighbourhoodMap } from "@/components/NeighbourhoodMap";
-import { VisitForm } from "@/components/VisitForm";
+import { ContactForms } from "@/components/ContactForms";
+import { PrivacyDialog } from "@/components/PrivacyDialog";
 import { Wordmark } from "@/components/Wordmark";
 import { CheckIcon, ChevronIcon, PhoneIcon, PinIcon, WhatsAppIcon } from "@/components/icons";
 import {
@@ -158,6 +159,22 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           </div>
         </section>
 
+        {/* About */}
+        <section id="about" className="relative overflow-hidden bg-brown-deep py-20 text-cream lg:py-28">
+          <Image src={PHOTOS.terrace.src} alt="" fill sizes="100vw" className="object-cover opacity-25" />
+          <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <SectionHeading eyebrow={t.about.eyebrow} title={t.about.title} light />
+            <div className="-mt-4 space-y-5 text-lg text-cream/85">
+              {t.about.text.map((para) => (
+                <p key={para}>{para}</p>
+              ))}
+            </div>
+            <a href="#visit" className="mt-10 inline-flex items-center justify-center rounded-full bg-cream px-7 py-3.5 font-medium text-brown transition hover:bg-white">
+              {t.hero.secondary}
+            </a>
+          </div>
+        </section>
+
         {/* Gallery */}
         <section id="gallery" className="bg-cream-deep py-20 lg:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -196,6 +213,16 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
                   <p key={p}>{p}</p>
                 ))}
               </div>
+              <h3 className="mt-8 text-sm font-medium uppercase tracking-[0.2em] text-brown-soft">{t.neighbourhood.poiTitle}</h3>
+              <ul className="mt-3 divide-y divide-brown/10 border-y border-brown/10">
+                {t.neighbourhood.pois.map((poi) => (
+                  <li key={poi} className="flex gap-3 py-3 text-brown">
+                    <PinIcon className="mt-0.5 size-5 shrink-0 text-green" />
+                    {poi}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-brown/80">{t.neighbourhood.closing}</p>
               <div className="relative mt-8 aspect-[3/2] overflow-hidden rounded-3xl">
                 <Image src={PHOTOS.aerial.src} alt={PHOTOS.aerial.alt[locale]} fill sizes="(min-width: 1024px) 35vw, 100vw" className="object-cover" />
               </div>
@@ -224,38 +251,45 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
               <p className="flex items-center gap-2 text-cream/80">
                 <PinIcon className="size-5" /> {ADDRESS}
               </p>
-              <p className="mt-2 text-cream/60">{t.contact.hours}</p>
+              <div className="mt-6">
+                <p className="text-sm font-medium uppercase tracking-[0.2em] text-green-soft">{t.contact.hoursTitle}</p>
+                <ul className="mt-2 space-y-1 text-cream/75">
+                  {t.contact.hours.map((h) => (
+                    <li key={h}>{h}</li>
+                  ))}
+                </ul>
+              </div>
               <div className="mt-8 flex flex-col gap-4">
-              <a
-                href={whatsappLink(t.contact.whatsappText)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-5 rounded-3xl bg-cream p-6 text-brown transition hover:bg-white"
-              >
-                <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-whatsapp text-white">
-                  <WhatsAppIcon className="size-7" />
-                </span>
-                <span>
-                  <span className="block text-sm uppercase tracking-[0.2em] text-green">{t.contact.whatsapp}</span>
-                  <span className="block font-display text-3xl">{PHONE_WHATSAPP_DISPLAY}</span>
-                </span>
-              </a>
-              <a
-                href={`tel:+${PHONE_MAIN}`}
-                className="flex items-center gap-5 rounded-3xl p-6 ring-1 ring-cream/30 transition hover:bg-cream/5"
-              >
-                <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-cream/10">
-                  <PhoneIcon className="size-6" />
-                </span>
-                <span>
-                  <span className="block text-sm uppercase tracking-[0.2em] text-green-soft">{t.contact.call}</span>
-                  <span className="block font-display text-3xl">{PHONE_MAIN_DISPLAY}</span>
-                </span>
-              </a>
+                <a
+                  href={whatsappLink(t.contact.whatsappText)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-5 rounded-3xl bg-cream p-6 text-brown transition hover:bg-white"
+                >
+                  <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-whatsapp text-white">
+                    <WhatsAppIcon className="size-7" />
+                  </span>
+                  <span>
+                    <span className="block text-sm uppercase tracking-[0.2em] text-green">{t.contact.whatsapp}</span>
+                    <span className="block font-display text-3xl">{PHONE_WHATSAPP_DISPLAY}</span>
+                  </span>
+                </a>
+                <a
+                  href={`tel:+${PHONE_MAIN}`}
+                  className="flex items-center gap-5 rounded-3xl p-6 ring-1 ring-cream/30 transition hover:bg-cream/5"
+                >
+                  <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-cream/10">
+                    <PhoneIcon className="size-6" />
+                  </span>
+                  <span>
+                    <span className="block text-sm uppercase tracking-[0.2em] text-green-soft">{t.contact.call}</span>
+                    <span className="block font-display text-3xl">{PHONE_MAIN_DISPLAY}</span>
+                  </span>
+                </a>
               </div>
             </div>
             <div className="lg:pt-6">
-              <VisitForm locale={locale} />
+              <ContactForms locale={locale} />
             </div>
           </div>
         </section>
@@ -265,9 +299,12 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-4 text-sm sm:flex-row sm:items-center sm:px-6 lg:px-8">
           <Wordmark className="h-5 w-auto text-cream" />
           <p>{ADDRESS}</p>
-          <p>
-            © 2026 Elora MTL. {t.footer.rights}
-          </p>
+          <div className="flex flex-col gap-2 sm:items-end">
+            <PrivacyDialog locale={locale} />
+            <p>
+              © 2026 Elora MTL. {t.footer.rights}
+            </p>
+          </div>
         </div>
       </footer>
 

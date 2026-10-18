@@ -23,7 +23,7 @@ export const PHONE_WHATSAPP = "15144651212";
 export const PHONE_MAIN = "15143411212";
 export const PHONE_WHATSAPP_DISPLAY = "514 465-1212";
 export const PHONE_MAIN_DISPLAY = "514 341-1212";
-export const ADDRESS = "2855 chemin Bates, Montréal (QC)";
+export const ADDRESS = "2855 chemin Bates, Montréal (QC) H3S 0A6";
 export const BUILDING_LATLNG: [number, number] = [45.5121, -73.6318];
 
 export const whatsappLink = (text: string) =>
