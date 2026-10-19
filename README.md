@@ -31,6 +31,14 @@ The neighbourhood map uses Mapbox when `NEXT_PUBLIC_MAPBOX_TOKEN` is set, and CA
 3. On Vercel, add the same variable under Settings > Environment Variables, then redeploy.
 4. In your Mapbox account, restrict the token to your domains (eloramtl.com, your Vercel URL, localhost).
 
+## Office hours (Google)
+
+The contact section shows office hours with a live "Open now / Closed" badge in Montréal time. The hours come from the Google Business Profile when `GOOGLE_PLACES_API_KEY` and `GOOGLE_PLACE_ID` are set (refreshed hourly, see `src/lib/officeHours.ts`); otherwise they fall back to Monday to Friday, 8 am to 5 pm.
+
+1. In Google Cloud Console, enable **Places API (New)** and create an API key (restrict it to that API).
+2. Find the Place ID of the Elora listing with Google's Place ID Finder.
+3. Add both variables to `.env.local` and to Vercel > Settings > Environment Variables.
+
 ## Apply now form
 
 The header's "Apply now" button opens a form (name, phone, email and move-in date required; comments optional). It is handled by the server action in `src/app/actions/apply.ts`, which validates the fields and composes the email for `APPLY_TO_EMAIL` (`src/data/building.ts`, currently sarah@eloramtl.com).

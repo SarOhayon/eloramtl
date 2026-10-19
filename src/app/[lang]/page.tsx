@@ -5,6 +5,7 @@ import { Gallery } from "@/components/Gallery";
 import { Header } from "@/components/Header";
 import { HeroSlider } from "@/components/HeroSlider";
 import { NeighbourhoodMap } from "@/components/NeighbourhoodMap";
+import { OfficeHoursCard } from "@/components/OfficeHoursCard";
 import { OfferBand } from "@/components/OfferBand";
 import { ContactForms } from "@/components/ContactForms";
 import { PrivacyDialog } from "@/components/PrivacyDialog";
@@ -21,6 +22,7 @@ import {
 } from "@/data/building";
 import { PHOTOS, type Photo } from "@/data/photos";
 import { getDictionary, hasLocale, type Locale } from "@/i18n/dictionaries";
+import { getOfficeHours } from "@/lib/officeHours";
 
 function SectionHeading({ eyebrow, title, lead, light = false }: { eyebrow: string; title: string; lead?: string; light?: boolean }) {
   return (
@@ -68,6 +70,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   const locale = lang;
   const t = getDictionary(locale);
   const a = t.amenities.items;
+  const hours = await getOfficeHours();
 
   return (
     <>
@@ -212,12 +215,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
                 <PinIcon className="size-5" /> {ADDRESS}
               </p>
               <div className="mt-6">
-                <p className="text-sm font-medium uppercase tracking-[0.2em] text-action">{t.contact.hoursTitle}</p>
-                <ul className="mt-2 space-y-1 text-brown/75">
-                  {t.contact.hours.map((h) => (
-                    <li key={h}>{h}</li>
-                  ))}
-                </ul>
+                <OfficeHoursCard hours={hours} locale={locale} />
               </div>
               <div className="mt-8 flex flex-col gap-4">
                 <a

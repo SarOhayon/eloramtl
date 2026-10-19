@@ -12,6 +12,17 @@ const fr = {
       "Studios à 3 chambres dans un immeuble neuf (2025) entre Outremont, Ville Mont-Royal et Glenmount. À 2 minutes du REM. Animaux bienvenus.",
   },
   offer: "Offre d'une durée limitée!",
+  hours: {
+    title: "Heures de bureau",
+    today: "Aujourd'hui",
+    closed: "Fermé",
+    allDay: "Ouvert 24 h",
+    openUntil: (t: string) => `Ouvert · ferme à ${t}`,
+    opensToday: (t: string) => `Fermé · ouvre à ${t}`,
+    opensOn: (day: string, t: string) => `Fermé · ouvre ${day} à ${t}`,
+    note: "Soirs et fins de semaine sur rendez-vous.",
+    maps: "Google Maps",
+  },
   apply: {
     title: "Postuler à Elora",
     lead: "Laissez-nous vos coordonnées et votre date d'emménagement. Notre équipe de location communiquera avec vous.",
@@ -238,8 +249,6 @@ const fr = {
     call: "Ligne principale",
     address: "Adresse",
     visit: "Visites sur rendez-vous",
-    hoursTitle: "Heures de bureau",
-    hours: ["Lundi au vendredi : 8 h à 17 h", "Samedi : fermé", "Dimanche : fermé"],
   },
   footer: {
     rights: "Tous droits réservés.",
@@ -255,6 +264,17 @@ const en: Dictionary = {
       "Studios to 3-bedroom suites in a new 2025 building between Outremont, Town of Mount Royal and Glenmount. Two minutes from the REM. Pet friendly.",
   },
   offer: "Limited-time offer!",
+  hours: {
+    title: "Office hours",
+    today: "Today",
+    closed: "Closed",
+    allDay: "Open 24 hours",
+    openUntil: (t: string) => `Open now · closes at ${t}`,
+    opensToday: (t: string) => `Closed · opens at ${t}`,
+    opensOn: (day: string, t: string) => `Closed · opens ${day} at ${t}`,
+    note: "Evenings and weekends by appointment.",
+    maps: "Google Maps",
+  },
   apply: {
     title: "Apply to Elora",
     lead: "Leave your details and move-in date, and our leasing team will be in touch.",
@@ -482,8 +502,6 @@ const en: Dictionary = {
     call: "Main line",
     address: "Address",
     visit: "Visits by appointment",
-    hoursTitle: "Office hours",
-    hours: ["Monday to Friday: 8 am to 5 pm", "Weekends and after 5 pm by appointment"],
   },
   footer: {
     rights: "All rights reserved.",
