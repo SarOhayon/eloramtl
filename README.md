@@ -45,6 +45,12 @@ Apply now, Building inquiry and Maintenance request are emailed to `INBOX_EMAIL`
 
 Set `SMTP_HOST`, `SMTP_PORT` (465), `SMTP_USER` and `SMTP_PASS` in `.env.local` and in Vercel. The values are in GreenGeeks cPanel > Email Accounts > Connect Devices. Without them, forms work locally (emails are printed in the terminal) and show an error on the live site.
 
+## Maintenance assistant
+
+The "Maintenance request" tab is a guided, chat-style question tree: safety check (gas, smoke, fire, flooding → 911 and the Elora line), then category, then issue, then details. Requests are emailed with "[URGENT]" in the subject for urgent issues.
+
+Edit the questions and routing in `src/data/maintenance.ts`: add or rename issues, mark them `urgent`, or set `sendTo` on a category (for example `sendTo: "plumbing@eloramtl.com"`) to send that kind of request to a different inbox.
+
 ## Still placeholder
 
 - Suite list: only suites 112 and 113 are real. Every other suite in `building.ts` is marked `sample: true`.
