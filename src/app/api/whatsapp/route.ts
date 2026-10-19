@@ -8,6 +8,10 @@ import { getFile, putFile } from "@/lib/storage";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   if (url.searchParams.has("check")) return Response.json(await healthCheck());
+  // One-time link of the WhatsApp Business Account to this app, so Meta forwards messages.
+  // Guarded by the verify token: /api/whatsapp?subscribe=<WHATSAPP_VERIFY_TOKEN>
+  const sub = url.searchParams.get("subscribe");
+  if (sub && process.env.WHATSAPP_VERIFY_TOKEN && sub === process.env.WHATSAPP_VERIFY_TOKEN) return Response.json(await subscribeApp());
   const ok = url.searchParams.get("hub.mode") === "subscribe" && url.searchParams.get("hub.verify_token") === process.env.WHATSAPP_VERIFY_TOKEN && Boolean(process.env.WHATSAPP_VERIFY_TOKEN);
   return ok ? new Response(url.searchParams.get("hub.challenge") ?? "") : new Response("Forbidden", { status: 403 });
 }
@@ -71,4 +75,15 @@ async function healthCheck() {
     last_webhook: JSON.parse((await getFile("health/last-webhook.json").catch(() => null))?.toString("utf8") ?? "null"),
     last_send: JSON.parse((await getFile("health/last-send.json").catch(() => null))?.toString("utf8") ?? "null"),
   };
+}
+
+const WABA_ID = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || "1456277419710102";
+
+async function subscribeApp() {
+  const headers = { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` };
+  const url = `https://graph.facebook.com/v25.0/${WABA_ID}/subscribed_apps`;
+  const before = await fetch(url, { headers }).then((r) => r.json()).catch((e) => ({ error: String(e) }));
+  const subscribe = await fetch(url, { method: "POST", headers }).then((r) => r.json()).catch((e) => ({ error: String(e) }));
+  const after = await fetch(url, { headers }).then((r) => r.json()).catch((e) => ({ error: String(e) }));
+  return { waba: WABA_ID, before, subscribe, after };
 }
