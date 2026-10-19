@@ -1,125 +1,106 @@
-// The maintenance assistant's question tree and where each kind of request is emailed.
-// Edit labels, add issues, or set `sendTo` on a category to route it to another inbox
-// (e.g. "plumbing@eloramtl.com"). Categories without `sendTo` go to INBOX_EMAIL.
+// The maintenance form's question tree, the approver, and which contractor gets each trade.
+// Edit freely: add rooms, items or problems, mark problems `urgent`, or change emails.
+// Every item belongs to a trade; approved requests go to that trade's email.
+
+import { INBOX_EMAIL } from "./building";
 
 export type Bi = { fr: string; en: string };
-export type Issue = { id: string; label: Bi; urgent?: boolean };
-export type Category = { id: string; label: Bi; sendTo?: string; issues: Issue[] };
+export type Trade = "plumbing" | "appliances" | "electrical" | "hvac" | "carpentry" | "general";
+export type Problem = { id: string; label: Bi; urgent?: boolean };
+export type Item = { id: string; label: Bi; trade: Trade; problems: Problem[] };
+export type Room = { id: string; label: Bi; items: Item[] };
 
-const other: Issue = { id: "other", label: { fr: "Autre problème", en: "Something else" } };
+// Receives every request with Approve / Decline buttons.
+export const APPROVER_EMAIL = INBOX_EMAIL; // TODO: your boss's email
 
-export const CATEGORIES: Category[] = [
+// Approved requests are forwarded here. Replace with each contractor's email.
+export const TRADES: Record<Trade, { label: Bi; email: string }> = {
+  plumbing: { label: { fr: "Plombier", en: "Plumber" }, email: INBOX_EMAIL },
+  appliances: { label: { fr: "Technicien en électroménagers", en: "Appliance technician" }, email: INBOX_EMAIL },
+  electrical: { label: { fr: "Électricien", en: "Electrician" }, email: INBOX_EMAIL },
+  hvac: { label: { fr: "Technicien chauffage et climatisation", en: "Heating & A/C technician" }, email: INBOX_EMAIL },
+  carpentry: { label: { fr: "Menuisier", en: "Carpenter / handyman" }, email: INBOX_EMAIL },
+  general: { label: { fr: "Entretien général", en: "General maintenance" }, email: INBOX_EMAIL },
+};
+
+const p = (id: string, fr: string, en: string, urgent?: boolean): Problem => ({ id, label: { fr, en }, urgent });
+const other = p("other", "Autre", "Something else");
+
+const sink: Item = {
+  id: "sink",
+  label: { fr: "Évier", en: "Sink" },
+  trade: "plumbing",
+  problems: [p("dripping", "Robinet qui goutte", "Dripping"), p("running", "L'eau ne s'arrête pas", "Running / won't stop"), p("burst", "Tuyau éclaté", "Burst pipe", true), p("clogged", "Bouché", "Clogged"), other],
+};
+const electrical: Item = {
+  id: "electrical",
+  label: { fr: "Électricité", en: "Electrical" },
+  trade: "electrical",
+  problems: [p("outlet", "Prise qui ne fonctionne pas", "Outlet not working"), p("light", "Lumière qui ne fonctionne pas", "Light not working"), p("breaker", "Le disjoncteur saute", "Breaker keeps tripping"), p("no-power", "Plus de courant", "No power", true), other],
+};
+const climate: Item = {
+  id: "climate",
+  label: { fr: "Chauffage / climatisation", en: "Heating / A/C" },
+  trade: "hvac",
+  problems: [p("no-heat", "Pas de chauffage", "No heat", true), p("no-cooling", "Ne refroidit pas", "Not cooling"), p("leaking", "L'appareil coule", "Leaking water"), p("noise", "Bruit inhabituel", "Strange noise"), p("remote", "Télécommande", "Remote not working"), other],
+};
+const windows: Item = {
+  id: "windows",
+  label: { fr: "Fenêtre / porte-patio", en: "Window / patio door" },
+  trade: "carpentry",
+  problems: [p("stuck", "N'ouvre ou ne ferme pas", "Won't open or close"), p("broken", "Vitre brisée", "Broken glass", true), p("draft", "Courant d'air", "Draft"), p("blinds", "Stores", "Blinds"), other],
+};
+
+export const ROOMS: Room[] = [
   {
-    id: "plumbing",
-    label: { fr: "Plomberie", en: "Plumbing" },
-    issues: [
-      { id: "leak", label: { fr: "Fuite d'eau ou dégât d'eau", en: "Water leak or flooding" }, urgent: true },
-      { id: "clog", label: { fr: "Évier, bain ou toilette bouché", en: "Clogged sink, tub or toilet" } },
-      { id: "hot-water", label: { fr: "Pas d'eau chaude", en: "No hot water" }, urgent: true },
-      { id: "toilet", label: { fr: "Toilette qui coule sans arrêt", en: "Toilet keeps running" } },
-      { id: "pressure", label: { fr: "Faible pression d'eau", en: "Low water pressure" } },
-      other,
+    id: "kitchen",
+    label: { fr: "Cuisine", en: "Kitchen" },
+    items: [
+      sink,
+      { id: "dishwasher", label: { fr: "Lave-vaisselle", en: "Dishwasher" }, trade: "appliances", problems: [p("not-draining", "Ne se vide pas", "Not draining"), p("leaking", "Fuit", "Leaking"), p("wont-start", "Ne démarre pas", "Won't start"), p("not-cleaning", "Lave mal", "Not cleaning well"), other] },
+      { id: "fridge", label: { fr: "Réfrigérateur", en: "Fridge" }, trade: "appliances", problems: [p("not-cooling", "Ne refroidit pas", "Not cooling", true), p("leaking", "Fuit", "Leaking"), p("noise", "Bruyant", "Noisy"), p("door", "Porte ou joint", "Door or seal"), other] },
+      { id: "freezer", label: { fr: "Congélateur", en: "Freezer" }, trade: "appliances", problems: [p("not-freezing", "Ne congèle pas", "Not freezing", true), p("ice", "Accumulation de glace", "Ice build-up"), p("noise", "Bruyant", "Noisy"), other] },
+      { id: "cabinet", label: { fr: "Armoire", en: "Cabinet" }, trade: "carpentry", problems: [p("door", "Porte ou charnière brisée", "Door or hinge broken"), p("drawer", "Tiroir coincé", "Drawer stuck"), p("damage", "Dommage", "Damage"), other] },
+      electrical,
     ],
   },
   {
-    id: "electrical",
-    label: { fr: "Électricité", en: "Electrical" },
-    issues: [
-      { id: "no-power", label: { fr: "Plus de courant dans le logement", en: "No power in the unit" }, urgent: true },
-      { id: "breaker", label: { fr: "Le disjoncteur saute", en: "Breaker keeps tripping" } },
-      { id: "outlet", label: { fr: "Prise ou interrupteur défectueux", en: "Outlet or switch not working" } },
-      { id: "lighting", label: { fr: "Luminaire défectueux", en: "Light fixture not working" } },
-      other,
+    id: "living",
+    label: { fr: "Salon", en: "Living room" },
+    items: [
+      climate,
+      windows,
+      { id: "floor", label: { fr: "Plancher", en: "Floor" }, trade: "carpentry", problems: [p("damaged", "Endommagé", "Damaged"), p("loose", "Lame qui bouge", "Loose board"), other] },
+      electrical,
     ],
   },
   {
-    id: "hvac",
-    label: { fr: "Chauffage et climatisation", en: "Heating & A/C" },
-    issues: [
-      { id: "no-heat", label: { fr: "Pas de chauffage", en: "No heat" }, urgent: true },
-      { id: "no-cooling", label: { fr: "La climatisation ne refroidit pas", en: "A/C not cooling" } },
-      { id: "water", label: { fr: "L'appareil mural coule", en: "Wall unit is dripping water" } },
-      { id: "remote", label: { fr: "Télécommande ou thermostat", en: "Remote or thermostat" } },
-      { id: "noise", label: { fr: "Bruit inhabituel", en: "Unusual noise" } },
-      other,
+    id: "bathroom",
+    label: { fr: "Salle de bain", en: "Bathroom" },
+    items: [
+      sink,
+      { id: "toilet", label: { fr: "Toilette", en: "Toilet" }, trade: "plumbing", problems: [p("running", "Coule sans arrêt", "Keeps running"), p("clogged", "Bouchée", "Clogged"), p("leaking", "Fuit au plancher", "Leaking on the floor", true), p("flush", "Chasse d'eau", "Flush not working"), other] },
+      { id: "shower", label: { fr: "Douche / bain", en: "Shower / tub" }, trade: "plumbing", problems: [p("no-hot-water", "Pas d'eau chaude", "No hot water", true), p("clogged", "Drain bouché", "Clogged drain"), p("leaking", "Fuit", "Leaking"), p("pressure", "Faible pression", "Low pressure"), other] },
+      { id: "fan", label: { fr: "Ventilateur", en: "Exhaust fan" }, trade: "electrical", problems: [p("not-working", "Ne fonctionne pas", "Not working"), p("noise", "Bruyant", "Noisy"), other] },
+      { id: "vanity", label: { fr: "Vanité / miroir", en: "Vanity / mirror" }, trade: "carpentry", problems: [p("door", "Porte ou tiroir", "Door or drawer"), p("damage", "Dommage", "Damage"), other] },
+      electrical,
     ],
   },
   {
-    id: "appliances",
-    label: { fr: "Électroménagers", en: "Appliances" },
-    issues: [
-      { id: "fridge", label: { fr: "Réfrigérateur ou congélateur", en: "Fridge or freezer" } },
-      { id: "stove", label: { fr: "Cuisinière ou four", en: "Stove or oven" } },
-      { id: "dishwasher", label: { fr: "Lave-vaisselle", en: "Dishwasher" } },
-      { id: "laundry", label: { fr: "Laveuse ou sécheuse", en: "Washer or dryer" } },
-      { id: "hood", label: { fr: "Hotte ou micro-ondes", en: "Range hood or microwave" } },
-      other,
+    id: "bedroom",
+    label: { fr: "Chambre", en: "Bedroom" },
+    items: [
+      climate,
+      windows,
+      { id: "closet", label: { fr: "Garde-robe", en: "Closet" }, trade: "carpentry", problems: [p("door", "Porte qui coince ou tombe", "Door stuck or off track"), p("shelf", "Tablette brisée", "Shelf broken"), other] },
+      electrical,
     ],
   },
-  {
-    id: "access",
-    label: { fr: "Portes, serrures et clés", en: "Doors, locks & keys" },
-    issues: [
-      { id: "locked-out", label: { fr: "Je suis barré dehors", en: "I'm locked out" }, urgent: true },
-      { id: "fob", label: { fr: "Clé ou puce d'accès défectueuse", en: "Key or fob not working" } },
-      { id: "door", label: { fr: "Porte qui ferme mal", en: "Door doesn't close properly" } },
-      { id: "intercom", label: { fr: "Interphone", en: "Intercom / buzzer" } },
-      other,
-    ],
-  },
-  {
-    id: "windows",
-    label: { fr: "Fenêtres et balcon", en: "Windows & balcony" },
-    issues: [
-      { id: "broken", label: { fr: "Vitre brisée", en: "Broken glass" }, urgent: true },
-      { id: "stuck", label: { fr: "Fenêtre qui n'ouvre ou ne ferme pas", en: "Window won't open or close" } },
-      { id: "patio", label: { fr: "Porte-patio du balcon", en: "Balcony patio door" } },
-      { id: "blinds", label: { fr: "Stores", en: "Blinds" } },
-      other,
-    ],
-  },
-  {
-    id: "pests",
-    label: { fr: "Insectes ou rongeurs", en: "Pests" },
-    issues: [
-      { id: "insects", label: { fr: "Insectes", en: "Insects" } },
-      { id: "rodents", label: { fr: "Souris ou rongeurs", en: "Mice or rodents" } },
-      other,
-    ],
-  },
-  {
-    id: "building",
-    label: { fr: "Aires communes", en: "Common areas" },
-    issues: [
-      { id: "elevator", label: { fr: "Ascenseur", en: "Elevator" }, urgent: true },
-      { id: "garage", label: { fr: "Porte du garage ou stationnement", en: "Garage door or parking" } },
-      { id: "amenities", label: { fr: "Gym, terrasse ou salon", en: "Gym, terrace or lounge" } },
-      { id: "hallway", label: { fr: "Corridor, éclairage ou propreté", en: "Hallway, lighting or cleanliness" } },
-      { id: "noise", label: { fr: "Plainte de bruit", en: "Noise complaint" } },
-      other,
-    ],
-  },
-  { id: "other", label: { fr: "Autre", en: "Something else" }, issues: [{ id: "other", label: { fr: "Décrire le problème", en: "Describe the problem" } }] },
 ];
 
-export const ROOMS: Bi[] = [
-  { fr: "Cuisine", en: "Kitchen" },
-  { fr: "Salle de bain", en: "Bathroom" },
-  { fr: "Chambre", en: "Bedroom" },
-  { fr: "Salon", en: "Living room" },
-  { fr: "Balcon", en: "Balcony" },
-  { fr: "Tout le logement", en: "Whole unit" },
-  { fr: "Aire commune", en: "Common area" },
-];
-
-export const SINCE: Bi[] = [
-  { fr: "Aujourd'hui", en: "Today" },
-  { fr: "Depuis quelques jours", en: "A few days" },
-  { fr: "Depuis plus d'une semaine", en: "Over a week" },
-];
-
-export const findIssue = (categoryId: string, issueId: string) => {
-  const category = CATEGORIES.find((c) => c.id === categoryId);
-  const issue = category?.issues.find((i) => i.id === issueId);
-  return category && issue ? { category, issue } : null;
+export const findProblem = (roomId: string, itemId: string, problemId: string) => {
+  const room = ROOMS.find((r) => r.id === roomId);
+  const item = room?.items.find((i) => i.id === itemId);
+  const problem = item?.problems.find((x) => x.id === problemId);
+  return room && item && problem ? { room, item, problem } : null;
 };

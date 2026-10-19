@@ -51,11 +51,17 @@ Apply now, Building inquiry and Maintenance request are emailed to `INBOX_EMAIL`
 
 Set `SMTP_HOST`, `SMTP_PORT` (465), `SMTP_USER` and `SMTP_PASS` in `.env.local` and in Vercel. The values are in GreenGeeks cPanel > Email Accounts > Connect Devices. Without them, forms work locally (emails are printed in the terminal) and show an error on the live site.
 
-## Maintenance assistant
+## Maintenance requests (with approval)
 
-The "Maintenance request" tab is a guided, chat-style question tree: safety check (gas, smoke, fire, flooding → 911 and the Elora line), then category, then issue, then details. Requests are emailed with "[URGENT]" in the subject for urgent issues.
+The "Maintenance request" tab is a step-by-step form: room → item → problem → photo → contact details. Then:
 
-Edit the questions and routing in `src/data/maintenance.ts`: add or rename issues, mark them `urgent`, or set `sendTo` on a category (for example `sendTo: "plumbing@eloramtl.com"`) to send that kind of request to a different inbox.
+1. The resident sees "Thank you! We will have someone over shortly."
+2. The approver (`APPROVER_EMAIL`) gets an email with the details, the photo and **Approve** / **Decline** buttons.
+3. Approve (after a confirmation click) emails the work order and photo to the contractor for that trade (`TRADES` in `src/data/maintenance.ts`, e.g. plumbing → plumber).
+
+Edit rooms, items, problems, urgency, the approver and contractor emails in `src/data/maintenance.ts`.
+
+On the live site this needs a private S3 bucket and `APPROVAL_SECRET` (see `.env.example`); locally it stores requests in a temp folder. Without them, the approver still gets the request and photo, just without the buttons.
 
 ## Still placeholder
 

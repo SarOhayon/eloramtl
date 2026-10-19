@@ -3,12 +3,28 @@
 import { useActionState, useState } from "react";
 import { submitMaintenance, type MaintenanceState } from "@/app/actions/maintenance";
 import { PHONE_MAIN, PHONE_MAIN_DISPLAY } from "@/data/building";
-import { CATEGORIES, ROOMS, SINCE, type Category, type Issue } from "@/data/maintenance";
+import { ROOMS, type Item, type Problem, type Room } from "@/data/maintenance";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 import { PhoneIcon } from "./icons";
 
 const field =
   "w-full rounded-sm border-0 bg-white px-4 py-3 text-brown ring-1 ring-brown/15 placeholder:text-brown-soft/60 focus:outline-none focus:ring-2 focus:ring-gold";
+
+// Phone photos are several MB; shrink to 1600px JPEG before upload.
+async function resize(file: File): Promise<File> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.82));
+    return blob ? new File([blob], "photo.jpg", { type: "image/jpeg" }) : file;
+  } catch {
+    return file;
+  }
+}
 
 function Bot({ children }: { children: React.ReactNode }) {
   return (
@@ -30,12 +46,12 @@ function Me({ children, onChange, changeLabel }: { children: React.ReactNode; on
   );
 }
 
-function Choices<T>({ items, label, onPick }: { items: T[]; label: (x: T) => string; onPick: (x: T) => void }) {
+function Choices<T extends { id: string }>({ items, label, onPick }: { items: T[]; label: (x: T) => string; onPick: (x: T) => void }) {
   return (
     <div className="flex flex-wrap gap-2 pl-11">
       {items.map((x) => (
         <button
-          key={label(x)}
+          key={x.id}
           type="button"
           onClick={() => onPick(x)}
           className="rounded-full bg-white px-4 py-2 text-sm text-brown ring-1 ring-brown/20 transition hover:bg-gold-light/40 hover:ring-gold"
@@ -49,16 +65,24 @@ function Choices<T>({ items, label, onPick }: { items: T[]; label: (x: T) => str
 
 export function MaintenanceAssistant({ locale }: { locale: Locale }) {
   const m = getDictionary(locale).maint;
-  const [safe, setSafe] = useState<boolean | null>(null);
-  const [category, setCategory] = useState<Category | null>(null);
-  const [issue, setIssue] = useState<Issue | null>(null);
+  const [room, setRoom] = useState<Room | null>(null);
+  const [item, setItem] = useState<Item | null>(null);
+  const [problem, setProblem] = useState<Problem | null>(null);
+  const [photo, setPhoto] = useState<{ file: File; url: string } | null>(null);
   const [state, formAction, pending] = useActionState<MaintenanceState, FormData>(submitMaintenance, { status: "idle" });
-  const v = state.values ?? {};
 
-  const restartFrom = (step: "safety" | "category" | "issue") => {
-    if (step === "safety") setSafe(null);
-    if (step !== "issue") setCategory(null);
-    setIssue(null);
+  const back = (step: "room" | "item" | "problem" | "photo") => {
+    if (step === "room") setRoom(null);
+    if (step === "room" || step === "item") setItem(null);
+    if (step !== "photo") setProblem(null);
+    setPhoto(null);
+  };
+
+  const pickPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const original = e.target.files?.[0];
+    if (!original) return;
+    const file = await resize(original);
+    setPhoto({ file, url: URL.createObjectURL(file) });
   };
 
   if (state.status === "sent") {
@@ -82,121 +106,108 @@ export function MaintenanceAssistant({ locale }: { locale: Locale }) {
         {m.bot}
       </p>
 
-      <Bot>
-        <p>{m.hello}</p>
-        <p className="mt-2 font-medium">{m.safety}</p>
-      </Bot>
-      {safe === null ? (
-        <Choices items={[true, false]} label={(x) => (x ? m.no : m.yes)} onPick={(x) => setSafe(x)} />
-      ) : (
-        <Me onChange={() => restartFrom("safety")} changeLabel={m.change}>
-          {safe ? m.no : m.yes}
+      <Bot>{m.where}</Bot>
+      {room ? (
+        <Me onChange={() => back("room")} changeLabel={m.change}>
+          {room.label[locale]}
         </Me>
+      ) : (
+        <Choices items={ROOMS} label={(r) => r.label[locale]} onPick={setRoom} />
       )}
 
-      {safe === false && (
-        <div className="rounded-lg border border-red-800/30 bg-red-50 p-5 text-sm text-red-900" role="alert">
-          <p className="font-display text-2xl">{m.emergencyTitle}</p>
-          <p className="mt-1">{m.emergency}</p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <a href="tel:911" className="inline-flex items-center gap-2 rounded-sm bg-red-800 px-5 py-3 font-medium text-white">
-              <PhoneIcon className="size-4" /> 911
-            </a>
-            <a href={`tel:+${PHONE_MAIN}`} className="inline-flex items-center gap-2 rounded-sm px-5 py-3 font-medium text-red-900 ring-1 ring-red-800/40">
-              <PhoneIcon className="size-4" /> {PHONE_MAIN_DISPLAY}
-            </a>
-          </div>
+      {room && (
+        <>
+          <Bot>{m.what(room.label[locale].toLowerCase())}</Bot>
+          {item ? (
+            <Me onChange={() => back("item")} changeLabel={m.change}>
+              {item.label[locale]}
+            </Me>
+          ) : (
+            <Choices items={room.items} label={(i) => i.label[locale]} onPick={setItem} />
+          )}
+        </>
+      )}
+
+      {item && (
+        <>
+          <Bot>{m.problem(item.label[locale].toLowerCase())}</Bot>
+          {problem ? (
+            <Me onChange={() => back("problem")} changeLabel={m.change}>
+              {problem.label[locale]}
+            </Me>
+          ) : (
+            <Choices items={item.problems} label={(x) => x.label[locale]} onPick={setProblem} />
+          )}
+        </>
+      )}
+
+      {problem?.urgent && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-gold-light/40 px-4 py-3 text-sm text-brown ring-1 ring-gold/50" role="alert">
+          <span>{m.urgentNote}</span>
+          <a href={`tel:+${PHONE_MAIN}`} className="inline-flex items-center gap-2 font-medium">
+            <PhoneIcon className="size-4" /> {PHONE_MAIN_DISPLAY}
+          </a>
         </div>
       )}
 
-      {safe && (
+      {problem && (
         <>
-          <Bot>{m.category}</Bot>
-          {category ? (
-            <Me onChange={() => restartFrom("category")} changeLabel={m.change}>
-              {category.label[locale]}
-            </Me>
-          ) : (
-            <Choices items={CATEGORIES} label={(c) => c.label[locale]} onPick={setCategory} />
-          )}
+          <Bot>{m.photo}</Bot>
+          <div className="pl-11">
+            {photo ? (
+              <div className="flex items-end justify-end gap-3">
+                <button type="button" onClick={() => back("photo")} className="text-xs text-brown-soft underline-offset-4 hover:underline">
+                  {m.change}
+                </button>
+                {/* eslint-disable-next-line @next/next/no-img-element -- local preview of the chosen file */}
+                <img src={photo.url} alt={m.photoAlt} className="h-32 w-auto rounded-lg object-cover ring-1 ring-brown/10" />
+              </div>
+            ) : (
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm text-brown ring-1 ring-brown/20 transition hover:bg-gold-light/40 hover:ring-gold">
+                📷 {m.photoButton}
+                <input type="file" accept="image/*" capture="environment" className="sr-only" onChange={pickPhoto} />
+              </label>
+            )}
+          </div>
         </>
       )}
 
-      {safe && category && (
+      {room && item && problem && photo && (
         <>
-          <Bot>{m.issue}</Bot>
-          {issue ? (
-            <Me onChange={() => restartFrom("issue")} changeLabel={m.change}>
-              {issue.label[locale]}
-            </Me>
-          ) : (
-            <Choices items={category.issues} label={(i) => i.label[locale]} onPick={setIssue} />
-          )}
-        </>
-      )}
-
-      {safe && category && issue && (
-        <>
-          {issue.urgent && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-gold-light/40 px-4 py-3 text-sm text-brown ring-1 ring-gold/50">
-              <span>{m.urgentNote}</span>
-              <a href={`tel:+${PHONE_MAIN}`} className="inline-flex items-center gap-2 font-medium">
-                <PhoneIcon className="size-4" /> {PHONE_MAIN_DISPLAY}
-              </a>
-            </div>
-          )}
           <Bot>{m.details}</Bot>
-          <form action={formAction} className="grid gap-4 rounded-lg bg-white/60 p-4 ring-1 ring-brown/10 sm:grid-cols-2 sm:p-5">
-            <input type="hidden" name="category" value={category.id} />
-            <input type="hidden" name="issue" value={issue.id} />
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-medium">{m.room}</span>
-              <select name="room" className={field} defaultValue={v.room ?? ""}>
-                <option value="">{m.choose}</option>
-                {ROOMS.map((r) => (
-                  <option key={r.en} value={r[locale]}>
-                    {r[locale]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-medium">{m.since}</span>
-              <select name="since" className={field} defaultValue={v.since ?? ""}>
-                <option value="">{m.choose}</option>
-                {SINCE.map((r) => (
-                  <option key={r.en} value={r[locale]}>
-                    {r[locale]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block sm:col-span-2">
-              <span className="mb-1.5 block text-sm font-medium">{m.description} *</span>
-              <textarea name="description" rows={3} required className={field} placeholder={m.descriptionHint} defaultValue={v.description} />
-            </label>
+          <form
+            action={(fd) => {
+              fd.set("photo", photo.file);
+              formAction(fd);
+            }}
+            className="grid gap-4 rounded-lg bg-white/60 p-4 ring-1 ring-brown/10 sm:grid-cols-2 sm:p-5"
+          >
+            <input type="hidden" name="lang" value={locale} />
+            <input type="hidden" name="room" value={room.id} />
+            <input type="hidden" name="item" value={item.id} />
+            <input type="hidden" name="problem" value={problem.id} />
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium">{m.name} *</span>
-              <input name="name" required autoComplete="name" className={field} defaultValue={v.name} />
+              <input name="name" required autoComplete="name" className={field} />
             </label>
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium">{m.suite} *</span>
-              <input name="suite" required inputMode="numeric" className={field} defaultValue={v.suite} />
+              <input name="suite" required inputMode="numeric" className={field} />
             </label>
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium">{m.phone} *</span>
-              <input name="phone" type="tel" required autoComplete="tel" className={field} defaultValue={v.phone} />
+              <input name="phone" type="tel" required autoComplete="tel" className={field} />
             </label>
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium">{m.email} *</span>
-              <input name="email" type="email" required autoComplete="email" className={field} defaultValue={v.email} />
+              <input name="email" type="email" required autoComplete="email" className={field} />
             </label>
             <label className="block sm:col-span-2">
-              <span className="mb-1.5 block text-sm font-medium">{m.bestTime}</span>
-              <input name="bestTime" className={field} placeholder={m.bestTimeHint} defaultValue={v.bestTime} />
+              <span className="mb-1.5 block text-sm font-medium">{m.note}</span>
+              <input name="note" className={field} placeholder={m.noteHint} />
             </label>
             <label className="flex items-center gap-3 text-sm sm:col-span-2">
-              <input name="access" type="checkbox" className="size-4 accent-[#3b2a20]" defaultChecked={!!v.access} />
+              <input name="access" type="checkbox" className="size-4 accent-[#3b2a20]" />
               {m.access}
             </label>
             {(state.status === "invalid" || state.status === "error") && (

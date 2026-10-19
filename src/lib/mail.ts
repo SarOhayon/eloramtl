@@ -1,7 +1,8 @@
 import nodemailer from "nodemailer";
 import { INBOX_EMAIL } from "@/data/building";
 
-export type Mail = { subject: string; text: string; replyTo?: string; to?: string };
+export type Attachment = { filename: string; content: Buffer; contentType: string };
+export type Mail = { subject: string; text: string; html?: string; replyTo?: string; to?: string; attachments?: Attachment[] };
 
 // Sends a website form to `to` (or MAIL_TO, or INBOX_EMAIL) through the company mailbox (GreenGeeks SMTP).
 // Needs SMTP_HOST, SMTP_USER and SMTP_PASS (and optionally SMTP_PORT, MAIL_TO).
@@ -18,7 +19,7 @@ export async function sendMail(mail: Mail): Promise<boolean> {
   try {
     await nodemailer
       .createTransport({ host: SMTP_HOST, port, secure: port === 465, auth: { user: SMTP_USER, pass: SMTP_PASS } })
-      .sendMail({ from: `"Elora website" <${SMTP_USER}>`, to: mail.to || MAIL_TO || INBOX_EMAIL, replyTo: mail.replyTo, subject: mail.subject, text: mail.text });
+      .sendMail({ from: `"Elora website" <${SMTP_USER}>`, to: mail.to || MAIL_TO || INBOX_EMAIL, replyTo: mail.replyTo, subject: mail.subject, text: mail.text, html: mail.html, attachments: mail.attachments });
     return true;
   } catch (err) {
     console.error("[mail] Sending failed", err);
