@@ -4,6 +4,12 @@ Rental website for Elora, 2855 chemin Bates, Montréal. Next.js (App Router), Ta
 
 French is the default language (`/fr`); English lives at `/en`. All copy is in `src/i18n/dictionaries.ts`.
 
+## Hosting (AWS Amplify)
+
+`amplify.yml` holds the build settings. In the AWS console: Amplify > Create new app > GitHub > `SarOhayon/eloramtl` > branch `main` (or the default branch). Under Environment variables add `NEXT_PUBLIC_MAPBOX_TOKEN`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (and optionally `MAIL_TO`). The build copies them into `.env.production` so the server-side forms can read them.
+
+Custom domain: Amplify > Hosting > Custom domains. Keep the domain and email at GreenGeeks: only add the CNAME records Amplify gives you, and leave the MX (email) records alone.
+
 ## Run it
 
 ```bash

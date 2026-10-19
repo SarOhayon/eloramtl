@@ -1,0 +1,22 @@
+# AWS Amplify Hosting build settings.
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - nvm install 22 && nvm use 22
+        - npm ci
+    build:
+      commands:
+        # Amplify doesn't hand environment variables to the running site (server actions,
+        # email), so copy the ones the site needs into .env.production before building.
+        - env | grep -E '^(SMTP_|MAIL_TO=|GOOGLE_PLACES_API_KEY=|GOOGLE_PLACE_ID=|NEXT_PUBLIC_)' >> .env.production || true
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - "**/*"
+  cache:
+    paths:
+      - .next/cache/**/*
+      - node_modules/**/*
