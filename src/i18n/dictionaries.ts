@@ -30,7 +30,7 @@ const fr = {
     primary: "Explorer les logements",
     secondary: "Réserver une visite",
     facts: [
-      { value: "1 470 $", label: "studios, à partir de /mois" },
+      { value: "1 470 $", label: "par mois pour un studio" },
       { value: "2 min", label: "à pied du REM Canora" },
       { value: "7 min", label: "du centre-ville en REM" },
       { value: "Oui", label: "aux animaux" },
@@ -292,7 +292,7 @@ const en: Dictionary = {
     primary: "Explore the suites",
     secondary: "Book a showing",
     facts: [
-      { value: "$1,470", label: "studios from, per month" },
+      { value: "$1,470", label: "per month for a studio" },
       { value: "2 min", label: "walk to Canora REM" },
       { value: "7 min", label: "to downtown by REM" },
       { value: "Yes", label: "to pets" },

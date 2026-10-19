@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Fraunces, Inter, Jost } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { getDictionary, hasLocale, locales } from "@/i18n/dictionaries";
 import "./globals.css";
 
-const heading = Fraunces({ variable: "--font-heading", subsets: ["latin"], axes: ["opsz", "SOFT"] });
-const body = Inter({ variable: "--font-body", subsets: ["latin"] });
-const mark = Jost({ variable: "--font-mark", subsets: ["latin"], weight: ["300", "400"] });
+// Same typeface as eloramtl.com, used for headings and body.
+const jakarta = Plus_Jakarta_Sans({ variable: "--font-body", subsets: ["latin"] });
 
 export async function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
@@ -35,7 +34,7 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   return (
-    <html lang={lang === "fr" ? "fr-CA" : "en-CA"} className={`${heading.variable} ${body.variable} ${mark.variable} antialiased`}>
+    <html lang={lang === "fr" ? "fr-CA" : "en-CA"} className={`${jakarta.variable} antialiased`}>
       <body className="min-h-full font-sans">{children}</body>
     </html>
   );

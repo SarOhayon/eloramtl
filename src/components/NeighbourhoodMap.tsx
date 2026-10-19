@@ -8,10 +8,10 @@ import { PLACES, type PlaceCategory } from "@/data/places";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 
 const COLORS: Record<PlaceCategory, string> = {
-  transit: "#5d6b4f",
+  transit: "#52796f",
   school: "#8a6a3e",
   shopping: "#b0704f",
-  park: "#6f8f5a",
+  park: "#6a9a7c",
   health: "#9a5a5a",
 };
 const CATS = Object.keys(COLORS) as PlaceCategory[];
@@ -39,7 +39,7 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
           className: "",
           iconSize: [36, 36],
           iconAnchor: [18, 18],
-          html: `<div style="position:relative;width:36px;height:36px"><div style="width:36px;height:36px;border-radius:50%;background:#4a3628;color:#f6f0e6;display:flex;align-items:center;justify-content:center;font:600 16px/1 Georgia,serif;box-shadow:0 0 0 6px rgba(74,54,40,.25)">E</div><span style="position:absolute;left:44px;top:7px;background:#4a3628;color:#f6f0e6;padding:3px 9px;border-radius:999px;font:500 12px/1.4 system-ui,sans-serif;white-space:nowrap">Elora</span></div>`,
+          html: `<div style="position:relative;width:36px;height:36px"><div style="width:36px;height:36px;border-radius:50%;background:#503d32;color:#faf8f5;display:flex;align-items:center;justify-content:center;font:600 16px/1 Georgia,serif;box-shadow:0 0 0 6px rgba(74,54,40,.25)">E</div><span style="position:absolute;left:44px;top:7px;background:#503d32;color:#faf8f5;padding:3px 9px;border-radius:999px;font:500 12px/1.4 system-ui,sans-serif;white-space:nowrap">Elora</span></div>`,
         }),
         zIndexOffset: 1000,
         keyboard: false,

@@ -69,7 +69,7 @@ export function ContactForms({ locale }: { locale: Locale }) {
             role="tab"
             aria-selected={kind === k}
             onClick={() => setKind(k)}
-            className={`rounded-full px-3 py-2.5 text-sm font-medium transition ${kind === k ? "bg-brown text-cream shadow" : "hover:bg-sand/50"}`}
+            className={`rounded-full px-3 py-2.5 text-sm font-medium transition ${kind === k ? "bg-green text-white shadow" : "hover:bg-sand/50"}`}
           >
             {f[k].tab}
           </button>
@@ -119,7 +119,7 @@ export function ContactForms({ locale }: { locale: Locale }) {
                 <textarea name="issue" rows={4} className={field} required />
               </Field>
               <label className="flex items-center gap-3 text-sm sm:col-span-2">
-                <input name="access" type="checkbox" className="size-4 accent-[#5d6b4f]" />
+                <input name="access" type="checkbox" className="size-4 accent-[#52796f]" />
                 {f.maintenance.access}
               </label>
             </>

@@ -69,19 +69,19 @@ const LAYOUTS: Record<UnitType, { width: number; rooms: Room[] }> = {
 };
 
 const FILL: Record<RoomKind, string> = {
-  living: "#f6f0e6",
-  kitchen: "#efe6d6",
-  bed: "#f2eadc",
-  bath: "#e4e7dc",
-  den: "#efe6d6",
-  entry: "#ece2d2",
-  laundry: "#e4e7dc",
+  living: "#faf8f5",
+  kitchen: "#f2eee8",
+  bed: "#f4f1ec",
+  bath: "#e6eeea",
+  den: "#f2eee8",
+  entry: "#f0ece6",
+  laundry: "#e6eeea",
 };
 
 function Furniture({ r }: { r: Room }) {
   const cx = r.x + r.w / 2;
   const cy = r.y + r.h / 2;
-  const s = { fill: "none", stroke: "#a08a76", strokeWidth: 1.2 };
+  const s = { fill: "none", stroke: "#a39383", strokeWidth: 1.2 };
   switch (r.kind) {
     case "bed": {
       const bw = Math.min(64, r.w - 30);
@@ -135,14 +135,14 @@ export function UnitPlan({ type, t }: { type: UnitType; t: Dictionary }) {
       aria-label={t.types[type]}
     >
       {/* balcony */}
-      <rect x={W * 0.45} y={H} width={W * 0.55} height={32} fill="#dfe4d5" stroke="#5d6b4f" strokeWidth={1.4} strokeDasharray="4 3" />
+      <rect x={W * 0.45} y={H} width={W * 0.55} height={32} fill="#e2ebe7" stroke="#52796f" strokeWidth={1.4} strokeDasharray="4 3" />
       <text x={W * 0.725} y={H + 21} textAnchor="middle" className="fill-green-deep" fontSize={10} letterSpacing={1}>
         {t.explorer.rooms.balcony.toUpperCase()}
       </text>
 
       {layout.rooms.map((r, i) => (
         <g key={i}>
-          <rect x={r.x} y={r.y} width={r.w} height={r.h} fill={FILL[r.kind]} stroke="#4a3628" strokeWidth={1.6} />
+          <rect x={r.x} y={r.y} width={r.w} height={r.h} fill={FILL[r.kind]} stroke="#503d32" strokeWidth={1.6} />
           <Furniture r={r} />
           <text
             x={r.x + r.w / 2}
@@ -158,10 +158,10 @@ export function UnitPlan({ type, t }: { type: UnitType; t: Dictionary }) {
       ))}
 
       {/* outer wall */}
-      <rect x={0} y={0} width={W} height={H} fill="none" stroke="#33241a" strokeWidth={5} />
+      <rect x={0} y={0} width={W} height={H} fill="none" stroke="#3a2c24" strokeWidth={5} />
       {/* windows along the balcony side */}
-      <line x1={W * 0.5} y1={H} x2={W * 0.95} y2={H} stroke="#f6f0e6" strokeWidth={3} />
-      <line x1={W * 0.5} y1={H} x2={W * 0.95} y2={H} stroke="#5d6b4f" strokeWidth={1} />
+      <line x1={W * 0.5} y1={H} x2={W * 0.95} y2={H} stroke="#faf8f5" strokeWidth={3} />
+      <line x1={W * 0.5} y1={H} x2={W * 0.95} y2={H} stroke="#52796f" strokeWidth={1} />
     </svg>
   );
 }

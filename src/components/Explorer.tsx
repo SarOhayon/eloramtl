@@ -88,7 +88,7 @@ export function Explorer({ locale }: { locale: Locale }) {
               aria-pressed={active}
               onClick={() => changeFilter(k)}
               className={`flex flex-col items-start rounded-2xl px-4 py-3.5 text-left transition ${
-                active ? "bg-brown text-cream shadow-lg shadow-brown/20" : "bg-cream text-brown ring-1 ring-brown/10 hover:ring-brown/30"
+                active ? "bg-green text-white shadow-lg shadow-green/25" : "bg-cream text-brown ring-1 ring-brown/10 hover:ring-brown/30"
               }`}
             >
               <span className="text-sm font-medium">{k === "all" ? t.explorer.all : t.types[k]}</span>
@@ -124,7 +124,7 @@ export function Explorer({ locale }: { locale: Locale }) {
             className="absolute inset-0 h-full w-full"
             onMouseLeave={() => setHoverFloor(null)}
           >
-            <rect width="100%" height="100%" fill="#33241a" opacity={0.18} pointerEvents="none" />
+            <rect width="100%" height="100%" fill="#3a2c24" opacity={0.18} pointerEvents="none" />
             {FLOORS.map((f) => {
               const active = f === floor;
               const hover = f === hoverFloor;
@@ -138,9 +138,9 @@ export function Explorer({ locale }: { locale: Locale }) {
                   onMouseEnter={() => setHoverFloor(f)}
                   onClick={() => goFloor(f)}
                   className="cursor-pointer transition-all duration-200"
-                  fill={active ? "#a7b394" : hover ? "#f6f0e6" : "transparent"}
+                  fill={active ? "#a8c1b8" : hover ? "#faf8f5" : "transparent"}
                   fillOpacity={active ? 0.62 : hover ? 0.38 : 0}
-                  stroke={active || hover ? "#f6f0e6" : "transparent"}
+                  stroke={active || hover ? "#faf8f5" : "transparent"}
                   strokeWidth={active ? 5 : 3}
                 />
               );
@@ -183,7 +183,7 @@ export function Explorer({ locale }: { locale: Locale }) {
 
       {/* Floor plate + suite */}
       <div className="flex min-w-0 flex-col overflow-hidden rounded-3xl bg-cream shadow-xl shadow-brown/10 ring-1 ring-brown/10">
-        <div className="flex items-center justify-between gap-3 bg-brown px-5 py-4 text-cream">
+        <div className="flex items-center justify-between gap-3 bg-green px-5 py-4 text-white">
           <button
             type="button"
             onClick={() => goFloor(Math.max(1, floor - 1))}
@@ -210,10 +210,10 @@ export function Explorer({ locale }: { locale: Locale }) {
 
         <div className="px-4 pt-4 sm:px-5">
           <svg viewBox="0 0 617 340" className="h-auto w-full" aria-label={floorLabel(floor)}>
-            <polygon points={pts(PLATE_OUTLINE)} fill="#ece2d2" stroke="#33241a" strokeWidth={4} />
+            <polygon points={pts(PLATE_OUTLINE)} fill="#f0ece6" stroke="#3a2c24" strokeWidth={4} />
             {CORES.map((c, i) => (
               <g key={i}>
-                <polygon points={pts(c)} fill="#d9c9b0" />
+                <polygon points={pts(c)} fill="#ddd4c8" />
                 <text x={centroid(c)[0]} y={centroid(c)[1] + 4} textAnchor="middle" fontSize={11} className="fill-brown-soft">
                   {t.explorer.amenity.core}
                 </text>
@@ -222,7 +222,7 @@ export function Explorer({ locale }: { locale: Locale }) {
             {floor === 1 &&
               FLOOR1_AMENITIES.map((a) => (
                 <g key={a.key}>
-                  <polygon points={pts(a.shape)} fill="#dfe4d5" stroke="#4a3628" strokeWidth={1.5} />
+                  <polygon points={pts(a.shape)} fill="#e2ebe7" stroke="#503d32" strokeWidth={1.5} />
                   <text x={centroid(a.shape)[0]} y={centroid(a.shape)[1] + 4} textAnchor="middle" fontSize={11} className="fill-green-deep">
                     {t.explorer.amenity[a.key]}
                   </text>
@@ -250,10 +250,10 @@ export function Explorer({ locale }: { locale: Locale }) {
                 >
                   <polygon
                     points={pts(u.shape)}
-                    fill={isSel ? "#4a3628" : ok ? "#c9d1b9" : "#f6f0e6"}
-                    stroke="#4a3628"
+                    fill={isSel ? "#52796f" : ok ? "#cddcd6" : "#faf8f5"}
+                    stroke="#503d32"
                     strokeWidth={1.5}
-                    className="transition-colors duration-150 hover:fill-[#a7b394]"
+                    className="transition-colors duration-150 hover:fill-[#a8c1b8]"
                     opacity={ok ? 1 : 0.55}
                   />
                   <text

@@ -41,7 +41,7 @@ export function Header({ locale }: { locale: Locale }) {
           <Wordmark className="h-6 w-auto lg:h-7" />
         </Link>
 
-        <nav className="hidden items-center gap-8 text-sm tracking-wide lg:flex" aria-label="Main">
+        <nav className="hidden items-center gap-8 text-xs font-medium uppercase tracking-[0.18em] lg:flex" aria-label="Main">
           {links.map((l) => (
             <a key={l.href} href={l.href} className="opacity-90 transition hover:opacity-100 hover:underline hover:underline-offset-8">
               {l.label}
@@ -62,7 +62,7 @@ export function Header({ locale }: { locale: Locale }) {
             href={whatsappLink(t.contact.whatsappText)}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden items-center gap-2 rounded-full bg-brown px-5 py-2.5 text-sm font-medium text-cream transition hover:bg-brown-deep sm:inline-flex"
+            className="hidden items-center gap-2 rounded-full bg-green px-5 py-2.5 text-sm font-medium text-white transition hover:bg-green-deep sm:inline-flex"
           >
             <WhatsAppIcon className="size-4" />
             {t.nav.cta}

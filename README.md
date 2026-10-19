@@ -20,7 +20,7 @@ npm run build
 | Suites, prices, 3D tour links, floor outlines, phone numbers | `src/data/building.ts` |
 | Map points | `src/data/places.ts` |
 | Photos and captions | `src/data/photos.ts`, `public/photos/` |
-| Logo (stand-in) | `src/components/Wordmark.tsx` |
+| Logo (official, from eloramtl.com) | `src/components/Wordmark.tsx` |
 
 ## Still placeholder
 
@@ -28,4 +28,3 @@ npm run build
 - Floor plates for floors 2 to 7 reuse the floor 1 layout.
 - Suite plans are illustrative drawings until the rendered plans arrive.
 - Map coordinates are approximate.
-- The logo is a redrawn stand-in for the official file.
