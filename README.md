@@ -51,21 +51,24 @@ Apply now, Building inquiry and Maintenance request are emailed to `INBOX_EMAIL`
 
 Set `SMTP_HOST`, `SMTP_PORT` (465), `SMTP_USER` and `SMTP_PASS` in `.env.local` and in Vercel. The values are in GreenGeeks cPanel > Email Accounts > Connect Devices. Without them, forms work locally (emails are printed in the terminal) and show an error on the live site.
 
-## Maintenance requests (with approval)
+## Maintenance requests (WhatsApp, with approval)
 
-The "Maintenance request" tab is a step-by-step form: room → item → problem → photo → contact details. Then:
+Residents report maintenance on WhatsApp (the site has a "Report on WhatsApp" button). The bot (`src/lib/whatsappBot.ts`) asks: language → room → item → problem → photo → suite number, then replies "Thank you! We will have someone over shortly."
 
-1. The resident sees "Thank you! We will have someone over shortly."
-2. The approver (`APPROVER_EMAIL`) gets an email with the details, the photo and **Approve** / **Decline** buttons.
-3. Approve (after a confirmation click) emails the work order and photo to the contractor for that trade (`TRADES` in `src/data/maintenance.ts`, e.g. plumbing → plumber).
+1. The approver (`APPROVER_EMAIL`) gets an email with the details, the photo and **Approve** / **Decline** buttons.
+2. Approve (after a confirmation click) emails the work order and photo to the contractor for that trade (`TRADES`), and messages the resident on WhatsApp that it's approved.
+3. Residents can type "menu" at any time to start over. Urgent problems (burst pipe, no heat...) also tell them to call.
 
 Edit rooms, items, problems, urgency, the approver and contractor emails in `src/data/maintenance.ts`.
 
-On the live site this needs a private S3 bucket and `APPROVAL_SECRET` (see `.env.example`); locally it stores requests in a temp folder. Without them, the approver still gets the request and photo, just without the buttons.
+### Setup
+- **Meta WhatsApp Business Platform:** create an app at developers.facebook.com, add WhatsApp, connect the business number. Set the webhook URL to `https://<your site>/api/whatsapp`, the verify token to `WHATSAPP_VERIFY_TOKEN`, and subscribe to `messages`. Add `WHATSAPP_TOKEN` (a permanent system-user token), `WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_APP_SECRET`.
+- **Storage:** a private S3 bucket (`ELORA_S3_*`) for conversations, photos and pending requests, plus `APPROVAL_SECRET` for the approval links. Locally a temp folder is used.
+- The site's WhatsApp buttons use `PHONE_WHATSAPP` in `src/data/building.ts`; it should be the same number as the bot.
 
 ## Still placeholder
 
 - Suite list: only suites 112 and 113 are real. Every other suite in `building.ts` is marked `sample: true`.
-- Floor plates for floors 2 to 7 reuse the floor 1 layout.
+- Floors 6 and 7 reuse the floor 2 layout until their plans are supplied.
 - Suite plans are illustrative drawings until the rendered plans arrive.
 - Map coordinates are approximate.

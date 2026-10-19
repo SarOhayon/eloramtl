@@ -9,7 +9,7 @@ const fr = {
   meta: {
     title: "Elora MTL · Appartements neufs à louer à Montréal",
     description:
-      "Studios à 3 chambres dans un immeuble neuf (2025) entre Outremont, Ville Mont-Royal et Glenmount. À 2 minutes du REM. Animaux bienvenus.",
+      "Studios à 3 chambres dans un immeuble neuf (2025) entre Outremont, Ville Mont-Royal et Glenmount. À 7 minutes à pied du REM. Animaux bienvenus.",
   },
   offer: "Offre d'une durée limitée!",
   hours: {
@@ -54,7 +54,7 @@ const fr = {
       "Espace de télétravail",
       "5 électroménagers et luminaires inclus",
       "Eau chaude incluse",
-      "REM Canora à quelques pas · centre-ville en 7 min",
+      "REM Canora à 7 min à pied · centre-ville en 7 min",
     ],
   },
   nav: {
@@ -82,7 +82,7 @@ const fr = {
     secondary: "Réserver une visite",
     facts: [
       { value: "1 470 $", label: "par mois pour un studio" },
-      { value: "2 min", label: "à pied du REM Canora" },
+      { value: "500 m", label: "du REM Canora, 7 min à pied" },
       { value: "7 min", label: "du centre-ville en REM" },
       { value: "Oui", label: "aux animaux" },
     ],
@@ -137,7 +137,7 @@ const fr = {
   },
   commute: {
     items: [
-      { value: "2 min", label: "à pied du REM Canora" },
+      { value: "7 min", label: "à pied du REM Canora" },
       { value: "7 min", label: "jusqu'au centre-ville en REM" },
       { value: "< 15 min", label: "jusqu'à l'aéroport YUL" },
       { value: "5 min", label: "des métros Acadie et Outremont" },
@@ -171,33 +171,12 @@ const fr = {
       commentsHint: "Ex. : j'aimerais visiter un 2 chambres un soir de semaine.",
       intro: "Bonjour! Demande d'information pour Elora.",
     },
-    maintenance: { tab: "Demande d'entretien" },
   },
-  maint: {
-    bot: "Demande d'entretien",
-    where: "Bonjour! Où se trouve votre problème aujourd'hui?",
-    what: (room: string) => `Qu'est-ce qui doit être réparé (${room})?`,
-    problem: (item: string) => `Que se passe-t-il avec : ${item}?`,
-    urgentNote: "Problème urgent : si possible, fermez l'eau ou l'appareil et appelez-nous aussi.",
-    photo: "Veuillez téléverser une photo du problème.",
-    photoButton: "Prendre ou choisir une photo",
-    photoAlt: "Photo du problème",
-    details: "Merci! Où devons-nous aller?",
-    name: "Nom complet",
-    suite: "Numéro de logement",
-    phone: "Téléphone",
-    email: "Courriel",
-    note: "Autre chose à savoir? (facultatif)",
-    noteHint: "Ex. : depuis ce matin, sous l'évier",
-    access: "L'équipe peut entrer en mon absence",
-    submit: "Envoyer",
-    sending: "Envoi…",
-    sentTitle: "Merci!",
-    sentText: "Nous enverrons quelqu'un sous peu.",
-    restart: "Faire une autre demande",
-    invalid: "Veuillez remplir les champs obligatoires et ajouter une photo.",
-    error: "L'envoi n'a pas fonctionné. Réessayez ou appelez-nous au 514 341-1212.",
-    change: "Modifier",
+  maintWhatsapp: {
+    title: "Résidents : un problème dans votre logement?",
+    text: "Signalez-le sur WhatsApp en quelques touches, photo incluse.",
+    cta: "Signaler sur WhatsApp",
+    message: "Entretien",
   },
   privacy: {
     link: "Politique de confidentialité",
@@ -219,7 +198,7 @@ const fr = {
     text: [
       "Bienvenue à Elora, un projet de condos locatifs situé sur le chemin Bates, à la croisée des quartiers Outremont, Ville Mont-Royal et Glenmount.",
       "Alliant un design contemporain raffiné et un confort supérieur, Elora vous invite à découvrir un mode de vie sans compromis. Dans cet édifice à haute efficacité énergétique, chaque détail a été soigneusement pensé pour répondre aux attentes des locataires modernes, avec une insonorisation triple vitrage, des commodités sur mesure et des espaces communs élégants.",
-      "Elora est idéalement connectée aux transports en commun. À quelques pas de la station du REM, qui vous permet de rejoindre le centre-ville en sept minutes et l'aéroport en moins de quinze, elle se trouve également à proximité des stations de métro Acadie et Outremont, toutes deux sur la ligne bleue. De plus, les vélos BIXI à votre porte offrent une option pratique pour tous vos déplacements, qu'ils soient quotidiens ou pour le plaisir.",
+      "Elora est idéalement connectée aux transports en commun. À sept minutes à pied de la station du REM, qui vous permet de rejoindre le centre-ville en sept minutes et l'aéroport en moins de quinze, elle se trouve également à proximité des stations de métro Acadie et Outremont, toutes deux sur la ligne bleue. De plus, les vélos BIXI à votre porte offrent une option pratique pour tous vos déplacements, qu'ils soient quotidiens ou pour le plaisir.",
     ],
   },
   amenities: {
@@ -261,7 +240,7 @@ const fr = {
   neighbourhood: {
     eyebrow: "Le quartier",
     title: "Une adresse convoitée",
-    intro: "Les boutiques d'Outremont, l'ambiance familiale de Ville Mont-Royal et le calme de Glenmount, à deux minutes du REM.",
+    intro: "Les boutiques d'Outremont, l'ambiance familiale de Ville Mont-Royal et le calme de Glenmount, à sept minutes à pied du REM.",
     categories: { transit: "Transport", school: "Écoles", shopping: "Commerces", park: "Parcs", health: "Santé" },
     you: "Elora",
   },
@@ -286,7 +265,7 @@ const en: Dictionary = {
   meta: {
     title: "Elora MTL · New apartments for rent in Montréal",
     description:
-      "Studios to 3-bedroom suites in a new 2025 building between Outremont, Town of Mount Royal and Glenmount. Two minutes from the REM. Pet friendly.",
+      "Studios to 3-bedroom suites in a new 2025 building between Outremont, Town of Mount Royal and Glenmount. A 7-minute walk from the REM. Pet friendly.",
   },
   offer: "Limited-time offer!",
   hours: {
@@ -331,7 +310,7 @@ const en: Dictionary = {
       "Co-working space",
       "5 appliances & lighting included",
       "Hot water included",
-      "REM Canora steps away · downtown in 7 min",
+      "REM Canora 7 min walk · downtown in 7 min",
     ],
   },
   nav: {
@@ -359,7 +338,7 @@ const en: Dictionary = {
     secondary: "Book a showing",
     facts: [
       { value: "$1,470", label: "per month for a studio" },
-      { value: "2 min", label: "walk to Canora REM" },
+      { value: "500 m", label: "to Canora REM, a 7-min walk" },
       { value: "7 min", label: "to downtown by REM" },
       { value: "Yes", label: "to pets" },
     ],
@@ -414,7 +393,7 @@ const en: Dictionary = {
   },
   commute: {
     items: [
-      { value: "2 min", label: "walk to Canora REM" },
+      { value: "7 min", label: "walk to Canora REM" },
       { value: "7 min", label: "to downtown by REM" },
       { value: "< 15 min", label: "to YUL airport" },
       { value: "5 min", label: "to Acadie and Outremont metros" },
@@ -448,33 +427,12 @@ const en: Dictionary = {
       commentsHint: "E.g. I'd like to see a 2-bedroom on a weekday evening.",
       intro: "Hi! Building inquiry for Elora.",
     },
-    maintenance: { tab: "Maintenance request" },
   },
-  maint: {
-    bot: "Maintenance request",
-    where: "Hi! Where is your issue today?",
-    what: (room: string) => `What needs fixing in the ${room}?`,
-    problem: (item: string) => `What's happening with the ${item}?`,
-    urgentNote: "Urgent issue: if you can, shut off the water or appliance and also call us.",
-    photo: "Please upload a photo of the problem.",
-    photoButton: "Take or choose a photo",
-    photoAlt: "Photo of the problem",
-    details: "Thanks! Where should we go?",
-    name: "Full name",
-    suite: "Suite number",
-    phone: "Phone",
-    email: "Email",
-    note: "Anything else we should know? (optional)",
-    noteHint: "E.g. since this morning, under the sink",
-    access: "The team may enter when I'm not home",
-    submit: "Send",
-    sending: "Sending…",
-    sentTitle: "Thank you!",
-    sentText: "We will have someone over shortly.",
-    restart: "Make another request",
-    invalid: "Please fill in the required fields and add a photo.",
-    error: "Sending didn't work. Please try again or call us at 514 341-1212.",
-    change: "Change",
+  maintWhatsapp: {
+    title: "Residents: something needs fixing?",
+    text: "Report it on WhatsApp in a few taps, photo included.",
+    cta: "Report on WhatsApp",
+    message: "Maintenance",
   },
   privacy: {
     link: "Privacy policy",
@@ -539,7 +497,7 @@ const en: Dictionary = {
   neighbourhood: {
     eyebrow: "Neighbourhood",
     title: "A coveted address",
-    intro: "Outremont's boutiques, the family feel of Ville Mont-Royal and the calm of Glenmount, two minutes from the REM.",
+    intro: "Outremont's boutiques, the family feel of Ville Mont-Royal and the calm of Glenmount, a seven-minute walk from the REM.",
     categories: { transit: "Transit", school: "Schools", shopping: "Shopping", park: "Parks", health: "Health" },
     you: "Elora",
   },

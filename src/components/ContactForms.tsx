@@ -1,11 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { submitContact, type ContactState } from "@/app/actions/contact";
 import { UNIT_TYPES, whatsappLink } from "@/data/building";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 import { WhatsAppIcon } from "./icons";
-import { MaintenanceAssistant } from "./MaintenanceAssistant";
 
 const field =
   "w-full rounded-sm border-0 bg-white px-4 py-3 text-brown ring-1 ring-brown/15 placeholder:text-brown-soft/60 focus:outline-none focus:ring-2 focus:ring-action";
@@ -99,26 +98,28 @@ function InquiryForm({ locale }: { locale: Locale }) {
 }
 
 export function ContactForms({ locale }: { locale: Locale }) {
-  const f = getDictionary(locale).forms;
-  const [kind, setKind] = useState<"inquiry" | "maintenance">("inquiry");
-
+  const m = getDictionary(locale).maintWhatsapp;
   return (
-    <div id="visit" className="rounded-lg bg-cream p-6 text-brown shadow-xl shadow-black/10 sm:p-8">
-      <div className="mb-6 grid grid-cols-2 gap-1 rounded-md bg-cream-deep p-1 ring-1 ring-brown/10" role="tablist">
-        {(["inquiry", "maintenance"] as const).map((k) => (
-          <button
-            key={k}
-            type="button"
-            role="tab"
-            aria-selected={kind === k}
-            onClick={() => setKind(k)}
-            className={`rounded-sm px-3 py-2.5 text-sm font-medium transition ${kind === k ? "bg-action text-white shadow" : "hover:bg-sand/50"}`}
-          >
-            {f[k].tab}
-          </button>
-        ))}
+    <div className="space-y-4">
+      <div id="visit" className="rounded-lg bg-cream p-6 text-brown shadow-xl shadow-black/10 sm:p-8">
+        <InquiryForm locale={locale} />
       </div>
-      {kind === "inquiry" ? <InquiryForm locale={locale} /> : <MaintenanceAssistant locale={locale} />}
+      {/* Residents report maintenance through the WhatsApp assistant. */}
+      <div id="maintenance" className="flex flex-col gap-4 rounded-lg bg-brown-deep p-6 text-cream sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="font-display text-2xl">{m.title}</p>
+          <p className="mt-1 text-sm text-cream/75">{m.text}</p>
+        </div>
+        <a
+          href={whatsappLink(m.message)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-sm bg-whatsapp px-5 py-3 text-sm font-medium text-white transition hover:brightness-95"
+        >
+          <WhatsAppIcon className="size-4" />
+          {m.cta}
+        </a>
+      </div>
     </div>
   );
 }

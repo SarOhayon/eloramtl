@@ -2,6 +2,7 @@ import { TRADES, type Trade } from "@/data/maintenance";
 import { sendMail } from "@/lib/mail";
 import { detailLines, detailsHtml, esc, loadRecord, saveRecord, title as plainTitle, verify, type RequestRecord } from "@/lib/maintenanceRequest";
 import { getFile } from "@/lib/storage";
+import { notifyApproved } from "@/lib/whatsappBot";
 
 // The approver's Approve / Decline links. GET shows a confirmation page (so email link
 // scanners can't trigger anything); the button on it POSTs to perform the action.
@@ -72,5 +73,6 @@ export async function POST(request: Request) {
   if (!sent) return page("Not sent", "<p>The email to the contractor could not be sent. Please try again in a moment.</p>", 502);
 
   await saveRecord({ ...record, status: "approved", decidedAt: new Date().toISOString() });
+  if (record.source === "whatsapp") await notifyApproved(record.phone, record.lang, record.trade as Trade);
   return page("Approved ✓", `<p>Sent to <b>${trade.label.en}</b> (${trade.email}) with the photo.</p>`);
 }

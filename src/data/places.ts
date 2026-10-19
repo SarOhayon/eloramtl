@@ -11,7 +11,7 @@ export type Place = {
 };
 
 export const PLACES: Place[] = [
-  { name: "REM Canora", category: "transit", latlng: [45.51389, -73.63444], walk: { fr: "2 min à pied", en: "2 min walk" } },
+  { name: "REM Canora", category: "transit", latlng: [45.51389, -73.63444], walk: { fr: "7 min à pied", en: "7 min walk" } },
   { name: "Métro Acadie", category: "transit", latlng: [45.5234, -73.6242] },
   { name: "Métro Outremont", category: "transit", latlng: [45.5203, -73.6149] },
   { name: "REM Mont-Royal", category: "transit", latlng: [45.5196, -73.6492] },

@@ -4,15 +4,13 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import {
   BUILDING_PHOTO,
-  CORES,
-  FLOOR1_AMENITIES,
   FLOOR_OUTLINES,
   FLOORS,
   PHONE_MAIN,
-  PLATE_OUTLINE,
   PRICE_FROM,
   UNITS,
   UNIT_TYPES,
+  layoutFor,
   formatPrice,
   whatsappLink,
   type Unit,
@@ -194,8 +192,8 @@ export function Explorer({ locale }: { locale: Locale }) {
 
         <div className="px-4 pt-4 sm:px-5">
           <svg viewBox="0 0 617 340" className="h-auto w-full" aria-label={floorLabel(floor)}>
-            <polygon points={pts(PLATE_OUTLINE)} fill="#f0ece6" stroke="#3a2c24" strokeWidth={4} />
-            {CORES.map((c, i) => (
+            <polygon points={pts(layoutFor(floor).outline)} fill="#f0ece6" stroke="#3a2c24" strokeWidth={4} />
+            {layoutFor(floor).cores.map((c, i) => (
               <g key={i}>
                 <polygon points={pts(c)} fill="#e6d9c3" />
                 <text x={centroid(c)[0]} y={centroid(c)[1] + 4} textAnchor="middle" fontSize={11} className="fill-brown-soft">
@@ -203,8 +201,7 @@ export function Explorer({ locale }: { locale: Locale }) {
                 </text>
               </g>
             ))}
-            {floor === 1 &&
-              FLOOR1_AMENITIES.map((a) => (
+            {layoutFor(floor).amenities.map((a) => (
                 <g key={a.key}>
                   <polygon points={pts(a.shape)} fill="#f3ede4" stroke="#3b2a20" strokeWidth={1.5} />
                   <text x={centroid(a.shape)[0]} y={centroid(a.shape)[1] + 4} textAnchor="middle" fontSize={11} className="fill-action-deep">
