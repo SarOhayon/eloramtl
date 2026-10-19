@@ -16,6 +16,7 @@ export async function POST(request: Request) {
   const raw = await request.text();
   if (!validSignature(raw, request.headers.get("x-hub-signature-256"))) {
     console.warn("[whatsapp] rejected webhook: signature doesn't match WHATSAPP_APP_SECRET");
+    await note("rejected: signature doesn't match WHATSAPP_APP_SECRET");
     return new Response("Invalid signature", { status: 401 });
   }
 
@@ -25,12 +26,17 @@ export async function POST(request: Request) {
     const messages = parseWebhook(JSON.parse(raw));
     console.info(`[whatsapp] webhook with ${messages.length} message(s)`);
     for (const message of messages) await handleMessage(message, baseUrl);
+    await note(messages.length ? `ok: handled ${messages.length} message(s), last text "${messages.at(-1)?.text ?? messages.at(-1)?.choice ?? "(media)"}"` : "ok: status update only (no message)");
   } catch (err) {
     console.error("[whatsapp] webhook error", err);
+    await note(`error: ${(err as Error).message}`);
   }
   // Always acknowledge, otherwise Meta keeps retrying the same message.
   return new Response("ok");
 }
+
+// Remembers what happened to the latest webhook, shown by the health check.
+const note = (result: string) => putFile("health/last-webhook.json", JSON.stringify({ at: new Date().toISOString(), result }), "application/json").catch(() => {});
 
 // /api/whatsapp?check : which settings the live site sees (true/false only, never values)
 // and whether storage works. Helps diagnose a silent bot.
@@ -62,5 +68,7 @@ async function healthCheck() {
     ELORA_S3_SECRET_ACCESS_KEY: has("ELORA_S3_SECRET_ACCESS_KEY"),
     storage,
     SMTP_HOST: has("SMTP_HOST"),
+    last_webhook: JSON.parse((await getFile("health/last-webhook.json").catch(() => null))?.toString("utf8") ?? "null"),
+    last_send: JSON.parse((await getFile("health/last-send.json").catch(() => null))?.toString("utf8") ?? "null"),
   };
 }

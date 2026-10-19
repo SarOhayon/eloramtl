@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { putFile } from "./storage";
 
 // Minimal WhatsApp Business Platform (Cloud API) client.
 // Needs WHATSAPP_TOKEN and WHATSAPP_PHONE_NUMBER_ID; WHATSAPP_APP_SECRET verifies incoming webhooks.
@@ -71,7 +72,10 @@ async function send(to: string, payload: object) {
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to, ...payload }),
   });
-  if (!res.ok) console.error("[whatsapp] send failed", res.status, await res.text());
+  const detail = res.ok ? "" : await res.text();
+  if (!res.ok) console.error("[whatsapp] send failed", res.status, detail);
+  // Shown by the health check (/api/whatsapp?check).
+  await putFile("health/last-send.json", JSON.stringify({ at: new Date().toISOString(), status: res.status, error: detail.slice(0, 300) || undefined }), "application/json").catch(() => {});
   return res.ok;
 }
 
