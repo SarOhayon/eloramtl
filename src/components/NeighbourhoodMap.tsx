@@ -95,23 +95,7 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
           </button>
         ))}
       </div>
-      <div ref={el} className="h-[420px] w-full sm:h-[520px]" aria-label={t.nav.neighbourhood} />
-      <ul className="grid gap-x-6 gap-y-2 p-5 text-sm sm:grid-cols-2">
-        {PLACES.filter((p) => active.has(p.category)).map((p) => (
-          <li key={p.name} className="flex items-center gap-2">
-            <span className="size-2 shrink-0 rounded-full" style={{ background: COLORS[p.category] }} />
-            <button
-              type="button"
-              className="text-left text-brown hover:underline"
-              onClick={() => map.current?.flyTo(p.latlng, 16, { duration: 0.6 })}
-            >
-              {p.name}
-            </button>
-            {p.walk && <span className="text-brown-soft">· {p.walk[locale]}</span>}
-          </li>
-        ))}
-      </ul>
-      <p className="px-5 pb-4 text-xs text-brown-soft">{t.neighbourhood.mapNote}</p>
+      <div ref={el} className="h-[380px] w-full sm:h-[460px]" aria-label={t.nav.neighbourhood} />
     </div>
   );
 }

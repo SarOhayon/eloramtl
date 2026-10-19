@@ -124,13 +124,11 @@ const fr = {
     "3br": "3 chambres",
   },
   commute: {
-    title: "Vos trajets",
     items: [
       { value: "2 min", label: "à pied du REM Canora" },
       { value: "7 min", label: "jusqu'au centre-ville en REM" },
       { value: "< 15 min", label: "jusqu'à l'aéroport YUL" },
       { value: "5 min", label: "des métros Acadie et Outremont" },
-      { value: "BIXI", label: "à la porte" },
     ],
   },
   tours: {
@@ -226,23 +224,9 @@ const fr = {
   },
   neighbourhood: {
     eyebrow: "Le quartier",
-    title: "Vivre à la croisée d'Outremont, Ville Mont-Royal et Glenmount",
-    text: [
-      "Elora bénéficie d'une localisation idéale, à la croisée de trois quartiers prisés qui allient calme, commodités et accessibilité.",
-      "Que vous soyez séduit par les boutiques élégantes d'Outremont, l'ambiance familiale de Ville Mont-Royal ou le charme paisible de Glenmount, tout est à portée de main. Son emplacement sur le chemin Bates vous offre aussi un accès rapide aux transports en commun, vers les nombreux restaurants, cafés et commerces à proximité.",
-    ],
-    poiTitle: "Points d'intérêt",
-    pois: [
-      "À deux (2) minutes de la station REM, reliant le centre-ville en 7 minutes et l'aéroport en moins de 15 minutes",
-      "À deux (2) minutes d'une station d'autobus",
-      "À cinq (5) minutes des stations de métro Acadie et Outremont",
-      "Accès direct aux vélos BIXI et aux nombreux parcs environnants",
-      "Avenue Laurier Ouest et avenue Bernard : des destinations prisées pour leurs boutiques chics et restaurants de renommée",
-      "Parcs, écoles réputées et services de proximité dans les trois quartiers",
-    ],
-    closing: "Elora vous offre une qualité de vie exceptionnelle dans l'un des secteurs les plus recherchés de Montréal.",
+    title: "Une adresse convoitée",
+    intro: "Les boutiques d'Outremont, l'ambiance familiale de Ville Mont-Royal et le calme de Glenmount, à deux minutes du REM.",
     categories: { transit: "Transport", school: "Écoles", shopping: "Commerces", park: "Parcs", health: "Santé" },
-    mapNote: "Emplacements approximatifs.",
     you: "Elora",
   },
   contact: {
@@ -383,13 +367,11 @@ const en: Dictionary = {
     "3br": "3 bedrooms",
   },
   commute: {
-    title: "Your commute",
     items: [
       { value: "2 min", label: "walk to Canora REM" },
       { value: "7 min", label: "to downtown by REM" },
       { value: "< 15 min", label: "to YUL airport" },
       { value: "5 min", label: "to Acadie and Outremont metros" },
-      { value: "BIXI", label: "at the door" },
     ],
   },
   tours: {
@@ -486,23 +468,9 @@ const en: Dictionary = {
   },
   neighbourhood: {
     eyebrow: "Neighbourhood",
-    title: "Living at the heart of Outremont, Ville Mont-Royal and Glenmount",
-    text: [
-      "Elora sits at the crossroads of three highly desirable Montréal neighbourhoods, with the perfect blend of tranquility, modern amenities and exceptional accessibility. Explore the elegant boutiques of Outremont, the family-friendly atmosphere of Ville Mont-Royal or the peaceful charm of Glenmount, all just moments away.",
-      "Elora is a short walk to the REM station: a seven-minute commute to downtown and under fifteen minutes to YUL airport. The Acadie and Outremont metro stations on the blue line are nearby, and BIXI stations at your doorstep make daily commutes and leisure rides easy.",
-    ],
-    poiTitle: "Points of interest",
-    pois: [
-      "Two (2) minutes from the REM station, connecting to downtown in 7 minutes and the airport in less than 15",
-      "Two (2) minutes from a bus stop",
-      "Five (5) minutes from Acadie and Outremont metro stations",
-      "Direct access to BIXI bikes and numerous nearby parks",
-      "Laurier Avenue West and Bernard Avenue: popular for their chic boutiques and renowned restaurants",
-      "Parks, prestigious schools and local services in all three neighbourhoods",
-    ],
-    closing: "The building offers an exceptional quality of life in one of Montréal's most desirable areas.",
+    title: "A coveted address",
+    intro: "Outremont's boutiques, the family feel of Ville Mont-Royal and the calm of Glenmount, two minutes from the REM.",
     categories: { transit: "Transit", school: "Schools", shopping: "Shopping", park: "Parks", health: "Health" },
-    mapNote: "Locations are approximate.",
     you: "Elora",
   },
   contact: {

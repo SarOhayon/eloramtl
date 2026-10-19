@@ -186,41 +186,20 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
 
         {/* Neighbourhood */}
         <section id="neighbourhood" className="py-20 lg:py-28">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.5fr] lg:gap-14 lg:px-8">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.4fr] lg:items-center lg:gap-14 lg:px-8">
             <div>
-              <SectionHeading eyebrow={t.neighbourhood.eyebrow} title={t.neighbourhood.title} />
-              <div className="-mt-4 space-y-4 text-lg text-brown/85">
-                {t.neighbourhood.text.map((p) => (
-                  <p key={p}>{p}</p>
+              <SectionHeading eyebrow={t.neighbourhood.eyebrow} title={t.neighbourhood.title} lead={t.neighbourhood.intro} />
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-6 border-t border-gold/40 pt-8">
+                {t.commute.items.map((c) => (
+                  <div key={c.label}>
+                    <dt className="sr-only">{c.label}</dt>
+                    <dd className="font-display text-4xl text-gold">{c.value}</dd>
+                    <dd className="mt-1 text-sm text-brown/75">{c.label}</dd>
+                  </div>
                 ))}
-              </div>
-              <h3 className="mt-8 text-sm font-medium uppercase tracking-[0.2em] text-brown-soft">{t.neighbourhood.poiTitle}</h3>
-              <ul className="mt-3 divide-y divide-brown/10 border-y border-brown/10">
-                {t.neighbourhood.pois.map((poi) => (
-                  <li key={poi} className="flex gap-3 py-3 text-brown">
-                    <PinIcon className="mt-0.5 size-5 shrink-0 text-action" />
-                    {poi}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-4 text-brown/80">{t.neighbourhood.closing}</p>
-              <div className="relative mt-8 aspect-[3/2] overflow-hidden rounded-lg">
-                <Image src={PHOTOS.aerial.src} alt={PHOTOS.aerial.alt[locale]} fill sizes="(min-width: 1024px) 35vw, 100vw" className="object-cover" />
-              </div>
+              </dl>
             </div>
             <NeighbourhoodMap locale={locale} />
-          </div>
-          <div className="mx-auto mt-12 max-w-7xl px-4 sm:px-6 lg:px-8">
-            <h3 className="mb-4 text-sm font-medium uppercase tracking-[0.2em] text-brown-soft">{t.commute.title}</h3>
-            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {t.commute.items.map((c) => (
-                <div key={c.label} className="rounded-lg bg-cream-deep px-5 py-4 ring-1 ring-brown/10">
-                  <dt className="sr-only">{c.label}</dt>
-                  <dd className="font-display text-3xl text-brown">{c.value}</dd>
-                  <dd className="mt-1 text-sm text-brown/75">{c.label}</dd>
-                </div>
-              ))}
-            </dl>
           </div>
         </section>
 
