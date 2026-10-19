@@ -11,6 +11,7 @@ const fr = {
     description:
       "Studios à 3 chambres dans un immeuble neuf (2025) entre Outremont, Ville Mont-Royal et Glenmount. À 2 minutes du REM. Animaux bienvenus.",
   },
+  offer: "Offre d'une durée limitée!",
   nav: {
     suites: "Logements",
     audiences: "Pour vous",
@@ -18,7 +19,7 @@ const fr = {
     gallery: "Galerie",
     neighbourhood: "Quartier",
     contact: "Contact",
-    cta: "Écrivez-nous",
+    cta: "Contactez-nous",
     switchTo: "EN",
     switchLabel: "Switch to English",
     menu: "Menu",
@@ -273,6 +274,7 @@ const en: Dictionary = {
     description:
       "Studios to 3-bedroom suites in a new 2025 building between Outremont, Town of Mount Royal and Glenmount. Two minutes from the REM. Pet friendly.",
   },
+  offer: "Limited-time offer!",
   nav: {
     suites: "Suites",
     audiences: "For you",
@@ -280,7 +282,7 @@ const en: Dictionary = {
     gallery: "Gallery",
     neighbourhood: "Neighbourhood",
     contact: "Contact",
-    cta: "Message us",
+    cta: "Contact us",
     switchTo: "FR",
     switchLabel: "Passer en français",
     menu: "Menu",

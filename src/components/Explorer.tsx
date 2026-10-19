@@ -87,8 +87,8 @@ export function Explorer({ locale }: { locale: Locale }) {
               type="button"
               aria-pressed={active}
               onClick={() => changeFilter(k)}
-              className={`flex flex-col items-start rounded-2xl px-4 py-3.5 text-left transition ${
-                active ? "bg-green text-white shadow-lg shadow-green/25" : "bg-cream text-brown ring-1 ring-brown/10 hover:ring-brown/30"
+              className={`flex flex-col items-start rounded-lg px-4 py-3.5 text-left transition ${
+                active ? "bg-action text-white shadow-lg shadow-action/25" : "bg-cream text-brown ring-1 ring-brown/10 hover:ring-brown/30"
               }`}
             >
               <span className="text-sm font-medium">{k === "all" ? t.explorer.all : t.types[k]}</span>
@@ -109,7 +109,7 @@ export function Explorer({ locale }: { locale: Locale }) {
     <div className="grid gap-6 lg:grid-cols-[1.05fr_1fr] lg:gap-8">
       {/* Building */}
       <div className="flex min-w-0 flex-col gap-4">
-        <div className="relative overflow-hidden rounded-3xl bg-brown-deep shadow-xl shadow-brown/10">
+        <div className="relative overflow-hidden rounded-lg bg-brown-deep shadow-xl shadow-brown/10">
           <Image
             src={BUILDING_PHOTO.src}
             width={BUILDING_PHOTO.width}
@@ -138,7 +138,7 @@ export function Explorer({ locale }: { locale: Locale }) {
                   onMouseEnter={() => setHoverFloor(f)}
                   onClick={() => goFloor(f)}
                   className="cursor-pointer transition-all duration-200"
-                  fill={active ? "#a8c1b8" : hover ? "#faf8f5" : "transparent"}
+                  fill={active ? "#d3cbbe" : hover ? "#faf8f5" : "transparent"}
                   fillOpacity={active ? 0.62 : hover ? 0.38 : 0}
                   stroke={active || hover ? "#faf8f5" : "transparent"}
                   strokeWidth={active ? 5 : 3}
@@ -146,7 +146,7 @@ export function Explorer({ locale }: { locale: Locale }) {
               );
             })}
           </svg>
-          <div className="pointer-events-none absolute left-4 top-4 rounded-full bg-cream/95 px-4 py-2 text-sm font-medium text-brown shadow">
+          <div className="pointer-events-none absolute left-4 top-4 rounded-md bg-cream/95 px-4 py-2 text-sm font-medium text-brown shadow">
             {floorLabel(shownFloor)} · {t.explorer.unitsOnFloor(matchCount(shownFloor))}
           </div>
         </div>
@@ -165,7 +165,7 @@ export function Explorer({ locale }: { locale: Locale }) {
                 onClick={() => goFloor(f)}
                 onMouseEnter={() => setHoverFloor(f)}
                 onMouseLeave={() => setHoverFloor(null)}
-                className={`flex min-w-14 flex-1 flex-col items-center rounded-2xl border px-3 py-2.5 transition ${
+                className={`flex min-w-14 flex-1 flex-col items-center rounded-lg border px-3 py-2.5 transition ${
                   active
                     ? "border-brown bg-brown text-cream"
                     : "border-brown/15 bg-cream text-brown hover:border-brown/40"
@@ -182,8 +182,8 @@ export function Explorer({ locale }: { locale: Locale }) {
       </div>
 
       {/* Floor plate + suite */}
-      <div className="flex min-w-0 flex-col overflow-hidden rounded-3xl bg-cream shadow-xl shadow-brown/10 ring-1 ring-brown/10">
-        <div className="flex items-center justify-between gap-3 bg-green px-5 py-4 text-white">
+      <div className="flex min-w-0 flex-col overflow-hidden rounded-lg bg-cream shadow-xl shadow-brown/10 ring-1 ring-brown/10">
+        <div className="flex items-center justify-between gap-3 bg-action px-5 py-4 text-white">
           <button
             type="button"
             onClick={() => goFloor(Math.max(1, floor - 1))}
@@ -222,8 +222,8 @@ export function Explorer({ locale }: { locale: Locale }) {
             {floor === 1 &&
               FLOOR1_AMENITIES.map((a) => (
                 <g key={a.key}>
-                  <polygon points={pts(a.shape)} fill="#e2ebe7" stroke="#503d32" strokeWidth={1.5} />
-                  <text x={centroid(a.shape)[0]} y={centroid(a.shape)[1] + 4} textAnchor="middle" fontSize={11} className="fill-green-deep">
+                  <polygon points={pts(a.shape)} fill="#f3f0ec" stroke="#503d32" strokeWidth={1.5} />
+                  <text x={centroid(a.shape)[0]} y={centroid(a.shape)[1] + 4} textAnchor="middle" fontSize={11} className="fill-action-deep">
                     {t.explorer.amenity[a.key]}
                   </text>
                 </g>
@@ -246,14 +246,14 @@ export function Explorer({ locale }: { locale: Locale }) {
                       setSelectedId(u.id);
                     }
                   }}
-                  className={`${ok ? "cursor-pointer" : "cursor-not-allowed"} outline-none [&:focus-visible>polygon]:stroke-green [&:focus-visible>polygon]:stroke-[4]`}
+                  className={`${ok ? "cursor-pointer" : "cursor-not-allowed"} outline-none [&:focus-visible>polygon]:stroke-action [&:focus-visible>polygon]:stroke-[4]`}
                 >
                   <polygon
                     points={pts(u.shape)}
-                    fill={isSel ? "#52796f" : ok ? "#cddcd6" : "#faf8f5"}
+                    fill={isSel ? "#503d32" : ok ? "#ebe5dc" : "#faf8f5"}
                     stroke="#503d32"
                     strokeWidth={1.5}
-                    className="transition-colors duration-150 hover:fill-[#a8c1b8]"
+                    className="transition-colors duration-150 hover:fill-[#d3cbbe]"
                     opacity={ok ? 1 : 0.55}
                   />
                   <text
@@ -278,7 +278,7 @@ export function Explorer({ locale }: { locale: Locale }) {
           {selected ? (
             <>
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-green">{t.types[selected.type]}</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-action">{t.types[selected.type]}</p>
                 <h3 className="mt-1 font-display text-4xl text-brown">
                   {t.explorer.unit} {selected.id}
                 </h3>
@@ -297,7 +297,7 @@ export function Explorer({ locale }: { locale: Locale }) {
                   <span className="text-sm text-brown-soft">{t.explorer.perMonth}</span>
                 </p>
                 {selected.availableOn && (
-                  <p className="mt-3 inline-block rounded-full bg-green-soft/40 px-3 py-1 text-sm text-green-deep">
+                  <p className="mt-3 inline-block rounded-md bg-action-light/40 px-3 py-1 text-sm text-action-deep">
                     {t.explorer.availableOn} {dateFmt.format(new Date(selected.availableOn))}
                   </p>
                 )}
@@ -306,21 +306,21 @@ export function Explorer({ locale }: { locale: Locale }) {
                     href={whatsappLink(t.explorer.askAbout(selected.id))}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-full bg-whatsapp px-5 py-3 text-sm font-medium text-white transition hover:brightness-95"
+                    className="inline-flex items-center justify-center gap-2 rounded-md bg-whatsapp px-5 py-3 text-sm font-medium text-white transition hover:brightness-95"
                   >
                     <WhatsAppIcon className="size-4" />
                     {t.explorer.whatsapp}
                   </a>
                   <a
                     href={`tel:+${PHONE_MAIN}`}
-                    className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium text-brown ring-1 ring-brown/25 transition hover:bg-cream-deep"
+                    className="inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-medium text-brown ring-1 ring-brown/25 transition hover:bg-cream-deep"
                   >
                     <PhoneIcon className="size-4" />
                     {t.explorer.call}
                   </a>
                 </div>
               </div>
-              <figure className="rounded-2xl bg-white/60 p-3 ring-1 ring-brown/10">
+              <figure className="rounded-lg bg-white/60 p-3 ring-1 ring-brown/10">
                 <UnitPlan type={selected.type} t={t} />
                 <figcaption className="mt-2 text-center text-[11px] text-brown-soft">{t.explorer.planNote}</figcaption>
               </figure>

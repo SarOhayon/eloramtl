@@ -20,7 +20,7 @@ export function Audiences({ locale }: { locale: Locale }) {
 
   return (
     <div>
-      <div className="mb-8 inline-flex flex-wrap gap-1 rounded-full bg-cream-deep p-1 ring-1 ring-brown/10" role="tablist" aria-label={t.audiences.eyebrow}>
+      <div className="mb-8 inline-flex flex-wrap gap-1 rounded-md bg-cream-deep p-1 ring-1 ring-brown/10" role="tablist" aria-label={t.audiences.eyebrow}>
         {KEYS.map((k) => (
           <button
             key={k}
@@ -30,8 +30,8 @@ export function Audiences({ locale }: { locale: Locale }) {
             aria-selected={active === k}
             aria-controls="aud-panel"
             onClick={() => setActive(k)}
-            className={`rounded-full px-5 py-2.5 text-sm font-medium transition ${
-              active === k ? "bg-green text-white shadow" : "text-brown hover:bg-sand/50"
+            className={`rounded-md px-5 py-2.5 text-sm font-medium transition ${
+              active === k ? "bg-action text-white shadow" : "text-brown hover:bg-sand/50"
             }`}
           >
             {t.audiences.tabs[k].label}
@@ -40,10 +40,10 @@ export function Audiences({ locale }: { locale: Locale }) {
       </div>
 
       <div id="aud-panel" role="tabpanel" aria-labelledby={`aud-tab-${active}`} className="grid items-stretch gap-6 lg:grid-cols-2 lg:gap-10">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-brown-deep lg:aspect-auto lg:min-h-[440px]">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-brown-deep lg:aspect-auto lg:min-h-[440px]">
           <Image key={photo.src} src={photo.src} alt={photo.alt[locale]} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
-          <div className="absolute bottom-4 left-4 rounded-2xl bg-cream/95 px-4 py-3 text-brown shadow">
-            <p className="text-xs uppercase tracking-[0.2em] text-green">{t.types[type]}</p>
+          <div className="absolute bottom-4 left-4 rounded-lg bg-cream/95 px-4 py-3 text-brown shadow">
+            <p className="text-xs uppercase tracking-[0.2em] text-action">{t.types[type]}</p>
             <p>
               <span className="text-sm text-brown-soft">{t.explorer.from} </span>
               <span className="font-display text-2xl">{formatPrice(PRICE_FROM[type], locale)}</span>
@@ -57,7 +57,7 @@ export function Audiences({ locale }: { locale: Locale }) {
           <ul className="mt-6 divide-y divide-brown/10 border-y border-brown/10">
             {tab.points.map((pt) => (
               <li key={pt} className="flex items-center gap-4 py-3.5 text-brown">
-                <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-green-soft/40 text-green-deep">
+                <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-action-light/40 text-action-deep">
                   <CheckIcon className="size-3.5" />
                 </span>
                 {pt}
@@ -67,7 +67,7 @@ export function Audiences({ locale }: { locale: Locale }) {
           <button
             type="button"
             onClick={() => showType(type)}
-            className="mt-8 inline-flex items-center justify-center self-start rounded-full bg-green px-7 py-3.5 font-medium text-white transition hover:bg-green-deep"
+            className="mt-8 inline-flex items-center justify-center self-start rounded-md bg-action px-7 py-3.5 font-medium text-white transition hover:bg-action-deep"
           >
             {t.audiences.see(t.types[type])}
           </button>

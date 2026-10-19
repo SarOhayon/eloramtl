@@ -23,8 +23,8 @@ import { getDictionary, hasLocale, type Locale } from "@/i18n/dictionaries";
 function SectionHeading({ eyebrow, title, lead, light = false }: { eyebrow: string; title: string; lead?: string; light?: boolean }) {
   return (
     <div className="mb-10 max-w-2xl lg:mb-14">
-      <p className={`text-xs font-medium uppercase tracking-[0.25em] ${light ? "text-green-soft" : "text-green"}`}>{eyebrow}</p>
-      <h2 className={`mt-3 font-display text-4xl leading-[1.05] sm:text-5xl ${light ? "text-cream" : "text-brown"}`}>{title}</h2>
+      <p className={`text-xs font-medium uppercase tracking-[0.25em] ${light ? "text-action-light" : "text-action"}`}>{eyebrow}</p>
+      <h2 className={`mt-3 font-display text-4xl leading-[1.1] sm:text-5xl ${light ? "text-cream" : "text-ink"}`}>{title}</h2>
       {lead && <p className={`mt-4 text-lg ${light ? "text-cream/80" : "text-brown/80"}`}>{lead}</p>}
     </div>
   );
@@ -32,7 +32,7 @@ function SectionHeading({ eyebrow, title, lead, light = false }: { eyebrow: stri
 
 function PhotoCard({ photo, locale, title, text, className = "" }: { photo: Photo; locale: Locale; title: string; text: string; className?: string }) {
   return (
-    <figure className={`group relative overflow-hidden rounded-3xl bg-brown-deep ${className}`}>
+    <figure className={`group relative overflow-hidden rounded-lg bg-brown-deep ${className}`}>
       <Image
         src={photo.src}
         alt={photo.alt[locale]}
@@ -50,7 +50,7 @@ function PhotoCard({ photo, locale, title, text, className = "" }: { photo: Phot
 
 function IconCard({ title, text, icon }: { title: string; text: string; icon: string }) {
   return (
-    <div className="flex flex-col justify-between rounded-3xl bg-cream-deep p-6 ring-1 ring-brown/10">
+    <div className="flex flex-col justify-between rounded-lg bg-cream-deep p-6 ring-1 ring-brown/10">
       <span className="text-3xl" aria-hidden="true">{icon}</span>
       <div className="mt-8">
         <p className="font-display text-2xl text-brown">{title}</p>
@@ -72,32 +72,36 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       <Header locale={locale} />
 
       <main>
-        {/* Hero */}
-        <section className="relative flex min-h-[100svh] items-end overflow-hidden bg-brown-deep text-cream">
-          <Image src={PHOTOS.facade.src} alt={PHOTOS.facade.alt[locale]} fill priority sizes="100vw" className="object-cover object-[50%_40%]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-brown-deep/60 via-brown-deep/30 to-brown-deep/95" />
-          <div className="absolute inset-0 bg-gradient-to-r from-brown-deep/80 via-brown-deep/35 to-transparent" />
-          <div className="relative mx-auto w-full max-w-7xl px-4 pb-10 pt-32 sm:px-6 lg:px-8 lg:pb-16">
-            <p className="text-xs font-medium uppercase tracking-[0.3em] text-green-soft">{t.hero.eyebrow}</p>
-            <h1 className="mt-4 max-w-4xl font-display text-5xl leading-[1.02] sm:text-6xl lg:text-7xl">{t.hero.title}</h1>
-            <p className="mt-6 max-w-2xl text-lg text-cream/85 sm:text-xl">{t.hero.lead}</p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <a href="#suites" className="inline-flex items-center justify-center rounded-full bg-cream px-7 py-3.5 font-medium text-brown transition hover:bg-white">
-                {t.hero.primary}
-              </a>
-              <a
-                href="#visit"
-                className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 font-medium text-cream ring-1 ring-cream/50 transition hover:bg-cream/10"
-              >
-                {t.hero.secondary}
-              </a>
+        {/* Hero: bright photo, text below */}
+        <section className="bg-cream pt-16 lg:pt-20">
+          <div className="relative h-[52svh] min-h-[320px] w-full lg:h-[68svh]">
+            <Image src={PHOTOS.facade.src} alt={PHOTOS.facade.alt[locale]} fill priority sizes="100vw" className="object-cover object-[50%_40%]" />
+          </div>
+          <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+            <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-end">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.3em] text-action">{t.hero.eyebrow}</p>
+                <h1 className="mt-4 max-w-4xl font-display text-4xl leading-[1.1] text-ink sm:text-5xl lg:text-6xl">{t.hero.title}</h1>
+                <p className="mt-6 max-w-2xl text-lg text-brown/80">{t.hero.lead}</p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
+                <a href="#suites" className="inline-flex items-center justify-center rounded-md bg-action px-7 py-3.5 font-medium text-white transition hover:bg-action-deep">
+                  {t.hero.primary}
+                </a>
+                <a
+                  href="#visit"
+                  className="inline-flex items-center justify-center gap-2 rounded-md px-7 py-3.5 font-medium text-action ring-1 ring-action/50 transition hover:bg-action/5"
+                >
+                  {t.hero.secondary}
+                </a>
+              </div>
             </div>
-            <dl className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-cream/15 sm:grid-cols-4">
+            <dl className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-brown/10 ring-1 ring-brown/10 sm:grid-cols-4">
               {t.hero.facts.map((f) => (
-                <div key={f.label} className="bg-brown-deep/50 px-5 py-4 backdrop-blur-sm">
+                <div key={f.label} className="bg-cream px-5 py-4">
                   <dt className="sr-only">{f.label}</dt>
-                  <dd className="font-display text-3xl">{f.value}</dd>
-                  <dd className="text-sm text-cream/75">{f.label}</dd>
+                  <dd className="font-display text-3xl text-action">{f.value}</dd>
+                  <dd className="text-sm text-brown/75">{f.label}</dd>
                 </div>
               ))}
             </dl>
@@ -139,7 +143,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
             </p>
 
             <div className="mt-16 grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-lg">
                 <Image src={PHOTOS.living.src} alt={PHOTOS.living.alt[locale]} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
               </div>
               <div>
@@ -147,7 +151,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
                 <ul className="mt-6 divide-y divide-brown/10 border-y border-brown/10">
                   {t.amenities.suiteItems.map((item) => (
                     <li key={item} className="flex items-center gap-4 py-4 text-lg text-brown">
-                      <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-green-soft/40 text-green-deep">
+                      <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-action-light/40 text-action-deep">
                         <CheckIcon className="size-4" />
                       </span>
                       {item}
@@ -160,16 +164,15 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         </section>
 
         {/* About */}
-        <section id="about" className="relative overflow-hidden bg-brown-deep py-20 text-cream lg:py-28">
-          <Image src={PHOTOS.terrace.src} alt="" fill sizes="100vw" className="object-cover opacity-25" />
-          <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-            <SectionHeading eyebrow={t.about.eyebrow} title={t.about.title} light />
-            <div className="-mt-4 space-y-5 text-lg text-cream/85">
+        <section id="about" className="bg-cream-deep py-20 lg:py-28">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <SectionHeading eyebrow={t.about.eyebrow} title={t.about.title} />
+            <div className="-mt-4 space-y-5 text-lg text-brown/85">
               {t.about.text.map((para) => (
                 <p key={para}>{para}</p>
               ))}
             </div>
-            <a href="#visit" className="mt-10 inline-flex items-center justify-center rounded-full bg-cream px-7 py-3.5 font-medium text-brown transition hover:bg-white">
+            <a href="#visit" className="mt-10 inline-flex items-center justify-center rounded-md bg-action px-7 py-3.5 font-medium text-white transition hover:bg-action-deep">
               {t.hero.secondary}
             </a>
           </div>
@@ -180,7 +183,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading eyebrow={t.gallery.eyebrow} title={t.gallery.title} />
             <Gallery locale={locale} />
-            <div className="mt-10 flex flex-col gap-4 rounded-3xl bg-brown p-6 text-cream sm:flex-row sm:items-center sm:justify-between sm:p-8">
+            <div className="mt-10 flex flex-col gap-4 rounded-lg bg-brown p-6 text-cream sm:flex-row sm:items-center sm:justify-between sm:p-8">
               <div>
                 <p className="font-display text-3xl">{t.tours.title}</p>
                 <p className="mt-1 text-cream/80">{t.tours.text}</p>
@@ -192,7 +195,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full bg-cream px-5 py-3 text-sm font-medium text-brown transition hover:bg-white"
+                    className="inline-flex items-center gap-2 rounded-md bg-cream px-5 py-3 text-sm font-medium text-brown transition hover:bg-white"
                   >
                     {t.tours.model(i + 1)}
                     <ChevronIcon className="size-4" />
@@ -217,13 +220,13 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
               <ul className="mt-3 divide-y divide-brown/10 border-y border-brown/10">
                 {t.neighbourhood.pois.map((poi) => (
                   <li key={poi} className="flex gap-3 py-3 text-brown">
-                    <PinIcon className="mt-0.5 size-5 shrink-0 text-green" />
+                    <PinIcon className="mt-0.5 size-5 shrink-0 text-action" />
                     {poi}
                   </li>
                 ))}
               </ul>
               <p className="mt-4 text-brown/80">{t.neighbourhood.closing}</p>
-              <div className="relative mt-8 aspect-[3/2] overflow-hidden rounded-3xl">
+              <div className="relative mt-8 aspect-[3/2] overflow-hidden rounded-lg">
                 <Image src={PHOTOS.aerial.src} alt={PHOTOS.aerial.alt[locale]} fill sizes="(min-width: 1024px) 35vw, 100vw" className="object-cover" />
               </div>
             </div>
@@ -233,7 +236,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
             <h3 className="mb-4 text-sm font-medium uppercase tracking-[0.2em] text-brown-soft">{t.commute.title}</h3>
             <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {t.commute.items.map((c) => (
-                <div key={c.label} className="rounded-2xl bg-cream-deep px-5 py-4 ring-1 ring-brown/10">
+                <div key={c.label} className="rounded-lg bg-cream-deep px-5 py-4 ring-1 ring-brown/10">
                   <dt className="sr-only">{c.label}</dt>
                   <dd className="font-display text-3xl text-brown">{c.value}</dd>
                   <dd className="mt-1 text-sm text-brown/75">{c.label}</dd>
@@ -244,16 +247,16 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         </section>
 
         {/* Contact */}
-        <section id="contact" className="relative overflow-hidden bg-green-deep py-20 text-cream lg:py-28">
+        <section id="contact" className="bg-cream-deep py-20 text-brown lg:py-28">
           <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
             <div>
-              <SectionHeading eyebrow={t.contact.eyebrow} title={t.contact.title} lead={t.contact.lead} light />
-              <p className="flex items-center gap-2 text-cream/80">
+              <SectionHeading eyebrow={t.contact.eyebrow} title={t.contact.title} lead={t.contact.lead} />
+              <p className="flex items-center gap-2 text-brown/80">
                 <PinIcon className="size-5" /> {ADDRESS}
               </p>
               <div className="mt-6">
-                <p className="text-sm font-medium uppercase tracking-[0.2em] text-green-soft">{t.contact.hoursTitle}</p>
-                <ul className="mt-2 space-y-1 text-cream/75">
+                <p className="text-sm font-medium uppercase tracking-[0.2em] text-action">{t.contact.hoursTitle}</p>
+                <ul className="mt-2 space-y-1 text-brown/75">
                   {t.contact.hours.map((h) => (
                     <li key={h}>{h}</li>
                   ))}
@@ -264,25 +267,25 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
                   href={whatsappLink(t.contact.whatsappText)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center gap-5 rounded-3xl bg-cream p-6 text-brown transition hover:bg-white"
+                  className="group flex items-center gap-5 rounded-lg bg-cream p-6 text-brown ring-1 ring-brown/10 transition hover:ring-action/40"
                 >
                   <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-whatsapp text-white">
                     <WhatsAppIcon className="size-7" />
                   </span>
                   <span>
-                    <span className="block text-sm uppercase tracking-[0.2em] text-green">{t.contact.whatsapp}</span>
+                    <span className="block text-sm uppercase tracking-[0.2em] text-action">{t.contact.whatsapp}</span>
                     <span className="block font-display text-3xl">{PHONE_WHATSAPP_DISPLAY}</span>
                   </span>
                 </a>
                 <a
                   href={`tel:+${PHONE_MAIN}`}
-                  className="flex items-center gap-5 rounded-3xl p-6 ring-1 ring-cream/30 transition hover:bg-cream/5"
+                  className="flex items-center gap-5 rounded-lg bg-cream p-6 ring-1 ring-brown/10 transition hover:ring-action/40"
                 >
-                  <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-cream/10">
+                  <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-action text-white">
                     <PhoneIcon className="size-6" />
                   </span>
                   <span>
-                    <span className="block text-sm uppercase tracking-[0.2em] text-green-soft">{t.contact.call}</span>
+                    <span className="block text-sm uppercase tracking-[0.2em] text-action">{t.contact.call}</span>
                     <span className="block font-display text-3xl">{PHONE_MAIN_DISPLAY}</span>
                   </span>
                 </a>
@@ -295,7 +298,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         </section>
       </main>
 
-      <footer className="bg-brown-deep py-10 text-cream/70">
+      <footer className="bg-black py-10 text-cream/70">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-4 text-sm sm:flex-row sm:items-center sm:px-6 lg:px-8">
           <Wordmark className="h-5 w-auto text-cream" />
           <p>{ADDRESS}</p>
@@ -307,6 +310,14 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           </div>
         </div>
       </footer>
+
+      {/* Limited-time offer tab, as on eloramtl.com */}
+      <a
+        href="#visit"
+        className="fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 rotate-180 bg-action px-3 py-8 text-sm uppercase tracking-[0.12em] text-white shadow-lg transition [writing-mode:vertical-rl] hover:bg-action-deep md:block"
+      >
+        {t.offer}
+      </a>
 
       {/* Floating WhatsApp on small screens */}
       <a

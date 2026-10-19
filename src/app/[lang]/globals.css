@@ -1,16 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-cream: #faf8f5;
-  --color-cream-deep: #f0ece6;
-  --color-sand: #ddd4c8;
+  /* Palette from eloramtl.com's theme (--action, --action-light, --accent). */
+  --color-cream: #ffffff;
+  --color-cream-deep: #f3f0ec;
+  --color-sand: #d3cbbe;
   --color-brown: #503d32;
-  --color-brown-deep: #3a2c24;
+  --color-brown-deep: #2d241c;
   --color-brown-soft: #786658;
-  --color-green: #52796f;
-  --color-green-deep: #3b5b53;
-  --color-green-soft: #a8c1b8;
-  --color-ink: #2b211b;
+  --color-action: #503d32;
+  --color-action-deep: #2d241c;
+  --color-action-light: #d3cbbe;
+  --color-ink: #000000;
   --color-whatsapp: #1fa855;
 
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
@@ -27,14 +28,13 @@ body {
   color: var(--color-ink);
 }
 
-/* eloramtl.com headings: light weight, tight tracking. */
+/* eloramtl.com headings: regular weight. */
 .font-display {
-  font-weight: 300;
-  letter-spacing: -0.02em;
+  font-weight: 400;
 }
 
 ::selection {
-  background: var(--color-green-soft);
+  background: var(--color-action-light);
   color: var(--color-brown-deep);
 }
 

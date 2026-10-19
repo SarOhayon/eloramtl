@@ -72,10 +72,10 @@ const FILL: Record<RoomKind, string> = {
   living: "#faf8f5",
   kitchen: "#f2eee8",
   bed: "#f4f1ec",
-  bath: "#e6eeea",
+  bath: "#f3f0ec",
   den: "#f2eee8",
   entry: "#f0ece6",
-  laundry: "#e6eeea",
+  laundry: "#f3f0ec",
 };
 
 function Furniture({ r }: { r: Room }) {
@@ -135,8 +135,8 @@ export function UnitPlan({ type, t }: { type: UnitType; t: Dictionary }) {
       aria-label={t.types[type]}
     >
       {/* balcony */}
-      <rect x={W * 0.45} y={H} width={W * 0.55} height={32} fill="#e2ebe7" stroke="#52796f" strokeWidth={1.4} strokeDasharray="4 3" />
-      <text x={W * 0.725} y={H + 21} textAnchor="middle" className="fill-green-deep" fontSize={10} letterSpacing={1}>
+      <rect x={W * 0.45} y={H} width={W * 0.55} height={32} fill="#f3f0ec" stroke="#503d32" strokeWidth={1.4} strokeDasharray="4 3" />
+      <text x={W * 0.725} y={H + 21} textAnchor="middle" className="fill-action-deep" fontSize={10} letterSpacing={1}>
         {t.explorer.rooms.balcony.toUpperCase()}
       </text>
 
@@ -161,7 +161,7 @@ export function UnitPlan({ type, t }: { type: UnitType; t: Dictionary }) {
       <rect x={0} y={0} width={W} height={H} fill="none" stroke="#3a2c24" strokeWidth={5} />
       {/* windows along the balcony side */}
       <line x1={W * 0.5} y1={H} x2={W * 0.95} y2={H} stroke="#faf8f5" strokeWidth={3} />
-      <line x1={W * 0.5} y1={H} x2={W * 0.95} y2={H} stroke="#52796f" strokeWidth={1} />
+      <line x1={W * 0.5} y1={H} x2={W * 0.95} y2={H} stroke="#503d32" strokeWidth={1} />
     </svg>
   );
 }

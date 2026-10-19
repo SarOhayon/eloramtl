@@ -41,7 +41,7 @@ export function Gallery({ locale }: { locale: Locale }) {
             type="button"
             aria-pressed={filter === k}
             onClick={() => setFilter(k)}
-            className={`rounded-full px-4 py-2 text-sm transition ${
+            className={`rounded-md px-4 py-2 text-sm transition ${
               filter === k ? "bg-brown text-cream" : "bg-cream text-brown ring-1 ring-brown/15 hover:ring-brown/40"
             }`}
           >
@@ -56,7 +56,7 @@ export function Gallery({ locale }: { locale: Locale }) {
             key={p.src}
             type="button"
             onClick={() => setOpen(i)}
-            className={`group relative block overflow-hidden rounded-2xl ${i % 6 === 0 ? "col-span-2 row-span-2" : ""}`}
+            className={`group relative block overflow-hidden rounded-lg ${i % 6 === 0 ? "col-span-2 row-span-2" : ""}`}
           >
             <Image
               src={p.src}
@@ -87,7 +87,7 @@ export function Gallery({ locale }: { locale: Locale }) {
               width={2000}
               height={1333}
               sizes="100vw"
-              className="max-h-[80vh] w-full rounded-xl object-contain"
+              className="max-h-[80vh] w-full rounded-md object-contain"
             />
             <p className="mt-3 text-center text-sm text-cream/80">
               {photos[open].alt[locale]} · {open + 1}/{photos.length}

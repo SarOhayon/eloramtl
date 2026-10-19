@@ -8,10 +8,10 @@ import { PLACES, type PlaceCategory } from "@/data/places";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 
 const COLORS: Record<PlaceCategory, string> = {
-  transit: "#52796f",
+  transit: "#503d32",
   school: "#8a6a3e",
   shopping: "#b0704f",
-  park: "#6a9a7c",
+  park: "#7d8c6a",
   health: "#9a5a5a",
 };
 const CATS = Object.keys(COLORS) as PlaceCategory[];
@@ -78,7 +78,7 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
     });
 
   return (
-    <div className="overflow-hidden rounded-3xl bg-cream shadow-xl shadow-brown/10 ring-1 ring-brown/10">
+    <div className="overflow-hidden rounded-lg bg-cream shadow-xl shadow-brown/10 ring-1 ring-brown/10">
       <div className="flex flex-wrap gap-2 p-4">
         {CATS.map((c) => (
           <button
@@ -86,7 +86,7 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
             type="button"
             aria-pressed={active.has(c)}
             onClick={() => toggle(c)}
-            className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm ring-1 transition ${
+            className={`inline-flex items-center gap-2 rounded-md px-3.5 py-1.5 text-sm ring-1 transition ${
               active.has(c) ? "bg-cream-deep text-brown ring-brown/20" : "text-brown/50 ring-brown/10"
             }`}
           >

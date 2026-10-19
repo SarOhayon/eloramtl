@@ -16,11 +16,11 @@ export function PrivacyDialog({ locale }: { locale: Locale }) {
         ref={ref}
         aria-labelledby="privacy-title"
         onClick={(e) => e.target === ref.current && ref.current?.close()}
-        className="m-auto max-h-[85svh] w-[min(42rem,calc(100%-2rem))] rounded-3xl bg-cream p-0 text-brown shadow-2xl backdrop:bg-brown-deep/70"
+        className="m-auto max-h-[85svh] w-[min(42rem,calc(100%-2rem))] rounded-lg bg-cream p-0 text-brown shadow-2xl backdrop:bg-brown-deep/70"
       >
         <div className="sticky top-0 flex items-center justify-between gap-4 border-b border-brown/10 bg-cream px-6 py-4">
           <h2 id="privacy-title" className="font-display text-2xl">{p.link}</h2>
-          <button type="button" onClick={() => ref.current?.close()} className="rounded-full px-4 py-2 text-sm ring-1 ring-brown/20 hover:bg-cream-deep">
+          <button type="button" onClick={() => ref.current?.close()} className="rounded-md px-4 py-2 text-sm ring-1 ring-brown/20 hover:bg-cream-deep">
             {p.close}
           </button>
         </div>

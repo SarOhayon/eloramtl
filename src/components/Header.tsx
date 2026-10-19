@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
-import { whatsappLink } from "@/data/building";
 import { Wordmark } from "./Wordmark";
-import { WhatsAppIcon } from "./icons";
 
 export function Header({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
@@ -33,7 +31,7 @@ export function Header({ locale }: { locale: Locale }) {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${
-        solid ? "bg-cream/95 text-brown shadow-[0_1px_0_rgba(74,54,40,0.12)] backdrop-blur" : "bg-transparent text-cream"
+        solid ? "bg-cream/95 text-brown shadow-[0_1px_0_rgba(80,61,50,0.12)] backdrop-blur" : "bg-cream text-brown"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
@@ -41,7 +39,7 @@ export function Header({ locale }: { locale: Locale }) {
           <Wordmark className="h-6 w-auto lg:h-7" />
         </Link>
 
-        <nav className="hidden items-center gap-8 text-xs font-medium uppercase tracking-[0.18em] lg:flex" aria-label="Main">
+        <nav className="hidden items-center gap-8 text-sm uppercase tracking-[0.06em] lg:flex" aria-label="Main">
           {links.map((l) => (
             <a key={l.href} href={l.href} className="opacity-90 transition hover:opacity-100 hover:underline hover:underline-offset-8">
               {l.label}
@@ -54,17 +52,14 @@ export function Header({ locale }: { locale: Locale }) {
             href={`/${other}`}
             hrefLang={other}
             aria-label={t.nav.switchLabel}
-            className="rounded-full px-3 py-2 text-sm font-medium tracking-wider transition hover:bg-black/5"
+            className="rounded-md px-3 py-2 text-sm font-medium tracking-wider transition hover:bg-black/5"
           >
             {t.nav.switchTo}
           </Link>
           <a
-            href={whatsappLink(t.contact.whatsappText)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden items-center gap-2 rounded-full bg-green px-5 py-2.5 text-sm font-medium text-white transition hover:bg-green-deep sm:inline-flex"
+            href="#visit"
+            className="hidden items-center rounded-md bg-action px-6 py-3 text-sm uppercase tracking-[0.06em] text-white transition hover:bg-action-deep sm:inline-flex"
           >
-            <WhatsAppIcon className="size-4" />
             {t.nav.cta}
           </a>
           <button
