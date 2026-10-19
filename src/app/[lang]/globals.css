@@ -1,21 +1,23 @@
 @import "tailwindcss";
 
 @theme {
-  /* Palette from eloramtl.com's theme (--action, --action-light, --accent). */
-  --color-cream: #ffffff;
-  --color-cream-deep: #f3f0ec;
-  --color-sand: #d3cbbe;
-  --color-brown: #503d32;
-  --color-brown-deep: #2d241c;
-  --color-brown-soft: #786658;
-  --color-action: #503d32;
-  --color-action-deep: #2d241c;
-  --color-action-light: #d3cbbe;
-  --color-ink: #000000;
+  /* "Lobby luxe": walnut panelling, brushed gold, champagne and ivory stone. */
+  --color-cream: #fbf8f3;
+  --color-cream-deep: #f3ede4;
+  --color-sand: #e6d9c3;
+  --color-brown: #3b2a20;
+  --color-brown-deep: #241912;
+  --color-brown-soft: #8a7461;
+  --color-action: #3b2a20;
+  --color-action-deep: #241912;
+  --color-action-light: #e9d6ae;
+  --color-gold: #b48a4a;
+  --color-gold-light: #e8d3a3;
+  --color-ink: #1f1712;
   --color-whatsapp: #1fa855;
 
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-heading), ui-serif, Georgia, serif;
 }
 
 html {
@@ -28,9 +30,19 @@ body {
   color: var(--color-ink);
 }
 
-/* eloramtl.com headings: regular weight. */
+/* Serif headings, as on the promo banners. */
 .font-display {
-  font-weight: 400;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  font-variant-numeric: lining-nums;
+}
+
+/* Brushed-gold lettering, like "FREE" on the banner. */
+.text-gold-foil {
+  background: linear-gradient(175deg, #f6e7c1 0%, #d9b46e 38%, #b4884a 62%, #e9cf94 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 ::selection {

@@ -72,10 +72,10 @@ const FILL: Record<RoomKind, string> = {
   living: "#faf8f5",
   kitchen: "#f2eee8",
   bed: "#f4f1ec",
-  bath: "#f3f0ec",
+  bath: "#f3ede4",
   den: "#f2eee8",
   entry: "#f0ece6",
-  laundry: "#f3f0ec",
+  laundry: "#f3ede4",
 };
 
 function Furniture({ r }: { r: Room }) {
@@ -135,14 +135,14 @@ export function UnitPlan({ type, t }: { type: UnitType; t: Dictionary }) {
       aria-label={t.types[type]}
     >
       {/* balcony */}
-      <rect x={W * 0.45} y={H} width={W * 0.55} height={32} fill="#f3f0ec" stroke="#503d32" strokeWidth={1.4} strokeDasharray="4 3" />
+      <rect x={W * 0.45} y={H} width={W * 0.55} height={32} fill="#f3ede4" stroke="#3b2a20" strokeWidth={1.4} strokeDasharray="4 3" />
       <text x={W * 0.725} y={H + 21} textAnchor="middle" className="fill-action-deep" fontSize={10} letterSpacing={1}>
         {t.explorer.rooms.balcony.toUpperCase()}
       </text>
 
       {layout.rooms.map((r, i) => (
         <g key={i}>
-          <rect x={r.x} y={r.y} width={r.w} height={r.h} fill={FILL[r.kind]} stroke="#503d32" strokeWidth={1.6} />
+          <rect x={r.x} y={r.y} width={r.w} height={r.h} fill={FILL[r.kind]} stroke="#3b2a20" strokeWidth={1.6} />
           <Furniture r={r} />
           <text
             x={r.x + r.w / 2}
@@ -161,7 +161,7 @@ export function UnitPlan({ type, t }: { type: UnitType; t: Dictionary }) {
       <rect x={0} y={0} width={W} height={H} fill="none" stroke="#3a2c24" strokeWidth={5} />
       {/* windows along the balcony side */}
       <line x1={W * 0.5} y1={H} x2={W * 0.95} y2={H} stroke="#faf8f5" strokeWidth={3} />
-      <line x1={W * 0.5} y1={H} x2={W * 0.95} y2={H} stroke="#503d32" strokeWidth={1} />
+      <line x1={W * 0.5} y1={H} x2={W * 0.95} y2={H} stroke="#3b2a20" strokeWidth={1} />
     </svg>
   );
 }

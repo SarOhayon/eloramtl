@@ -5,6 +5,7 @@ import { Explorer } from "@/components/Explorer";
 import { Gallery } from "@/components/Gallery";
 import { Header } from "@/components/Header";
 import { NeighbourhoodMap } from "@/components/NeighbourhoodMap";
+import { OfferBand } from "@/components/OfferBand";
 import { ContactForms } from "@/components/ContactForms";
 import { PrivacyDialog } from "@/components/PrivacyDialog";
 import { Wordmark } from "@/components/Wordmark";
@@ -23,7 +24,7 @@ import { getDictionary, hasLocale, type Locale } from "@/i18n/dictionaries";
 function SectionHeading({ eyebrow, title, lead, light = false }: { eyebrow: string; title: string; lead?: string; light?: boolean }) {
   return (
     <div className="mb-10 max-w-2xl lg:mb-14">
-      <p className={`text-xs font-medium uppercase tracking-[0.25em] ${light ? "text-action-light" : "text-action"}`}>{eyebrow}</p>
+      <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.3em] text-gold"><span className="h-px w-8 bg-gold" />{eyebrow}</p>
       <h2 className={`mt-3 font-display text-4xl leading-[1.1] sm:text-5xl ${light ? "text-cream" : "text-ink"}`}>{title}</h2>
       {lead && <p className={`mt-4 text-lg ${light ? "text-cream/80" : "text-brown/80"}`}>{lead}</p>}
     </div>
@@ -75,22 +76,23 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         {/* Hero: bright photo, text below */}
         <section className="bg-cream pt-16 lg:pt-20">
           <div className="relative h-[52svh] min-h-[320px] w-full lg:h-[68svh]">
-            <Image src={PHOTOS.facade.src} alt={PHOTOS.facade.alt[locale]} fill priority sizes="100vw" className="object-cover object-[50%_40%]" />
+            <Image src={PHOTOS.lobby.src} alt={PHOTOS.lobby.alt[locale]} fill priority sizes="100vw" className="object-cover object-[50%_45%]" />
+            <div className="pointer-events-none absolute inset-4 border border-gold-light/80 sm:inset-6" />
           </div>
           <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
             <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-end">
               <div>
-                <p className="text-xs font-medium uppercase tracking-[0.3em] text-action">{t.hero.eyebrow}</p>
+                <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.3em] text-gold"><span className="h-px w-8 bg-gold" />{t.hero.eyebrow}</p>
                 <h1 className="mt-4 max-w-4xl font-display text-4xl leading-[1.1] text-ink sm:text-5xl lg:text-6xl">{t.hero.title}</h1>
                 <p className="mt-6 max-w-2xl text-lg text-brown/80">{t.hero.lead}</p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
-                <a href="#suites" className="inline-flex items-center justify-center rounded-md bg-action px-7 py-3.5 font-medium text-white transition hover:bg-action-deep">
+                <a href="#suites" className="inline-flex items-center justify-center rounded-sm bg-action px-8 py-4 text-sm uppercase tracking-[0.18em] text-white transition hover:bg-action-deep">
                   {t.hero.primary}
                 </a>
                 <a
                   href="#visit"
-                  className="inline-flex items-center justify-center gap-2 rounded-md px-7 py-3.5 font-medium text-action ring-1 ring-action/50 transition hover:bg-action/5"
+                  className="inline-flex items-center justify-center gap-2 rounded-sm px-8 py-4 text-sm uppercase tracking-[0.18em] text-brown ring-1 ring-gold transition hover:bg-gold/10"
                 >
                   {t.hero.secondary}
                 </a>
@@ -100,13 +102,15 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
               {t.hero.facts.map((f) => (
                 <div key={f.label} className="bg-cream px-5 py-4">
                   <dt className="sr-only">{f.label}</dt>
-                  <dd className="font-display text-3xl text-action">{f.value}</dd>
+                  <dd className="font-display text-4xl text-gold">{f.value}</dd>
                   <dd className="text-sm text-brown/75">{f.label}</dd>
                 </div>
               ))}
             </dl>
           </div>
         </section>
+
+        <OfferBand locale={locale} />
 
         {/* Who it's for */}
         <section id="for-you" className="py-20 lg:py-28">
@@ -172,7 +176,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
                 <p key={para}>{para}</p>
               ))}
             </div>
-            <a href="#visit" className="mt-10 inline-flex items-center justify-center rounded-md bg-action px-7 py-3.5 font-medium text-white transition hover:bg-action-deep">
+            <a href="#visit" className="mt-10 inline-flex items-center justify-center rounded-sm bg-action px-7 py-3.5 font-medium text-white transition hover:bg-action-deep">
               {t.hero.secondary}
             </a>
           </div>
@@ -195,7 +199,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-md bg-cream px-5 py-3 text-sm font-medium text-brown transition hover:bg-white"
+                    className="inline-flex items-center gap-2 rounded-sm bg-cream px-5 py-3 text-sm font-medium text-brown transition hover:bg-white"
                   >
                     {t.tours.model(i + 1)}
                     <ChevronIcon className="size-4" />
@@ -298,9 +302,9 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         </section>
       </main>
 
-      <footer className="bg-black py-10 text-cream/70">
+      <footer className="border-t-2 border-gold bg-brown-deep py-10 text-cream/70">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-4 text-sm sm:flex-row sm:items-center sm:px-6 lg:px-8">
-          <Wordmark className="h-5 w-auto text-cream" />
+          <Wordmark className="h-5 w-auto text-gold-light" />
           <p>{ADDRESS}</p>
           <div className="flex flex-col gap-2 sm:items-end">
             <PrivacyDialog locale={locale} />
@@ -313,8 +317,8 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
 
       {/* Limited-time offer tab, as on eloramtl.com */}
       <a
-        href="#visit"
-        className="fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 rotate-180 bg-action px-3 py-8 text-sm uppercase tracking-[0.12em] text-white shadow-lg transition [writing-mode:vertical-rl] hover:bg-action-deep md:block"
+        href="#offer"
+        className="fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 rotate-180 border border-l-0 border-gold/60 bg-brown-deep px-3 py-8 text-sm uppercase tracking-[0.16em] text-gold-light shadow-lg transition [writing-mode:vertical-rl] hover:bg-brown md:block"
       >
         {t.offer}
       </a>

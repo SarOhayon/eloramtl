@@ -52,13 +52,13 @@ export function Header({ locale }: { locale: Locale }) {
             href={`/${other}`}
             hrefLang={other}
             aria-label={t.nav.switchLabel}
-            className="rounded-md px-3 py-2 text-sm font-medium tracking-wider transition hover:bg-black/5"
+            className="rounded-sm px-3 py-2 text-sm font-medium tracking-wider transition hover:bg-black/5"
           >
             {t.nav.switchTo}
           </Link>
           <a
             href="#visit"
-            className="hidden items-center rounded-md bg-action px-6 py-3 text-sm uppercase tracking-[0.06em] text-white transition hover:bg-action-deep sm:inline-flex"
+            className="hidden items-center rounded-sm bg-action px-6 py-3 text-sm uppercase tracking-[0.06em] text-white transition hover:bg-action-deep sm:inline-flex"
           >
             {t.nav.cta}
           </a>

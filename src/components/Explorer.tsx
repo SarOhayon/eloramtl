@@ -138,7 +138,7 @@ export function Explorer({ locale }: { locale: Locale }) {
                   onMouseEnter={() => setHoverFloor(f)}
                   onClick={() => goFloor(f)}
                   className="cursor-pointer transition-all duration-200"
-                  fill={active ? "#d3cbbe" : hover ? "#faf8f5" : "transparent"}
+                  fill={active ? "#e9d6ae" : hover ? "#faf8f5" : "transparent"}
                   fillOpacity={active ? 0.62 : hover ? 0.38 : 0}
                   stroke={active || hover ? "#faf8f5" : "transparent"}
                   strokeWidth={active ? 5 : 3}
@@ -146,7 +146,7 @@ export function Explorer({ locale }: { locale: Locale }) {
               );
             })}
           </svg>
-          <div className="pointer-events-none absolute left-4 top-4 rounded-md bg-cream/95 px-4 py-2 text-sm font-medium text-brown shadow">
+          <div className="pointer-events-none absolute left-4 top-4 rounded-sm bg-cream/95 px-4 py-2 text-sm font-medium text-brown shadow">
             {floorLabel(shownFloor)} · {t.explorer.unitsOnFloor(matchCount(shownFloor))}
           </div>
         </div>
@@ -213,7 +213,7 @@ export function Explorer({ locale }: { locale: Locale }) {
             <polygon points={pts(PLATE_OUTLINE)} fill="#f0ece6" stroke="#3a2c24" strokeWidth={4} />
             {CORES.map((c, i) => (
               <g key={i}>
-                <polygon points={pts(c)} fill="#ddd4c8" />
+                <polygon points={pts(c)} fill="#e6d9c3" />
                 <text x={centroid(c)[0]} y={centroid(c)[1] + 4} textAnchor="middle" fontSize={11} className="fill-brown-soft">
                   {t.explorer.amenity.core}
                 </text>
@@ -222,7 +222,7 @@ export function Explorer({ locale }: { locale: Locale }) {
             {floor === 1 &&
               FLOOR1_AMENITIES.map((a) => (
                 <g key={a.key}>
-                  <polygon points={pts(a.shape)} fill="#f3f0ec" stroke="#503d32" strokeWidth={1.5} />
+                  <polygon points={pts(a.shape)} fill="#f3ede4" stroke="#3b2a20" strokeWidth={1.5} />
                   <text x={centroid(a.shape)[0]} y={centroid(a.shape)[1] + 4} textAnchor="middle" fontSize={11} className="fill-action-deep">
                     {t.explorer.amenity[a.key]}
                   </text>
@@ -250,10 +250,10 @@ export function Explorer({ locale }: { locale: Locale }) {
                 >
                   <polygon
                     points={pts(u.shape)}
-                    fill={isSel ? "#503d32" : ok ? "#ebe5dc" : "#faf8f5"}
-                    stroke="#503d32"
+                    fill={isSel ? "#3b2a20" : ok ? "#efe2c8" : "#faf8f5"}
+                    stroke="#3b2a20"
                     strokeWidth={1.5}
-                    className="transition-colors duration-150 hover:fill-[#d3cbbe]"
+                    className="transition-colors duration-150 hover:fill-[#e9d6ae]"
                     opacity={ok ? 1 : 0.55}
                   />
                   <text
@@ -297,7 +297,7 @@ export function Explorer({ locale }: { locale: Locale }) {
                   <span className="text-sm text-brown-soft">{t.explorer.perMonth}</span>
                 </p>
                 {selected.availableOn && (
-                  <p className="mt-3 inline-block rounded-md bg-action-light/40 px-3 py-1 text-sm text-action-deep">
+                  <p className="mt-3 inline-block rounded-sm bg-action-light/40 px-3 py-1 text-sm text-action-deep">
                     {t.explorer.availableOn} {dateFmt.format(new Date(selected.availableOn))}
                   </p>
                 )}
@@ -306,14 +306,14 @@ export function Explorer({ locale }: { locale: Locale }) {
                     href={whatsappLink(t.explorer.askAbout(selected.id))}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-md bg-whatsapp px-5 py-3 text-sm font-medium text-white transition hover:brightness-95"
+                    className="inline-flex items-center justify-center gap-2 rounded-sm bg-whatsapp px-5 py-3 text-sm font-medium text-white transition hover:brightness-95"
                   >
                     <WhatsAppIcon className="size-4" />
                     {t.explorer.whatsapp}
                   </a>
                   <a
                     href={`tel:+${PHONE_MAIN}`}
-                    className="inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-medium text-brown ring-1 ring-brown/25 transition hover:bg-cream-deep"
+                    className="inline-flex items-center justify-center gap-2 rounded-sm px-5 py-3 text-sm font-medium text-brown ring-1 ring-brown/25 transition hover:bg-cream-deep"
                   >
                     <PhoneIcon className="size-4" />
                     {t.explorer.call}

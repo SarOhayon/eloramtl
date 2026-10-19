@@ -8,7 +8,7 @@ import { PLACES, type PlaceCategory } from "@/data/places";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 
 const COLORS: Record<PlaceCategory, string> = {
-  transit: "#503d32",
+  transit: "#3b2a20",
   school: "#8a6a3e",
   shopping: "#b0704f",
   park: "#7d8c6a",
@@ -39,7 +39,7 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
           className: "",
           iconSize: [36, 36],
           iconAnchor: [18, 18],
-          html: `<div style="position:relative;width:36px;height:36px"><div style="width:36px;height:36px;border-radius:50%;background:#503d32;color:#faf8f5;display:flex;align-items:center;justify-content:center;font:600 16px/1 Georgia,serif;box-shadow:0 0 0 6px rgba(74,54,40,.25)">E</div><span style="position:absolute;left:44px;top:7px;background:#503d32;color:#faf8f5;padding:3px 9px;border-radius:999px;font:500 12px/1.4 system-ui,sans-serif;white-space:nowrap">Elora</span></div>`,
+          html: `<div style="position:relative;width:36px;height:36px"><div style="width:36px;height:36px;border-radius:50%;background:#3b2a20;color:#faf8f5;display:flex;align-items:center;justify-content:center;font:600 16px/1 Georgia,serif;box-shadow:0 0 0 6px rgba(74,54,40,.25)">E</div><span style="position:absolute;left:44px;top:7px;background:#3b2a20;color:#faf8f5;padding:3px 9px;border-radius:999px;font:500 12px/1.4 system-ui,sans-serif;white-space:nowrap">Elora</span></div>`,
         }),
         zIndexOffset: 1000,
         keyboard: false,
@@ -86,7 +86,7 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
             type="button"
             aria-pressed={active.has(c)}
             onClick={() => toggle(c)}
-            className={`inline-flex items-center gap-2 rounded-md px-3.5 py-1.5 text-sm ring-1 transition ${
+            className={`inline-flex items-center gap-2 rounded-sm px-3.5 py-1.5 text-sm ring-1 transition ${
               active.has(c) ? "bg-cream-deep text-brown ring-brown/20" : "text-brown/50 ring-brown/10"
             }`}
           >

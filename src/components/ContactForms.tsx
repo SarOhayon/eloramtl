@@ -6,7 +6,7 @@ import { getDictionary, type Locale } from "@/i18n/dictionaries";
 import { WhatsAppIcon } from "./icons";
 
 const field =
-  "w-full rounded-md border-0 bg-white px-4 py-3 text-brown ring-1 ring-brown/15 placeholder:text-brown-soft/60 focus:outline-none focus:ring-2 focus:ring-action";
+  "w-full rounded-sm border-0 bg-white px-4 py-3 text-brown ring-1 ring-brown/15 placeholder:text-brown-soft/60 focus:outline-none focus:ring-2 focus:ring-action";
 
 type Kind = "inquiry" | "maintenance";
 
@@ -69,7 +69,7 @@ export function ContactForms({ locale }: { locale: Locale }) {
             role="tab"
             aria-selected={kind === k}
             onClick={() => setKind(k)}
-            className={`rounded-md px-3 py-2.5 text-sm font-medium transition ${kind === k ? "bg-action text-white shadow" : "hover:bg-sand/50"}`}
+            className={`rounded-sm px-3 py-2.5 text-sm font-medium transition ${kind === k ? "bg-action text-white shadow" : "hover:bg-sand/50"}`}
           >
             {f[k].tab}
           </button>
@@ -119,7 +119,7 @@ export function ContactForms({ locale }: { locale: Locale }) {
                 <textarea name="issue" rows={4} className={field} required />
               </Field>
               <label className="flex items-center gap-3 text-sm sm:col-span-2">
-                <input name="access" type="checkbox" className="size-4 accent-[#503d32]" />
+                <input name="access" type="checkbox" className="size-4 accent-[#3b2a20]" />
                 {f.maintenance.access}
               </label>
             </>
@@ -128,7 +128,7 @@ export function ContactForms({ locale }: { locale: Locale }) {
 
         <button
           type="submit"
-          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-md bg-whatsapp px-6 py-3.5 font-medium text-white transition hover:brightness-95"
+          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-sm bg-whatsapp px-6 py-3.5 font-medium text-white transition hover:brightness-95"
         >
           <WhatsAppIcon className="size-5" />
           {f.submit}

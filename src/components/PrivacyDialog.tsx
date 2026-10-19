@@ -9,7 +9,7 @@ export function PrivacyDialog({ locale }: { locale: Locale }) {
 
   return (
     <>
-      <button type="button" onClick={() => ref.current?.showModal()} className="underline-offset-4 hover:text-cream hover:underline">
+      <button type="button" onClick={() => ref.current?.showModal()} className="text-left underline-offset-4 hover:text-cream hover:underline">
         {p.link}
       </button>
       <dialog
@@ -20,7 +20,7 @@ export function PrivacyDialog({ locale }: { locale: Locale }) {
       >
         <div className="sticky top-0 flex items-center justify-between gap-4 border-b border-brown/10 bg-cream px-6 py-4">
           <h2 id="privacy-title" className="font-display text-2xl">{p.link}</h2>
-          <button type="button" onClick={() => ref.current?.close()} className="rounded-md px-4 py-2 text-sm ring-1 ring-brown/20 hover:bg-cream-deep">
+          <button type="button" onClick={() => ref.current?.close()} className="rounded-sm px-4 py-2 text-sm ring-1 ring-brown/20 hover:bg-cream-deep">
             {p.close}
           </button>
         </div>

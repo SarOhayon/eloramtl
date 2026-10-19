@@ -30,7 +30,7 @@ export function Audiences({ locale }: { locale: Locale }) {
             aria-selected={active === k}
             aria-controls="aud-panel"
             onClick={() => setActive(k)}
-            className={`rounded-md px-5 py-2.5 text-sm font-medium transition ${
+            className={`rounded-sm px-5 py-2.5 text-sm font-medium transition ${
               active === k ? "bg-action text-white shadow" : "text-brown hover:bg-sand/50"
             }`}
           >
@@ -67,7 +67,7 @@ export function Audiences({ locale }: { locale: Locale }) {
           <button
             type="button"
             onClick={() => showType(type)}
-            className="mt-8 inline-flex items-center justify-center self-start rounded-md bg-action px-7 py-3.5 font-medium text-white transition hover:bg-action-deep"
+            className="mt-8 inline-flex items-center justify-center self-start rounded-sm bg-action px-7 py-3.5 font-medium text-white transition hover:bg-action-deep"
           >
             {t.audiences.see(t.types[type])}
           </button>

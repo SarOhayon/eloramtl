@@ -41,7 +41,7 @@ export function Gallery({ locale }: { locale: Locale }) {
             type="button"
             aria-pressed={filter === k}
             onClick={() => setFilter(k)}
-            className={`rounded-md px-4 py-2 text-sm transition ${
+            className={`rounded-sm px-4 py-2 text-sm transition ${
               filter === k ? "bg-brown text-cream" : "bg-cream text-brown ring-1 ring-brown/15 hover:ring-brown/40"
             }`}
           >

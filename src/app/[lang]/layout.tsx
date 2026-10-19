@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import { getDictionary, hasLocale, locales } from "@/i18n/dictionaries";
 import "./globals.css";
 
-// Same typeface as eloramtl.com, used for headings and body.
+// Serif headings for the high-end look; Plus Jakarta Sans (eloramtl.com) for body text.
+const serif = Cormorant_Garamond({ variable: "--font-heading", subsets: ["latin"], weight: ["400", "500", "600"] });
 const jakarta = Plus_Jakarta_Sans({ variable: "--font-body", subsets: ["latin"] });
 
 export async function generateStaticParams() {
@@ -34,7 +35,7 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   return (
-    <html lang={lang === "fr" ? "fr-CA" : "en-CA"} className={`${jakarta.variable} antialiased`}>
+    <html lang={lang === "fr" ? "fr-CA" : "en-CA"} className={`${serif.variable} ${jakarta.variable} antialiased`}>
       <body className="min-h-full font-sans">{children}</body>
     </html>
   );
