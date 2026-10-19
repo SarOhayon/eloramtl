@@ -22,6 +22,12 @@ npm run build
 | Photos and captions | `src/data/photos.ts`, `public/photos/` |
 | Logo (official, from eloramtl.com) | `src/components/Wordmark.tsx` |
 
+## Apply now form
+
+The header's "Apply now" button opens a form (name, phone, email and move-in date required; comments optional). It is handled by the server action in `src/app/actions/apply.ts`, which validates the fields and composes the email for `APPLY_TO_EMAIL` (`src/data/building.ts`, currently sarah@eloramtl.com).
+
+**Email sending is not connected yet**: applications are only logged on the server. To turn it on, call an email service (Web3Forms, Formspree or Resend) in `deliver()` in that file.
+
 ## Still placeholder
 
 - Suite list: only suites 112 and 113 are real. Every other suite in `building.ts` is marked `sample: true`.

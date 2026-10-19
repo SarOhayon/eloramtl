@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   BUILDING_PHOTO,
   CORES,
@@ -11,7 +11,6 @@ import {
   PHONE_MAIN,
   PLATE_OUTLINE,
   PRICE_FROM,
-  SHOW_TYPE_EVENT,
   UNITS,
   UNIT_TYPES,
   formatPrice,
@@ -55,21 +54,6 @@ export function Explorer({ locale }: { locale: Locale }) {
       setSelectedId(UNITS.find((u) => u.floor === floor && ok(u))?.id ?? "");
     }
   };
-
-  // Audience and price cards elsewhere on the page jump straight to a suite type.
-  useEffect(() => {
-    const onShow = (e: Event) => {
-      const type = (e as CustomEvent<UnitType>).detail;
-      setFilter(type);
-      const first = UNITS.find((u) => u.floor === floor && u.type === type) ?? UNITS.find((u) => u.type === type);
-      if (first) {
-        setFloor(first.floor);
-        setSelectedId(first.id);
-      }
-    };
-    window.addEventListener(SHOW_TYPE_EVENT, onShow);
-    return () => window.removeEventListener(SHOW_TYPE_EVENT, onShow);
-  }, [floor]);
 
   const floorLabel = (f: number) => (f === 1 ? t.explorer.ground : `${t.explorer.floor} ${f}`);
   const shownFloor = hoverFloor ?? floor;

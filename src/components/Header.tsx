@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
+import { INSTAGRAM_URL, whatsappLink } from "@/data/building";
+import { ApplyDialog } from "./ApplyDialog";
+import { InstagramIcon, WhatsAppIcon } from "./icons";
 import { Wordmark } from "./Wordmark";
 
 export function Header({ locale }: { locale: Locale }) {
@@ -18,7 +21,6 @@ export function Header({ locale }: { locale: Locale }) {
   }, []);
 
   const links = [
-    { href: "#for-you", label: t.nav.audiences },
     { href: "#suites", label: t.nav.suites },
     { href: "#amenities", label: t.nav.amenities },
     { href: "#gallery", label: t.nav.gallery },
@@ -57,11 +59,27 @@ export function Header({ locale }: { locale: Locale }) {
             {t.nav.switchTo}
           </Link>
           <a
-            href="#visit"
-            className="hidden items-center rounded-sm bg-action px-6 py-3 text-sm uppercase tracking-[0.06em] text-white transition hover:bg-action-deep sm:inline-flex"
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t.nav.instagram}
+            className="hidden size-10 items-center justify-center rounded-sm transition hover:text-gold xl:inline-flex"
           >
-            {t.nav.cta}
+            <InstagramIcon className="size-5" />
           </a>
+          <a
+            href={whatsappLink(t.contact.whatsappText)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden items-center gap-2 rounded-sm px-4 py-3 text-sm uppercase tracking-[0.06em] ring-1 ring-brown/25 transition hover:ring-gold md:inline-flex"
+          >
+            <WhatsAppIcon className="size-4 text-whatsapp" />
+            {t.nav.whatsapp}
+          </a>
+          <ApplyDialog
+            locale={locale}
+            className="inline-flex items-center rounded-sm bg-gold px-4 py-2.5 text-xs font-medium uppercase tracking-[0.14em] text-brown-deep transition hover:bg-gold-light sm:px-6 sm:py-3 sm:text-sm"
+          />
           <button
             type="button"
             className="inline-flex size-10 items-center justify-center rounded-full lg:hidden"
@@ -89,6 +107,15 @@ export function Header({ locale }: { locale: Locale }) {
               {l.label}
             </a>
           ))}
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 text-sm uppercase tracking-[0.12em] text-brown"
+          >
+            <InstagramIcon className="size-5 text-gold" />
+            @eloramtl
+          </a>
         </nav>
       )}
     </header>

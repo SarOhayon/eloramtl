@@ -142,9 +142,6 @@ export const TOURS_3D = [
   "https://3drenderingservices.ca/eloramtl-c2/",
 ];
 
-// Lets other sections (audience cards, price cards) drive the explorer filter.
-export const SHOW_TYPE_EVENT = "elora:show-type";
-export const showType = (type: UnitType) => {
-  window.dispatchEvent(new CustomEvent<UnitType>(SHOW_TYPE_EVENT, { detail: type }));
-  document.getElementById("suites")?.scrollIntoView({ behavior: "smooth" });
-};
+// Where "Apply now" applications go once an email service is connected (see src/app/actions/apply.ts).
+export const APPLY_TO_EMAIL = "sarah@eloramtl.com";
+export const INSTAGRAM_URL = "https://www.instagram.com/eloramtl/";

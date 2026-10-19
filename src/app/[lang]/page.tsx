@@ -1,17 +1,18 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { Audiences } from "@/components/Audiences";
 import { Explorer } from "@/components/Explorer";
 import { Gallery } from "@/components/Gallery";
 import { Header } from "@/components/Header";
+import { HeroSlider } from "@/components/HeroSlider";
 import { NeighbourhoodMap } from "@/components/NeighbourhoodMap";
 import { OfferBand } from "@/components/OfferBand";
 import { ContactForms } from "@/components/ContactForms";
 import { PrivacyDialog } from "@/components/PrivacyDialog";
 import { Wordmark } from "@/components/Wordmark";
-import { CheckIcon, ChevronIcon, PhoneIcon, PinIcon, WhatsAppIcon } from "@/components/icons";
+import { CheckIcon, ChevronIcon, InstagramIcon, PhoneIcon, PinIcon, WhatsAppIcon } from "@/components/icons";
 import {
   ADDRESS,
+  INSTAGRAM_URL,
   PHONE_MAIN,
   PHONE_MAIN_DISPLAY,
   PHONE_WHATSAPP_DISPLAY,
@@ -73,32 +74,13 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       <Header locale={locale} />
 
       <main>
-        {/* Hero: bright photo, text below */}
-        <section className="bg-cream pt-16 lg:pt-20">
-          <div className="relative h-[52svh] min-h-[320px] w-full lg:h-[68svh]">
-            <Image src={PHOTOS.lobby.src} alt={PHOTOS.lobby.alt[locale]} fill priority sizes="100vw" className="object-cover object-[50%_45%]" />
-            <div className="pointer-events-none absolute inset-4 border border-gold-light/80 sm:inset-6" />
-          </div>
-          <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-            <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-end">
-              <div>
-                <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.3em] text-gold"><span className="h-px w-8 bg-gold" />{t.hero.eyebrow}</p>
-                <h1 className="mt-4 max-w-4xl font-display text-4xl leading-[1.1] text-ink sm:text-5xl lg:text-6xl">{t.hero.title}</h1>
-                <p className="mt-6 max-w-2xl text-lg text-brown/80">{t.hero.lead}</p>
-              </div>
-              <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
-                <a href="#suites" className="inline-flex items-center justify-center rounded-sm bg-action px-8 py-4 text-sm uppercase tracking-[0.18em] text-white transition hover:bg-action-deep">
-                  {t.hero.primary}
-                </a>
-                <a
-                  href="#visit"
-                  className="inline-flex items-center justify-center gap-2 rounded-sm px-8 py-4 text-sm uppercase tracking-[0.18em] text-brown ring-1 ring-gold transition hover:bg-gold/10"
-                >
-                  {t.hero.secondary}
-                </a>
-              </div>
-            </div>
-            <dl className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-brown/10 ring-1 ring-brown/10 sm:grid-cols-4">
+        {/* Hero: full-screen photo slider */}
+        <div className="pt-16 lg:pt-20">
+          <HeroSlider locale={locale} />
+        </div>
+        <section className="bg-cream py-8 lg:py-10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-brown/10 ring-1 ring-brown/10 sm:grid-cols-4">
               {t.hero.facts.map((f) => (
                 <div key={f.label} className="bg-cream px-5 py-4">
                   <dt className="sr-only">{f.label}</dt>
@@ -111,14 +93,6 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         </section>
 
         <OfferBand locale={locale} />
-
-        {/* Who it's for */}
-        <section id="for-you" className="py-20 lg:py-28">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <SectionHeading eyebrow={t.audiences.eyebrow} title={t.audiences.title} lead={t.audiences.lead} />
-            <Audiences locale={locale} />
-          </div>
-        </section>
 
         {/* Suites explorer */}
         <section id="suites" className="bg-cream-deep py-20 lg:py-28">
@@ -305,7 +279,13 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       <footer className="border-t-2 border-gold bg-brown-deep py-10 text-cream/70">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-4 text-sm sm:flex-row sm:items-center sm:px-6 lg:px-8">
           <Wordmark className="h-5 w-auto text-gold-light" />
-          <p>{ADDRESS}</p>
+          <div className="flex flex-col gap-2">
+            <p>{ADDRESS}</p>
+            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-gold-light transition hover:text-cream">
+              <InstagramIcon className="size-4" />
+              @eloramtl
+            </a>
+          </div>
           <div className="flex flex-col gap-2 sm:items-end">
             <PrivacyDialog locale={locale} />
             <p>
