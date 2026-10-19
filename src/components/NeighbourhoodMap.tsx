@@ -16,6 +16,27 @@ const COLORS: Record<PlaceCategory, string> = {
 };
 const CATS = Object.keys(COLORS) as PlaceCategory[];
 
+// Mapbox when a token is configured (NEXT_PUBLIC_MAPBOX_TOKEN), otherwise CARTO's free basemap.
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+const MAPBOX_STYLE = process.env.NEXT_PUBLIC_MAPBOX_STYLE || "mapbox/light-v11";
+const OSM = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
+function tileLayer(L: typeof import("leaflet")) {
+  if (MAPBOX_TOKEN) {
+    return L.tileLayer(`https://api.mapbox.com/styles/v1/${MAPBOX_STYLE}/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`, {
+      attribution: `&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> ${OSM} <a href="https://www.mapbox.com/map-feedback/">Improve this map</a>`,
+      tileSize: 512,
+      zoomOffset: -1,
+      maxZoom: 20,
+    });
+  }
+  return L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    attribution: `${OSM} &copy; <a href="https://carto.com/">CARTO</a>`,
+    subdomains: "abcd",
+    maxZoom: 19,
+  });
+}
+
 export function NeighbourhoodMap({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
   const el = useRef<HTMLDivElement>(null);
@@ -29,11 +50,7 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
     import("leaflet").then((L) => {
       if (cancelled || !el.current || map.current) return;
       const m = L.map(el.current, { scrollWheelZoom: false, zoomControl: true }).setView(BUILDING_LATLNG, 14);
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains: "abcd",
-        maxZoom: 19,
-      }).addTo(m);
+      tileLayer(L).addTo(m);
       L.marker(BUILDING_LATLNG, {
         icon: L.divIcon({
           className: "",

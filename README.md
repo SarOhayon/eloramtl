@@ -22,6 +22,15 @@ npm run build
 | Photos and captions | `src/data/photos.ts`, `public/photos/` |
 | Logo (official, from eloramtl.com) | `src/components/Wordmark.tsx` |
 
+## Map
+
+The neighbourhood map uses Mapbox when `NEXT_PUBLIC_MAPBOX_TOKEN` is set, and CARTO's free OpenStreetMap tiles otherwise. To connect Mapbox:
+
+1. Create a free account at mapbox.com and copy your **Default public token** (`pk.…`).
+2. Copy `.env.example` to `.env.local` and paste the token after `NEXT_PUBLIC_MAPBOX_TOKEN=`.
+3. On Vercel, add the same variable under Settings > Environment Variables, then redeploy.
+4. In your Mapbox account, restrict the token to your domains (eloramtl.com, your Vercel URL, localhost).
+
 ## Apply now form
 
 The header's "Apply now" button opens a form (name, phone, email and move-in date required; comments optional). It is handled by the server action in `src/app/actions/apply.ts`, which validates the fields and composes the email for `APPLY_TO_EMAIL` (`src/data/building.ts`, currently sarah@eloramtl.com).
