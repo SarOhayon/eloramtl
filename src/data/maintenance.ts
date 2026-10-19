@@ -10,7 +10,9 @@ export type Problem = { id: string; label: Bi; urgent?: boolean };
 export type Item = { id: string; label: Bi; trade: Trade; problems: Problem[] };
 export type Room = { id: string; label: Bi; items: Item[] };
 
-// Receives every request with Approve / Decline buttons.
+// Receives every request with Approve / Decline buttons: on WhatsApp (number with
+// country code, digits only, e.g. "15145551234") and by email as a backup record.
+export const APPROVER_WHATSAPP = process.env.APPROVER_WHATSAPP ?? ""; // TODO: your boss's WhatsApp
 export const APPROVER_EMAIL = INBOX_EMAIL; // TODO: your boss's email
 
 // Approved requests are forwarded here. Replace with each contractor's email.

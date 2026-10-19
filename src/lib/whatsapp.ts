@@ -8,7 +8,7 @@ const version = process.env.WHATSAPP_API_VERSION || "v23.0";
 const graph = process.env.WHATSAPP_GRAPH_URL || "https://graph.facebook.com"; // overridable for testing
 
 export type Option = { id: string; title: string };
-export type Incoming = { id: string; from: string; name?: string; text?: string; choice?: string; image?: { id: string; mime: string } };
+export type Incoming = { id: string; from: string; name?: string; text?: string; choice?: string; media?: { id: string; mime: string; kind: "photo" | "video" } };
 
 // Meta signs every webhook with the app secret (X-Hub-Signature-256).
 export function validSignature(rawBody: string, header: string | null) {
@@ -31,6 +31,7 @@ type WebhookBody = {
           text?: { body: string };
           interactive?: { list_reply?: { id: string }; button_reply?: { id: string } };
           image?: { id: string; mime_type: string };
+          video?: { id: string; mime_type: string };
         }[];
       };
     }[];
@@ -49,7 +50,11 @@ export function parseWebhook(body: WebhookBody): Incoming[] {
           name: value?.contacts?.find((c) => c.wa_id === m.from)?.profile?.name,
           text: m.text?.body,
           choice: m.interactive?.list_reply?.id ?? m.interactive?.button_reply?.id,
-          image: m.image ? { id: m.image.id, mime: m.image.mime_type } : undefined,
+          media: m.image
+            ? { id: m.image.id, mime: m.image.mime_type, kind: "photo" }
+            : m.video
+              ? { id: m.video.id, mime: m.video.mime_type, kind: "video" }
+              : undefined,
         });
       }
     }
@@ -93,6 +98,32 @@ export const sendList = (to: string, body: string, button: string, options: Opti
       },
     },
   });
+
+// Like the example in WhatsApp: up to 3 options appear as tappable buttons under the
+// message; longer menus use WhatsApp's list (one button that opens the options).
+export const sendChoices = (to: string, body: string, listButton: string, options: Option[]) =>
+  options.length <= 3 ? sendButtons(to, body, options) : sendList(to, body, listButton, options);
+
+export async function uploadMedia(bytes: Buffer, type: string): Promise<string | null> {
+  if (!token || !phoneId) return null;
+  const form = new FormData();
+  form.set("messaging_product", "whatsapp");
+  form.set("type", type);
+  form.set("file", new Blob([new Uint8Array(bytes)], { type }), type.startsWith("video") ? "video.mp4" : "photo.jpg");
+  const res = await fetch(`${graph}/${version}/${phoneId}/media`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form });
+  if (!res.ok) {
+    console.error("[whatsapp] media upload failed", res.status, await res.text());
+    return null;
+  }
+  return ((await res.json()) as { id: string }).id;
+}
+
+export const sendMedia = (to: string, kind: "photo" | "video", mediaId: string, caption: string) =>
+  send(to, kind === "video" ? { type: "video", video: { id: mediaId, caption } } : { type: "image", image: { id: mediaId, caption } });
+
+// Pre-approved template (needed to message someone outside WhatsApp's 24-hour window).
+export const sendTemplate = (to: string, name: string, language: string, components: object[]) =>
+  send(to, { type: "template", template: { name, language: { code: language }, components } });
 
 export async function downloadMedia(mediaId: string): Promise<{ bytes: Buffer; type: string } | null> {
   if (!token) return null;

@@ -1,8 +1,5 @@
 import { TRADES, type Trade } from "@/data/maintenance";
-import { sendMail } from "@/lib/mail";
-import { detailLines, detailsHtml, esc, loadRecord, saveRecord, title as plainTitle, verify, type RequestRecord } from "@/lib/maintenanceRequest";
-import { getFile } from "@/lib/storage";
-import { notifyApproved } from "@/lib/whatsappBot";
+import { decide, detailsHtml, esc, loadRecord, title as plainTitle, verify, type RequestRecord } from "@/lib/maintenanceRequest";
 
 // The approver's Approve / Decline links. GET shows a confirmation page (so email link
 // scanners can't trigger anything); the button on it POSTs to perform the action.
@@ -23,8 +20,9 @@ const page = (heading: string, body: string, status = 200) =>
 async function getRequest(url: URL) {
   const id = url.searchParams.get("id") ?? "";
   const sig = url.searchParams.get("sig") ?? "";
-  const action = url.searchParams.get("do");
-  if (!verify(id, sig) || (action !== "approve" && action !== "decline")) return null;
+  const param = url.searchParams.get("do");
+  if (!verify(id, sig) || (param !== "approve" && param !== "decline")) return null;
+  const action: "approve" | "decline" = param;
   const record = await loadRecord(id);
   return record ? { record, action, id, sig } : null;
 }
@@ -53,26 +51,10 @@ export async function POST(request: Request) {
   const found = await getRequest(new URL(request.url));
   if (!found) return page("Link not valid", "<p>This link is invalid or the request no longer exists.</p>", 404);
   const { record, action } = found;
-  if (record.status !== "pending") return page(title(record), done(record.status));
-
-  if (action === "decline") {
-    await saveRecord({ ...record, status: "declined", decidedAt: new Date().toISOString() });
-    return page("Request declined", `<p>${title(record)} was declined. The contractor was not contacted.</p>`);
-  }
-
-  const trade = TRADES[record.trade as Trade];
-  const photo = record.photo ? await getFile(record.photo.key) : null;
-  const sent = await sendMail({
-    to: trade.email,
-    replyTo: record.email,
-    subject: `${record.urgent ? "[URGENT] " : ""}Work order · ${plainTitle(record)}`,
-    text: ["Approved maintenance request for Elora, 2855 chemin Bates, Montréal.", "", ...detailLines(record).map(([k, v]) => `${k}: ${v}`)].join("\n"),
-    html: `<div style="font:14px/1.5 Arial,sans-serif;color:#241912"><p>Approved maintenance request for <b>Elora, 2855 chemin Bates, Montréal</b>. Please contact the resident to schedule.</p>${detailsHtml(record)}${photo ? '<p style="color:#8a7461">Photo attached.</p>' : ""}</div>`,
-    attachments: photo && record.photo ? [{ filename: record.photo.filename, content: photo, contentType: record.photo.type }] : undefined,
-  });
-  if (!sent) return page("Not sent", "<p>The email to the contractor could not be sent. Please try again in a moment.</p>", 502);
-
-  await saveRecord({ ...record, status: "approved", decidedAt: new Date().toISOString() });
-  if (record.source === "whatsapp") await notifyApproved(record.phone, record.lang, record.trade as Trade);
-  return page("Approved ✓", `<p>Sent to <b>${trade.label.en}</b> (${trade.email}) with the photo.</p>`);
+  const result = await decide(record, action);
+  if (result.already) return page(title(record), done(result.status));
+  if (!result.ok) return page("Not sent", "<p>The email to the contractor could not be sent. Please try again in a moment.</p>", 502);
+  return result.status === "declined"
+    ? page("Request declined", `<p>${title(record)} was declined. The contractor was not contacted.</p>`)
+    : page("Approved ✓", `<p>Sent to <b>${result.trade.label}</b> (${result.trade.email}) with the ${record.media?.kind === "video" ? "video" : "photo"}.</p>`);
 }

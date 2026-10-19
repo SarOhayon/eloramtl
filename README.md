@@ -53,16 +53,19 @@ Set `SMTP_HOST`, `SMTP_PORT` (465), `SMTP_USER` and `SMTP_PASS` in `.env.local` 
 
 ## Maintenance requests (WhatsApp, with approval)
 
-Residents report maintenance on WhatsApp (the site has a "Report on WhatsApp" button). The bot (`src/lib/whatsappBot.ts`) asks: language → room → item → problem → photo → suite number, then replies "Thank you! We will have someone over shortly."
+Residents text **"maintenance"** (or "entretien") to the WhatsApp number. Other messages are ignored by the bot, so leasing chats stay with you. The bot (`src/lib/whatsappBot.ts`) asks, with tap buttons and lists: language → suite number → name → room → item → problem → photo or video → may we enter if you're not home → best time, then replies "Thank you! We will have someone over shortly."
 
-1. The approver (`APPROVER_EMAIL`) gets an email with the details, the photo and **Approve** / **Decline** buttons.
-2. Approve (after a confirmation click) emails the work order and photo to the contractor for that trade (`TRADES`), and messages the resident on WhatsApp that it's approved.
-3. Residents can type "menu" at any time to start over. Urgent problems (burst pipe, no heat...) also tell them to call.
+The approver then gets a summary on WhatsApp (photo + details + "Do you approve?" with **✅ Yes / ❌ No**), and an email copy with the same choices as links:
 
-Edit rooms, items, problems, urgency, the approver and contractor emails in `src/data/maintenance.ts`.
+- **Yes:** the work order and photo/video are emailed to the contractor for that trade (`TRADES`), the resident is told it's approved, and the approver gets a confirmation.
+- **No:** nothing is sent; the request is marked declined.
+
+Edit rooms, items, problems, urgency, the approver and contractor emails in `src/data/maintenance.ts`. The approver's WhatsApp number is `APPROVER_WHATSAPP` (digits with country code, e.g. 15145551234).
+
+WhatsApp only lets a business message someone freely within 24 hours of their last message. For approvals outside that window, create a template in Meta (media header, one body variable, two quick-reply buttons "Yes" / "No") and set `WHATSAPP_APPROVAL_TEMPLATE` (and `WHATSAPP_APPROVAL_TEMPLATE_LANG`).
 
 ### Setup
-- **Meta WhatsApp Business Platform:** create an app at developers.facebook.com, add WhatsApp, connect the business number. Set the webhook URL to `https://<your site>/api/whatsapp`, the verify token to `WHATSAPP_VERIFY_TOKEN`, and subscribe to `messages`. Add `WHATSAPP_TOKEN` (a permanent system-user token), `WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_APP_SECRET`.
+- **Meta WhatsApp Business Platform:** create an app at developers.facebook.com and add WhatsApp. For testing, use Meta's free test number and add your phone as a recipient; a number used for the bot can't stay on the regular WhatsApp app. Set the webhook URL to `https://<your site>/api/whatsapp`, the verify token to `WHATSAPP_VERIFY_TOKEN`, and subscribe to `messages`. Add `WHATSAPP_TOKEN` (a permanent system-user token), `WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_APP_SECRET`.
 - **Storage:** a private S3 bucket (`ELORA_S3_*`) for conversations, photos and pending requests, plus `APPROVAL_SECRET` for the approval links. Locally a temp folder is used.
 - The site's WhatsApp buttons use `PHONE_WHATSAPP` in `src/data/building.ts`; it should be the same number as the bot.
 
