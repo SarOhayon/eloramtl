@@ -1,10 +1,10 @@
 "use server";
 
-import { APPLY_TO_EMAIL } from "@/data/building";
+import { sendMail } from "@/lib/mail";
 
 export type ApplyField = "name" | "phone" | "email" | "moveIn";
 // `values` echoes what was typed, so the form can refill itself after a failed check.
-export type ApplyState = { status: "idle" | "sent" | "invalid"; invalid?: ApplyField[]; values?: Record<string, string> };
+export type ApplyState = { status: "idle" | "sent" | "invalid" | "error"; invalid?: ApplyField[]; values?: Record<string, string> };
 
 type Application = { name: string; phone: string; email: string; moveIn: string; comments: string; lang: string };
 
@@ -26,11 +26,11 @@ export async function submitApplication(_prev: ApplyState, formData: FormData): 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(app.moveIn)) invalid.push("moveIn");
   if (invalid.length) return { status: "invalid", invalid, values: app };
 
-  await deliver(app);
-  return { status: "sent" };
+  const sent = await sendMail(compose(app));
+  return sent ? { status: "sent" } : { status: "error", values: app };
 }
 
-async function deliver(app: Application) {
+function compose(app: Application) {
   const subject = `Elora application: ${app.name} (move-in ${app.moveIn})`;
   const text = [
     `Name: ${app.name}`,
@@ -41,9 +41,5 @@ async function deliver(app: Application) {
     "",
     app.comments || "(no comments)",
   ].join("\n");
-
-  // Email delivery is not connected yet. To turn it on, send { to: APPLY_TO_EMAIL,
-  // replyTo: app.email, subject, text } with an email service (Web3Forms, Formspree
-  // or Resend) right here. Until then the application is only logged on the server.
-  console.info(`[apply] for ${APPLY_TO_EMAIL}: ${subject}\n${text}`);
+  return { subject, text, replyTo: app.email };
 }

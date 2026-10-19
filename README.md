@@ -39,11 +39,11 @@ The contact section shows office hours with a live "Open now / Closed" badge in 
 2. Find the Place ID of the Elora listing with Google's Place ID Finder.
 3. Add both variables to `.env.local` and to Vercel > Settings > Environment Variables.
 
-## Apply now form
+## Website forms (email)
 
-The header's "Apply now" button opens a form (name, phone, email and move-in date required; comments optional). It is handled by the server action in `src/app/actions/apply.ts`, which validates the fields and composes the email for `APPLY_TO_EMAIL` (`src/data/building.ts`, currently sarah@eloramtl.com).
+Apply now, Building inquiry and Maintenance request are emailed to `INBOX_EMAIL` (`src/data/building.ts`, sarah@eloramtl.com) through the company mailbox at GreenGeeks, using SMTP (`src/lib/mail.ts`). Reply-To is set to the person who filled in the form.
 
-**Email sending is not connected yet**: applications are only logged on the server. To turn it on, call an email service (Web3Forms, Formspree or Resend) in `deliver()` in that file.
+Set `SMTP_HOST`, `SMTP_PORT` (465), `SMTP_USER` and `SMTP_PASS` in `.env.local` and in Vercel. The values are in GreenGeeks cPanel > Email Accounts > Connect Devices. Without them, forms work locally (emails are printed in the terminal) and show an error on the live site.
 
 ## Still placeholder
 

@@ -142,6 +142,6 @@ export const TOURS_3D = [
   "https://3drenderingservices.ca/eloramtl-c2/",
 ];
 
-// Where "Apply now" applications go once an email service is connected (see src/app/actions/apply.ts).
-export const APPLY_TO_EMAIL = "sarah@eloramtl.com";
+// Inbox that receives every website form (Apply now, inquiries, maintenance). See src/lib/mail.ts.
+export const INBOX_EMAIL = "sarah@eloramtl.com";
 export const INSTAGRAM_URL = "https://www.instagram.com/eloramtl/";

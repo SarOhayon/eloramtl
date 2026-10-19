@@ -91,9 +91,9 @@ export function ApplyDialog({ locale, className }: { locale: Locale; className?:
                   <textarea name="comments" rows={3} className={field} placeholder={a.commentsHint} defaultValue={state.values?.comments} />
                 </label>
               </div>
-              {state.status === "invalid" && (
+              {(state.status === "invalid" || state.status === "error") && (
                 <p className="mt-4 text-sm text-red-800" role="alert">
-                  {a.invalid}
+                  {state.status === "invalid" ? a.invalid : a.error}
                 </p>
               )}
               <button
