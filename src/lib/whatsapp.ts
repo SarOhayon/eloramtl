@@ -4,7 +4,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 // Needs WHATSAPP_TOKEN and WHATSAPP_PHONE_NUMBER_ID; WHATSAPP_APP_SECRET verifies incoming webhooks.
 
 const { WHATSAPP_TOKEN: token, WHATSAPP_PHONE_NUMBER_ID: phoneId, WHATSAPP_APP_SECRET: appSecret } = process.env;
-const version = process.env.WHATSAPP_API_VERSION || "v23.0";
+const version = process.env.WHATSAPP_API_VERSION || "v25.0";
 const graph = process.env.WHATSAPP_GRAPH_URL || "https://graph.facebook.com"; // overridable for testing
 
 export type Option = { id: string; title: string };
