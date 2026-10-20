@@ -183,16 +183,30 @@ async function Body({ locale }: { locale: Locale }) {
 
         {/* About */}
         <section id="about" className="bg-cream-deep py-20 lg:py-28">
-          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-            <SectionHeading eyebrow={t.about.eyebrow} title={t.about.title} />
-            <div className="-mt-4 space-y-5 text-lg text-brown/85">
-              {t.about.text.map((para) => (
-                <p key={para}>{para}</p>
-              ))}
+          <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:gap-16 lg:px-8">
+            <div className="relative">
+              <div className="absolute -bottom-4 -right-4 hidden h-full w-full rounded-sm ring-1 ring-gold/50 lg:block" aria-hidden />
+              <Image
+                src={content.photos.about.src}
+                unoptimized={isUploaded(content.photos.about.src)}
+                alt={content.photos.about.alt[locale]}
+                width={1200}
+                height={1500}
+                sizes="(min-width: 1024px) 45vw, 100vw"
+                className="relative aspect-[4/5] w-full rounded-sm object-cover shadow-xl shadow-brown/15"
+              />
             </div>
-            <a href="#visit" className="mt-10 inline-flex items-center justify-center rounded-sm bg-action px-7 py-3.5 font-medium text-white transition hover:bg-action-deep">
-              {t.hero.secondary}
-            </a>
+            <div>
+              <SectionHeading eyebrow={t.about.eyebrow} title={t.about.title} />
+              <div className="-mt-4 space-y-5 text-lg text-brown/85">
+                {t.about.text.map((para) => (
+                  <p key={para}>{para}</p>
+                ))}
+              </div>
+              <a href="#visit" className="mt-10 inline-flex items-center justify-center rounded-sm bg-action px-7 py-3.5 font-medium text-white transition hover:bg-action-deep">
+                {t.hero.secondary}
+              </a>
+            </div>
           </div>
         </section>
 

@@ -79,7 +79,7 @@ function clean(input: SiteContent): SiteContent {
     : [];
 
   return {
-    photos: { hero: photos(input.photos?.hero), gallery: photos(input.photos?.gallery), amenities },
+    photos: { hero: photos(input.photos?.hero), gallery: photos(input.photos?.gallery), about: photo(input.photos?.about) ?? DEFAULT_CONTENT.photos.about, amenities },
     prices,
     suites,
     floorPlans,

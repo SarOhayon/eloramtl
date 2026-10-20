@@ -31,7 +31,7 @@ export type Promo = {
 };
 
 export type SiteContent = {
-  photos: { hero: Photo[]; gallery: Photo[]; amenities: Record<AmenitySlot, Photo> };
+  photos: { hero: Photo[]; gallery: Photo[]; about: Photo; amenities: Record<AmenitySlot, Photo> };
   prices: Record<UnitType, number>;
   suites: Record<string, SuiteInfo>;
   floorPlans: Record<string, string>; // floor number -> file
@@ -44,6 +44,7 @@ export const DEFAULT_CONTENT: SiteContent = {
   photos: {
     hero: [PHOTOS.lobby, PHOTOS.rooftop, PHOTOS.living, PHOTOS.gym, PHOTOS.facade],
     gallery: GALLERY,
+    about: PHOTOS.alcoves,
     amenities: { rooftop: PHOTOS.rooftop, gym: PHOTOS.gym, terrace: PHOTOS.terrace, lounge: PHOTOS.workBooth, parking: PHOTOS.ev, living: PHOTOS.living },
   },
   prices: { ...PRICE_FROM },

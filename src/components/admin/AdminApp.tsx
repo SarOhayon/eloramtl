@@ -641,6 +641,22 @@ function PhotosScreen({ content, update, upload }: { content: SiteContent; updat
           onChange={(fn) => setList("gallery", fn)}
           onAdd={() => setPicking({ title: "Add a photo to the gallery", onPick: (src) => setList("gallery", (l) => [...l, known(src)]) })}
         />
+        <Step title="“Welcome to Elora” photo" help="The photo beside the welcome text. Click “Change” to replace it.">
+          <figure className="max-w-sm overflow-hidden rounded-md bg-white ring-1 ring-sand">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={content.photos.about.src} alt="" className="aspect-[4/5] w-full object-cover" />
+            <figcaption className="p-3">
+              <button
+                className={softBtn}
+                onClick={() =>
+                  setPicking({ title: "Photo for: Welcome to Elora", onPick: (src) => update((c) => ({ ...c, photos: { ...c.photos, about: known(src) } })) })
+                }
+              >
+                Change
+              </button>
+            </figcaption>
+          </figure>
+        </Step>
         <Step title="Amenity photos" help="The photo shown for each amenity. Click “Change” to replace it.">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {AMENITY_SLOTS.map((slot) => (

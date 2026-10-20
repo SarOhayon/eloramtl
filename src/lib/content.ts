@@ -14,6 +14,7 @@ function merge(saved: Partial<SiteContent> & { offer?: { enabled?: boolean } }):
     photos: {
       hero: saved.photos?.hero?.length ? saved.photos.hero : d.photos.hero,
       gallery: saved.photos?.gallery ?? d.photos.gallery,
+      about: saved.photos?.about ?? d.photos.about,
       amenities: { ...d.photos.amenities, ...saved.photos?.amenities },
     },
     prices: { ...d.prices, ...saved.prices },

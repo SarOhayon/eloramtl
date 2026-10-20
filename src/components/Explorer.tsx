@@ -128,7 +128,7 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
     </>
   );
   const contactButtons = (u: Suite) => (
-    <div className="mt-5 flex flex-col gap-2">
+    <div className="flex flex-col gap-2">
       <a
         href={whatsappLink(t.explorer.askAbout(u.id))}
         target="_blank"
@@ -179,83 +179,8 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
         })}
       </div>
 
-    <div className="grid gap-6 lg:grid-cols-[1.05fr_1fr] lg:gap-8">
-      {/* Building */}
-      <div className="flex min-w-0 flex-col gap-4">
-        <div className="relative overflow-hidden rounded-lg bg-brown-deep shadow-xl shadow-brown/10">
-          <Image
-            src={BUILDING_PHOTO.src}
-            width={BUILDING_PHOTO.width}
-            height={BUILDING_PHOTO.height}
-            alt=""
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            className="h-auto w-full"
-            priority={false}
-          />
-          <svg
-            viewBox={`0 0 ${BUILDING_PHOTO.width} ${BUILDING_PHOTO.height}`}
-            className="absolute inset-0 h-full w-full"
-            onMouseLeave={() => setHoverFloor(null)}
-          >
-            <rect width="100%" height="100%" fill="#3a2c24" opacity={0.18} pointerEvents="none" />
-            {FLOORS.map((f) => {
-              const active = f === floor;
-              const hover = f === hoverFloor;
-              return (
-                <polygon
-                  key={f}
-                  points={pts(FLOOR_OUTLINES[f])}
-                  role="button"
-                  tabIndex={-1}
-                  aria-label={floorLabel(f)}
-                  onMouseEnter={() => setHoverFloor(f)}
-                  onClick={() => goFloor(f)}
-                  className="cursor-pointer transition-all duration-200"
-                  fill={active ? "#e9d6ae" : hover ? "#faf8f5" : "transparent"}
-                  fillOpacity={active ? 0.62 : hover ? 0.38 : 0}
-                  stroke={active || hover ? "#faf8f5" : "transparent"}
-                  strokeWidth={active ? 5 : 3}
-                />
-              );
-            })}
-          </svg>
-          <div className="pointer-events-none absolute left-4 top-4 rounded-sm bg-cream/95 px-4 py-2 text-sm font-medium text-brown shadow">
-            {floorLabel(shownFloor)} · {t.explorer.unitsOnFloor(matchCount(shownFloor))}
-          </div>
-        </div>
-
-        {/* Floor picker */}
-        <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label={t.explorer.floor}>
-          {FLOORS.slice().reverse().map((f) => {
-            const n = matchCount(f);
-            const active = f === floor;
-            return (
-              <button
-                key={f}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => goFloor(f)}
-                onMouseEnter={() => setHoverFloor(f)}
-                onMouseLeave={() => setHoverFloor(null)}
-                className={`flex min-w-14 flex-1 flex-col items-center rounded-lg border px-3 py-2.5 transition ${
-                  active
-                    ? "border-brown bg-brown text-cream"
-                    : "border-brown/15 bg-cream text-brown hover:border-brown/40"
-                } ${n === 0 ? "opacity-50" : ""}`}
-              >
-                <span className="font-display text-xl leading-none">{f}</span>
-                <span className="mt-1 text-[11px] tracking-wide opacity-80">
-                  {n} {locale === "fr" ? "log." : "suites"}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Floor plate + suite */}
-      <div className="flex min-w-0 flex-col overflow-hidden rounded-lg bg-cream shadow-xl shadow-brown/10 ring-1 ring-brown/10">
+      {/* Building + floor plate in one card */}
+      <div className="overflow-hidden rounded-lg bg-cream shadow-xl shadow-brown/10 ring-1 ring-brown/10">
         <div className="flex items-center justify-between gap-3 bg-action px-5 py-4 text-white">
           <button
             type="button"
@@ -281,137 +206,181 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
           </button>
         </div>
 
-        <div className="px-4 pt-4 sm:px-5">
-          <svg viewBox="0 0 617 340" className="h-auto w-full" aria-label={floorLabel(floor)}>
-            <polygon points={pts(layoutFor(floor).outline)} fill="#f0ece6" stroke="#3a2c24" strokeWidth={4} />
-            {layoutFor(floor).cores.map((c, i) => (
-              <g key={i}>
-                <polygon points={pts(c)} fill="#e6d9c3" />
-                <text x={centroid(c)[0]} y={centroid(c)[1] + 4} textAnchor="middle" fontSize={11} className="fill-brown-soft">
-                  {t.explorer.amenity.core}
-                </text>
-              </g>
-            ))}
-            {layoutFor(floor).amenities.map((a) => (
-                <g key={a.key}>
-                  <polygon points={pts(a.shape)} fill="#f3ede4" stroke="#3b2a20" strokeWidth={1.5} />
-                  <text x={centroid(a.shape)[0]} y={centroid(a.shape)[1] + 4} textAnchor="middle" fontSize={11} className="fill-action-deep">
-                    {t.explorer.amenity[a.key]}
+        <div className="grid lg:grid-cols-[0.85fr_1.15fr]">
+          {/* Building */}
+          <div className="flex min-w-0 flex-col justify-center gap-4 border-brown/10 p-4 sm:p-5 lg:border-r">
+            <div className="relative overflow-hidden rounded-md bg-brown-deep">
+              <Image
+                src={BUILDING_PHOTO.src}
+                width={BUILDING_PHOTO.width}
+                height={BUILDING_PHOTO.height}
+                alt=""
+                sizes="(min-width: 1024px) 40vw, 100vw"
+                className="h-auto w-full"
+                priority={false}
+              />
+              <svg
+                viewBox={`0 0 ${BUILDING_PHOTO.width} ${BUILDING_PHOTO.height}`}
+                className="absolute inset-0 h-full w-full"
+                onMouseLeave={() => setHoverFloor(null)}
+              >
+                <rect width="100%" height="100%" fill="#3a2c24" opacity={0.18} pointerEvents="none" />
+                {FLOORS.map((f) => {
+                  const active = f === floor;
+                  const hover = f === hoverFloor;
+                  return (
+                    <polygon
+                      key={f}
+                      points={pts(FLOOR_OUTLINES[f])}
+                      role="button"
+                      tabIndex={-1}
+                      aria-label={floorLabel(f)}
+                      onMouseEnter={() => setHoverFloor(f)}
+                      onClick={() => goFloor(f)}
+                      className="cursor-pointer transition-all duration-200"
+                      fill={active ? "#e9d6ae" : hover ? "#faf8f5" : "transparent"}
+                      fillOpacity={active ? 0.62 : hover ? 0.38 : 0}
+                      stroke={active || hover ? "#faf8f5" : "transparent"}
+                      strokeWidth={active ? 5 : 3}
+                    />
+                  );
+                })}
+              </svg>
+              <div className="pointer-events-none absolute left-3 top-3 rounded-sm bg-cream/95 px-3 py-1.5 text-xs font-medium text-brown shadow">
+                {floorLabel(shownFloor)} · {t.explorer.unitsOnFloor(matchCount(shownFloor))}
+              </div>
+            </div>
+
+            {/* Floor picker */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label={t.explorer.floor}>
+              {FLOORS.slice().reverse().map((f) => {
+                const n = matchCount(f);
+                const active = f === floor;
+                return (
+                  <button
+                    key={f}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => goFloor(f)}
+                    onMouseEnter={() => setHoverFloor(f)}
+                    onMouseLeave={() => setHoverFloor(null)}
+                    className={`flex min-w-11 flex-1 flex-col items-center rounded-md border px-2 py-2 transition ${
+                      active
+                        ? "border-brown bg-brown text-cream"
+                        : "border-brown/15 bg-cream text-brown hover:border-brown/40"
+                    } ${n === 0 ? "opacity-50" : ""}`}
+                  >
+                    <span className="font-display text-lg leading-none">{f}</span>
+                    <span className="mt-1 text-[10px] tracking-wide opacity-80">
+                      {n} {locale === "fr" ? "log." : "suites"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Floor plate + suite */}
+          <div className="flex min-w-0 flex-col">
+            <div className="px-4 pt-4 sm:px-5 sm:pt-5">
+            <svg viewBox="0 0 617 340" className="h-auto w-full" aria-label={floorLabel(floor)}>
+              <polygon points={pts(layoutFor(floor).outline)} fill="#f0ece6" stroke="#3a2c24" strokeWidth={4} />
+              {layoutFor(floor).cores.map((c, i) => (
+                <g key={i}>
+                  <polygon points={pts(c)} fill="#e6d9c3" />
+                  <text x={centroid(c)[0]} y={centroid(c)[1] + 4} textAnchor="middle" fontSize={11} className="fill-brown-soft">
+                    {t.explorer.amenity.core}
                   </text>
                 </g>
               ))}
-            {floorUnits.map((u) => {
-              const isSel = u.id === selectedId;
-              const ok = matches(u);
-              const [cx, cy] = u.label ?? centroid(u.shape);
-              return (
-                <g
-                  key={u.id}
-                  role="button"
-                  tabIndex={ok ? 0 : -1}
-                  aria-label={`${t.explorer.unit} ${u.id}, ${t.types[u.type]}`}
-                  aria-pressed={isSel}
-                  onClick={() => ok && openSuite(u.id)}
-                  onKeyDown={(e) => {
-                    if (ok && (e.key === "Enter" || e.key === " ")) {
-                      e.preventDefault();
-                      openSuite(u.id);
-                    }
-                  }}
-                  className={`${ok ? "cursor-pointer" : "cursor-not-allowed"} outline-none [&:focus-visible>polygon]:stroke-action [&:focus-visible>polygon]:stroke-[4]`}
-                >
-                  <polygon
-                    points={pts(u.shape)}
-                    fill={isSel ? "#503d32" : !ok ? "#faf8f5" : u.status === "leased" ? "#e8e2da" : "#efe2c8"}
-                    stroke="#3b2a20"
-                    strokeWidth={1.5}
-                    className="transition-colors duration-150 hover:fill-[#e9d6ae]"
-                    opacity={ok ? 1 : 0.55}
-                  />
-                  <text
-                    x={cx}
-                    y={cy + 5}
-                    textAnchor="middle"
-                    fontSize={15}
-                    fontWeight={500}
-                    pointerEvents="none"
-                    className={isSel ? "fill-cream" : "fill-brown"}
+              {layoutFor(floor).amenities.map((a) => (
+                  <g key={a.key}>
+                    <polygon points={pts(a.shape)} fill="#f3ede4" stroke="#3b2a20" strokeWidth={1.5} />
+                    <text x={centroid(a.shape)[0]} y={centroid(a.shape)[1] + 4} textAnchor="middle" fontSize={11} className="fill-action-deep">
+                      {t.explorer.amenity[a.key]}
+                    </text>
+                  </g>
+                ))}
+              {floorUnits.map((u) => {
+                const isSel = u.id === selectedId;
+                const ok = matches(u);
+                const [cx, cy] = u.label ?? centroid(u.shape);
+                return (
+                  <g
+                    key={u.id}
+                    role="button"
+                    tabIndex={ok ? 0 : -1}
+                    aria-label={`${t.explorer.unit} ${u.id}, ${t.types[u.type]}`}
+                    aria-pressed={isSel}
+                    onClick={() => ok && openSuite(u.id)}
+                    onKeyDown={(e) => {
+                      if (ok && (e.key === "Enter" || e.key === " ")) {
+                        e.preventDefault();
+                        openSuite(u.id);
+                      }
+                    }}
+                    className={`${ok ? "cursor-pointer" : "cursor-not-allowed"} outline-none [&:focus-visible>polygon]:stroke-action [&:focus-visible>polygon]:stroke-[4]`}
                   >
-                    {u.id}
-                  </text>
-                  {onPromo(u) && u.status !== "leased" && <circle cx={cx + 22} cy={cy - 8} r={4.5} fill="#a8875a" stroke="#fff" strokeWidth={1.5} pointerEvents="none" />}
-                </g>
-              );
-            })}
-          </svg>
-          {matchCount(floor) === 0 && <p className="py-2 text-center text-sm text-brown-soft">{t.explorer.noMatch}</p>}
-          {floorPlans[String(floor)] && (
-            <p className="pt-2 text-center text-sm">
-              <a href={floorPlans[String(floor)]} target="_blank" rel="noopener noreferrer" className="font-medium text-brown underline underline-offset-4">
-                {t.explorer.viewFloorPlan}
-              </a>
-            </p>
-          )}
-        </div>
-
-        <div className="mt-auto grid gap-5 p-5 sm:grid-cols-[1fr_1.1fr] sm:items-start">
-          {selected ? (
-            <>
-              <div>
-                {details(selected)}
-                <button
-                  type="button"
-                  onClick={() => setShowDetails(true)}
-                  className="mt-5 inline-flex w-full items-center justify-center rounded-sm bg-action px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-white transition hover:bg-action-deep"
-                >
-                  {selected.plan ? t.explorer.detailsAndPlan : t.explorer.details}
-                </button>
-                <div className="mt-2 flex flex-col gap-2">
-                  <a
-                    href={whatsappLink(t.explorer.askAbout(selected.id))}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-sm bg-whatsapp px-5 py-3 text-sm font-medium text-white transition hover:brightness-95"
-                  >
-                    <WhatsAppIcon className="size-4" />
-                    {t.explorer.whatsapp}
-                  </a>
-                  <a
-                    href={`tel:+${PHONE_MAIN}`}
-                    className="inline-flex items-center justify-center gap-2 rounded-sm px-5 py-3 text-sm font-medium text-brown ring-1 ring-brown/25 transition hover:bg-cream-deep"
-                  >
-                    <PhoneIcon className="size-4" />
-                    {t.explorer.call}
-                  </a>
-                </div>
-              </div>
-              <figure className="rounded-lg bg-white/60 p-3 ring-1 ring-brown/10">
-                {selected.plan && !selected.plan.endsWith(".pdf") ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- plan uploaded in the admin
-                  <img src={selected.plan} alt={`${t.explorer.unit} ${selected.id}`} className="h-auto w-full" />
-                ) : (
-                  <UnitPlan type={selected.type} t={t} />
-                )}
-                <figcaption className="mt-2 text-center text-[11px] text-brown-soft">
-                  {selected.plan ? (
-                    <a href={selected.plan} target="_blank" rel="noopener noreferrer" className="font-medium text-brown underline underline-offset-4">
-                      {t.explorer.viewPlan}
-                    </a>
-                  ) : (
-                    t.explorer.planNote
-                  )}
-                </figcaption>
-              </figure>
-            </>
-          ) : (
-            <div className="sm:col-span-2">
-              <p className="font-display text-xl text-brown">{t.explorer.pickUnit}</p>
-              <p className="text-sm text-brown-soft">{t.explorer.pickUnitHint}</p>
+                    <polygon
+                      points={pts(u.shape)}
+                      fill={isSel ? "#503d32" : !ok ? "#faf8f5" : u.status === "leased" ? "#e8e2da" : "#efe2c8"}
+                      stroke="#3b2a20"
+                      strokeWidth={1.5}
+                      className="transition-colors duration-150 hover:fill-[#e9d6ae]"
+                      opacity={ok ? 1 : 0.55}
+                    />
+                    <text
+                      x={cx}
+                      y={cy + 5}
+                      textAnchor="middle"
+                      fontSize={15}
+                      fontWeight={500}
+                      pointerEvents="none"
+                      className={isSel ? "fill-cream" : "fill-brown"}
+                    >
+                      {u.id}
+                    </text>
+                    {onPromo(u) && u.status !== "leased" && <circle cx={cx + 22} cy={cy - 8} r={4.5} fill="#a8875a" stroke="#fff" strokeWidth={1.5} pointerEvents="none" />}
+                  </g>
+                );
+              })}
+            </svg>
+            {matchCount(floor) === 0 && <p className="py-2 text-center text-sm text-brown-soft">{t.explorer.noMatch}</p>}
+            {floorPlans[String(floor)] && (
+              <p className="pt-2 text-center text-sm">
+                <a href={floorPlans[String(floor)]} target="_blank" rel="noopener noreferrer" className="font-medium text-brown underline underline-offset-4">
+                  {t.explorer.viewFloorPlan}
+                </a>
+              </p>
+            )}
             </div>
-          )}
+
+            <div className="mt-auto border-t border-brown/10 p-5">
+              {selected ? (
+                <div className="grid gap-5 sm:grid-cols-[1fr_auto] sm:items-end">
+                  <div>{details(selected)}</div>
+                  <div className="flex flex-col gap-2 sm:w-56">
+                    <button
+                      type="button"
+                      onClick={() => setShowDetails(true)}
+                      className="inline-flex w-full items-center justify-center rounded-sm bg-action px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-white transition hover:bg-action-deep"
+                    >
+                      {selected.plan ? t.explorer.detailsAndPlan : t.explorer.details}
+                    </button>
+                    {contactButtons(selected)}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p className="font-display text-xl text-brown">{t.explorer.pickUnit}</p>
+                  <p className="text-sm text-brown-soft">{t.explorer.pickUnitHint}</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
       {showDetails && selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label={`${t.explorer.unit} ${selected.id}`} onClick={() => setShowDetails(false)}>
@@ -433,7 +402,7 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
               >
                 {t.explorer.bookVisit}
               </a>
-              {contactButtons(selected)}
+              <div className="mt-2">{contactButtons(selected)}</div>
             </div>
             <div className="flex min-h-[50svh] flex-col bg-white p-3 sm:p-4">
               {selected.plan?.endsWith(".pdf") ? (
