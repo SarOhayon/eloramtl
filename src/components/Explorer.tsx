@@ -27,10 +27,16 @@ const centroid = (p: [number, number][]) => {
   return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
 };
 
-type Props = { locale: Locale; prices: SiteContent["prices"]; suites: SiteContent["suites"]; floorPlans: SiteContent["floorPlans"] };
+type Props = {
+  locale: Locale;
+  prices: SiteContent["prices"];
+  suites: SiteContent["suites"];
+  floorPlans: SiteContent["floorPlans"];
+  promo?: { types: UnitType[]; suites: string[] }; // set while the promotion is live
+};
 type Suite = Unit & { status?: SuiteStatus; price?: number; plan?: string };
 
-export function Explorer({ locale, prices, suites, floorPlans }: Props) {
+export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
   const t = getDictionary(locale);
   // Suite details set in the admin (status, price, date, plan) on top of the building data.
   const units = useMemo<Suite[]>(
@@ -42,6 +48,7 @@ export function Explorer({ locale, prices, suites, floorPlans }: Props) {
   const [filter, setFilter] = useState<UnitType | "all">("all");
   const [selectedId, setSelectedId] = useState<string>("112");
 
+  const onPromo = (u: { id: string; type: UnitType }) => Boolean(promo && (promo.types.includes(u.type) || promo.suites.includes(u.id)));
   const matches = (u: Suite) => filter === "all" || u.type === filter;
   const floorUnits = useMemo(() => units.filter((u) => u.floor === floor), [units, floor]);
   const matchCount = (f: number) => units.filter((u) => u.floor === f && matches(u)).length;
@@ -256,6 +263,7 @@ export function Explorer({ locale, prices, suites, floorPlans }: Props) {
                   >
                     {u.id}
                   </text>
+                  {onPromo(u) && u.status !== "leased" && <circle cx={cx + 22} cy={cy - 8} r={4.5} fill="#a8875a" stroke="#fff" strokeWidth={1.5} pointerEvents="none" />}
                 </g>
               );
             })}
@@ -292,6 +300,9 @@ export function Explorer({ locale, prices, suites, floorPlans }: Props) {
                   <span className="font-display text-2xl">{formatPrice(selected.price ?? prices[selected.type], locale)}</span>
                   <span className="text-sm text-brown-soft">{t.explorer.perMonth}</span>
                 </p>
+                {onPromo(selected) && selected.status !== "leased" && (
+                  <p className="mt-3 mr-2 inline-block rounded-sm bg-gold px-3 py-1 text-sm font-medium text-white">{t.promo.badge}</p>
+                )}
                 {selected.status === "leased" && (
                   <p className="mt-3 inline-block rounded-sm bg-sand px-3 py-1 text-sm text-brown">{t.explorer.leased}</p>
                 )}

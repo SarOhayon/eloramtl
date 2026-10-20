@@ -9,6 +9,7 @@ import { HeroSlider } from "@/components/HeroSlider";
 import { NeighbourhoodMap } from "@/components/NeighbourhoodMap";
 import { OfficeHoursCard } from "@/components/OfficeHoursCard";
 import { OfferBand } from "@/components/OfferBand";
+import { PromoPopup } from "@/components/PromoPopup";
 import { ContactForms } from "@/components/ContactForms";
 import { PrivacyDialog } from "@/components/PrivacyDialog";
 import { Wordmark } from "@/components/Wordmark";
@@ -22,7 +23,7 @@ import {
   formatPrice,
   whatsappLink,
 } from "@/data/building";
-import { applyText, isUploaded } from "@/data/content";
+import { applyText, isUploaded, promoState } from "@/data/content";
 import type { Photo } from "@/data/photos";
 import { getDictionary, hasLocale, type Locale } from "@/i18n/dictionaries";
 import { getContent } from "@/lib/content";
@@ -91,6 +92,25 @@ async function Body({ locale }: { locale: Locale }) {
   // The first fact is the studio's starting price, kept in sync with the admin prices.
   const facts = t.hero.facts.map((f, i) => (i === 0 ? { ...f, value: formatPrice(content.prices.studio, locale) } : f));
 
+  // The promotion, if it's on and within its dates.
+  const promo = content.promo;
+  const promoLive = promoState(promo) === "live";
+  const dateFmt = new Intl.DateTimeFormat(locale === "fr" ? "fr-CA" : "en-CA", { dateStyle: "long", timeZone: "UTC" });
+  const promoText = {
+    kicker: promo.kicker[locale],
+    big: promo.big[locale],
+    sub: promo.sub[locale],
+    fine: promo.fine[locale],
+    cta: promo.cta[locale],
+    dates: promo.end ? t.promo.until(dateFmt.format(new Date(promo.end))) : undefined,
+    applies:
+      promo.types.length || promo.suites.length
+        ? t.promo.applies([...promo.types.map((k) => t.types[k]), ...promo.suites.map((id) => `${t.explorer.unit} ${id}`)].join(" · "))
+        : undefined,
+  };
+  // Changes whenever the promotion changes, so visitors see a new one again.
+  const promoId = [...JSON.stringify(promo)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7).toString(36);
+
   return (
     <>
       <main>
@@ -112,13 +132,13 @@ async function Body({ locale }: { locale: Locale }) {
           </div>
         </section>
 
-        {content.offer.enabled && <OfferBand locale={locale} o={t.offerBand} />}
+        {promoLive && promo.showBand && <OfferBand locale={locale} o={{ ...t.offerBand, ...promoText }} />}
 
         {/* Suites explorer */}
         <section id="suites" className="bg-cream-deep py-20 lg:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading eyebrow={t.explorer.eyebrow} title={t.explorer.title} lead={t.explorer.lead} />
-            <Explorer locale={locale} prices={content.prices} suites={content.suites} floorPlans={content.floorPlans} />
+            <Explorer locale={locale} prices={content.prices} suites={content.suites} floorPlans={content.floorPlans} promo={promoLive ? { types: promo.types, suites: promo.suites } : undefined} />
           </div>
         </section>
 
@@ -273,14 +293,8 @@ async function Body({ locale }: { locale: Locale }) {
         </div>
       </footer>
 
-      {/* Limited-time offer tab, as on eloramtl.com */}
-      {content.offer.enabled && (
-      <a
-        href="#offer"
-        className="fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 rotate-180 border border-l-0 border-gold/40 bg-cream px-3 py-8 text-sm uppercase tracking-[0.16em] text-brown shadow-lg transition [writing-mode:vertical-rl] hover:border-gold hover:bg-cream-deep hover:text-ink md:block"
-      >
-        {t.offer}
-      </a>
+      {promoLive && (
+        <PromoPopup id={promoId} text={promoText} tab={promo.tab[locale]} photo={promo.photo} showTab={promo.showTab} closeLabel={t.promo.close} />
       )}
 
       {/* Floating WhatsApp on small screens */}

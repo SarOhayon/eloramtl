@@ -3,6 +3,7 @@
 // falls back to the defaults below.
 
 import { PRICE_FROM, type UnitType } from "./building";
+import { dictionaries } from "@/i18n/dictionaries";
 import { GALLERY, PHOTOS, type Photo } from "./photos";
 
 export type SuiteStatus = "available" | "leased" | "soon";
@@ -11,13 +12,31 @@ export type AmenitySlot = "rooftop" | "gym" | "terrace" | "lounge" | "parking" |
 export type Bilingual = { fr: string; en: string };
 export type LibraryItem = { src: string; name: string; type: string; uploadedAt: string };
 
+// The one promotion: shown as a pop-up (once per visitor) and a side tab, between its dates.
+export type Promo = {
+  enabled: boolean;
+  start?: string; // YYYY-MM-DD, Montréal time
+  end?: string;
+  kicker: Bilingual; // "One month"
+  big: Bilingual; // "FREE"
+  sub: Bilingual; // "On select units"
+  fine: Bilingual; // "Certain conditions apply"
+  cta: Bilingual; // button
+  tab: Bilingual; // side tab
+  photo?: string;
+  types: UnitType[]; // apartment types it applies to
+  suites: string[]; // specific suites it applies to
+  showTab: boolean;
+  showBand: boolean; // the large brown section
+};
+
 export type SiteContent = {
   photos: { hero: Photo[]; gallery: Photo[]; amenities: Record<AmenitySlot, Photo> };
   prices: Record<UnitType, number>;
   suites: Record<string, SuiteInfo>;
   floorPlans: Record<string, string>; // floor number -> file
   text: Record<string, Bilingual>; // dictionary path -> text, e.g. "hero.title"
-  offer: { enabled: boolean };
+  promo: Promo;
   library: LibraryItem[]; // files uploaded through the admin
 };
 
@@ -28,13 +47,39 @@ export const DEFAULT_CONTENT: SiteContent = {
     amenities: { rooftop: PHOTOS.rooftop, gym: PHOTOS.gym, terrace: PHOTOS.terrace, lounge: PHOTOS.workBooth, parking: PHOTOS.ev, living: PHOTOS.living },
   },
   prices: { ...PRICE_FROM },
+  // Available apartments and 2026/2027 prices (price list of October 2026).
   suites: {
-    "112": { status: "available", availableOn: "2026-11-01" },
-    "113": { status: "available", availableOn: "2026-11-01" },
+    "507": { status: "available", price: 1660 },
+    "314": { status: "available", price: 1700 },
+    "414": { status: "available", price: 1720 },
+    "514": { status: "available", price: 1740 },
+    "211": { status: "available", price: 1915 },
+    "503": { status: "available", price: 2300 },
+    "306": { status: "available", price: 2395 },
+    "506": { status: "available", price: 2425 },
+    "113": { status: "available", price: 2480, availableOn: "2026-11-01" },
+    "304": { status: "available", price: 2720 },
+    "504": { status: "available", price: 2760 },
+    "215": { status: "available", price: 2850 },
+    "315": { status: "available", price: 2870 },
+    "415": { status: "available", price: 2890 },
+    "112": { status: "available", price: 2900, availableOn: "2026-11-01" },
   },
   floorPlans: {},
   text: {},
-  offer: { enabled: true },
+  promo: {
+    enabled: true,
+    kicker: { fr: dictionaries.fr.offerBand.kicker, en: dictionaries.en.offerBand.kicker },
+    big: { fr: dictionaries.fr.offerBand.big, en: dictionaries.en.offerBand.big },
+    sub: { fr: dictionaries.fr.offerBand.sub, en: dictionaries.en.offerBand.sub },
+    fine: { fr: dictionaries.fr.offerBand.fine, en: dictionaries.en.offerBand.fine },
+    cta: { fr: dictionaries.fr.offerBand.cta, en: dictionaries.en.offerBand.cta },
+    tab: { fr: dictionaries.fr.offer, en: dictionaries.en.offer },
+    types: [],
+    suites: [],
+    showTab: true,
+    showBand: false,
+  },
   library: [],
 };
 
@@ -57,17 +102,6 @@ export const EDITABLE_TEXT: { section: string; fields: { path: string; label: st
       { path: "hero.lead", label: "Intro", long: true },
       { path: "hero.primary", label: "Main button" },
       { path: "hero.secondary", label: "Second button" },
-    ],
-  },
-  {
-    section: "One month free offer",
-    fields: [
-      { path: "offerBand.kicker", label: "Line 1 (One month)" },
-      { path: "offerBand.big", label: "Big word (Free)" },
-      { path: "offerBand.sub", label: "Line 3 (On select units)" },
-      { path: "offerBand.fine", label: "Fine print" },
-      { path: "offerBand.cta", label: "Button" },
-      { path: "offer", label: "Side tab" },
     ],
   },
   {
@@ -158,3 +192,17 @@ export function applyText<T>(dict: T, text: SiteContent["text"], locale: "fr" | 
 
 // Files uploaded through the admin are served from /api/media/...
 export const isUploaded = (src: string) => src.startsWith("/api/media/");
+
+// Today's date in Montréal as YYYY-MM-DD.
+export const todayInMontreal = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Montreal" }).format(new Date());
+
+export type PromoState = "off" | "live" | "scheduled" | "ended";
+export function promoState(p: Promo, today = todayInMontreal()): PromoState {
+  if (!p.enabled) return "off";
+  if (p.start && today < p.start) return "scheduled";
+  if (p.end && today > p.end) return "ended";
+  return "live";
+}
+
+// Whether the promotion applies to a given suite.
+export const promoApplies = (p: Promo, suite: { id: string; type: UnitType }) => p.types.includes(suite.type) || p.suites.includes(suite.id);

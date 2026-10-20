@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { UNITS, UNIT_TYPES } from "@/data/building";
-import { DEFAULT_CONTENT, EDITABLE_PATHS, type AmenitySlot, type SiteContent, type SuiteStatus } from "@/data/content";
+import { DEFAULT_CONTENT, EDITABLE_PATHS, type AmenitySlot, type Bilingual, type Promo, type SiteContent, type SuiteStatus } from "@/data/content";
 import type { Photo, PhotoCategory } from "@/data/photos";
 import { checkPassword, endSession, isAdmin, startSession } from "@/lib/adminAuth";
 import { getContent, saveContent } from "@/lib/content";
@@ -84,8 +84,33 @@ function clean(input: SiteContent): SiteContent {
     suites,
     floorPlans,
     text,
-    offer: { enabled: input.offer?.enabled !== false },
+    promo: cleanPromo(input.promo, ids),
     library,
+  };
+}
+
+const date = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);
+
+function cleanPromo(p: Partial<Promo> | undefined, suiteIds: Set<string>): Promo {
+  const d = DEFAULT_CONTENT.promo;
+  const bi = (v: Partial<Bilingual> | undefined, fallback: Bilingual): Bilingual => ({ fr: str(v?.fr, 300) || fallback.fr, en: str(v?.en, 300) || fallback.en });
+  const start = date(p?.start);
+  const end = date(p?.end);
+  return {
+    enabled: p?.enabled !== false,
+    ...(start ? { start } : {}),
+    ...(end ? { end } : {}),
+    kicker: bi(p?.kicker, d.kicker),
+    big: bi(p?.big, d.big),
+    sub: bi(p?.sub, d.sub),
+    fine: { fr: str(p?.fine?.fr, 300), en: str(p?.fine?.en, 300) },
+    cta: bi(p?.cta, d.cta),
+    tab: bi(p?.tab, d.tab),
+    ...(validSrc(p?.photo) ? { photo: p!.photo } : {}),
+    types: UNIT_TYPES.filter((t) => p?.types?.includes(t)),
+    suites: [...new Set((p?.suites ?? []).map(String).filter((id) => suiteIds.has(id)))],
+    showTab: p?.showTab !== false,
+    showBand: p?.showBand === true,
   };
 }
 

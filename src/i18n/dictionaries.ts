@@ -41,6 +41,12 @@ const fr = {
     sentTitle: "Merci!",
     sentText: "Votre demande a bien été reçue. Notre équipe vous contactera sous peu.",
   },
+  promo: {
+    until: (d: string) => `Jusqu'au ${d}`,
+    applies: (list: string) => `S'applique à : ${list}`,
+    close: "Fermer",
+    badge: "Promo",
+  },
   offerBand: {
     kicker: "Un mois",
     big: "Gratuit",
@@ -71,7 +77,7 @@ const fr = {
     menu: "Menu",
   },
   hero: {
-    eyebrow: "ELORA MTL",
+    eyebrow: "ELORA MTL · 2855 chemin Bates",
     title: "Bienvenue chez vous",
     lead: "Une adresse locative raffinée à la croisée d'Outremont, de Ville Mont-Royal et de Glenmount, où le bois de noyer, les lustres de cristal et la lumière naturelle donnent le ton.",
     primary: "Découvrir les résidences",
@@ -296,6 +302,12 @@ const en: Dictionary = {
     sentTitle: "Thank you!",
     sentText: "Your application has been received. Our team will contact you shortly.",
   },
+  promo: {
+    until: (d: string) => `Until ${d}`,
+    applies: (list: string) => `Applies to: ${list}`,
+    close: "Close",
+    badge: "Promo",
+  },
   offerBand: {
     kicker: "One month",
     big: "Free",
@@ -326,7 +338,7 @@ const en: Dictionary = {
     menu: "Menu",
   },
   hero: {
-    eyebrow: "ELORA MTL",
+    eyebrow: "ELORA MTL · 2855 chemin Bates",
     title: "Welcome home",
     lead: "A refined rental address where Outremont, Ville Mont-Royal and Glenmount meet, set in walnut, crystal and natural light.",
     primary: "Discover the residences",

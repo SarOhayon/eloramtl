@@ -106,10 +106,12 @@ const FLOOR1_SAMPLES: Record<string, Spec> = {
   "03": s("2br", 940), "04": s("2br", 905), "05": s("1br-den", 720), "06": s("2br", 960), "07": s("1br-den", 745), "08": s("studio", 470),
   "09": s("studio", 470), "10": s("1br", 640), "11": s("1br", 655), "12": s("3br", 1152), "13": s("2br", 987),
 };
+// Types for x03, x04, x06, x07, x11, x14, x15 come from the 2026/2027 price list;
+// the rest (and all sizes) are still samples.
 const UPPER_SAMPLES: Record<string, Spec> = {
-  "01": s("1br", 620), "02": s("1br-den", 760), "03": s("2br", 900), "04": s("2br", 940), "05": s("1br-den", 780), "06": s("2br", 960),
-  "07": s("1br-den", 740), "08": s("studio", 480), "09": s("studio", 470), "10": s("1br", 650), "11": s("1br", 640), "12": s("2br", 920),
-  "13": s("2br", 950), "14": s("1br-den", 750), "15": s("3br", 1150), "16": s("2br", 880),
+  "01": s("1br", 620), "02": s("1br-den", 760), "03": s("2br", 900), "04": s("3br", 1100), "05": s("1br-den", 780), "06": s("2br", 960),
+  "07": s("1br", 650), "08": s("studio", 480), "09": s("studio", 470), "10": s("1br", 650), "11": s("1br-den", 740), "12": s("2br", 920),
+  "13": s("2br", 950), "14": s("1br", 660), "15": s("3br", 1150), "16": s("2br", 880),
 };
 
 function buildUnits(): Unit[] {

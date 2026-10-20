@@ -72,7 +72,7 @@ WhatsApp only lets a business message someone freely within 24 hours of their la
 ## Admin
 
 `/admin` (reached from the small "·" after the copyright in the footer) lets you manage, without a redeploy:
-photos (library, upload, delete, top slider and gallery order, amenity photos), suites (status, price, available date, plan per suite, plan per floor), starting prices, section text in FR and EN, and the "One month free" offer.
+a home screen with big buttons leads to: the promotion (wording FR/EN, photo, start/end dates, apartments it applies to, side tab and brown section switches, live preview; shown to visitors as a once-per-visitor pop-up), apartments (status, price, available date, plan per suite and per floor), photos (top slider, gallery, amenity photos, library), starting prices and section text. Changes save automatically.
 
 Content is saved to `content/site.json` in the S3 bucket and uploads under `media/`; the site reads it on every visit. Sign-in uses `ADMIN_PASSWORD` (temporary single password; "admin" when testing locally). Code: `src/app/admin`, `src/components/admin`, `src/app/actions/admin.ts`, `src/data/content.ts`.
 

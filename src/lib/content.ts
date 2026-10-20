@@ -8,7 +8,7 @@ const KEY = "content/site.json";
 let memo: { at: number; value: SiteContent } | null = null;
 const MEMO_MS = 3000;
 
-function merge(saved: Partial<SiteContent>): SiteContent {
+function merge(saved: Partial<SiteContent> & { offer?: { enabled?: boolean } }): SiteContent {
   const d = DEFAULT_CONTENT;
   return {
     photos: {
@@ -17,11 +17,31 @@ function merge(saved: Partial<SiteContent>): SiteContent {
       amenities: { ...d.photos.amenities, ...saved.photos?.amenities },
     },
     prices: { ...d.prices, ...saved.prices },
-    suites: saved.suites ?? d.suites,
+    // Saved settings win; the built-in list fills in apartments not yet touched in the admin.
+    suites: { ...d.suites, ...saved.suites },
     floorPlans: saved.floorPlans ?? d.floorPlans,
     text: saved.text ?? d.text,
-    offer: { ...d.offer, ...saved.offer },
+    promo: mergePromo(saved),
     library: saved.library ?? d.library,
+  };
+}
+
+// Older saves had an on/off offer and its wording in the text overrides.
+function mergePromo(saved: Partial<SiteContent> & { offer?: { enabled?: boolean } }): SiteContent["promo"] {
+  const d = DEFAULT_CONTENT.promo;
+  if (saved.promo) return { ...d, ...saved.promo };
+  const t = saved.text ?? {};
+  const pick = (path: string, fallback: SiteContent["promo"]["kicker"]) => ({ fr: t[path]?.fr || fallback.fr, en: t[path]?.en || fallback.en });
+  return {
+    ...d,
+    enabled: saved.offer?.enabled ?? d.enabled,
+    showBand: saved.offer ? true : d.showBand,
+    kicker: pick("offerBand.kicker", d.kicker),
+    big: pick("offerBand.big", d.big),
+    sub: pick("offerBand.sub", d.sub),
+    fine: pick("offerBand.fine", d.fine),
+    cta: pick("offerBand.cta", d.cta),
+    tab: pick("offer", d.tab),
   };
 }
 
