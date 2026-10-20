@@ -151,10 +151,6 @@ export const formatPrice = (amount: number, locale: "fr" | "en") =>
     maximumFractionDigits: 0,
   }).format(amount);
 
-export const TOURS_3D = [
-  "https://3drenderingservices.ca/eloramtl-c1/",
-  "https://3drenderingservices.ca/eloramtl-c2/",
-];
 
 // Inbox that receives every website form (Apply now, inquiries, maintenance). See src/lib/mail.ts.
 export const INBOX_EMAIL = "sarah@eloramtl.com";

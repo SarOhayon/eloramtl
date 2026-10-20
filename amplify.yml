@@ -10,7 +10,7 @@ frontend:
       commands:
         # Amplify doesn't hand environment variables to the running site (server actions,
         # email), so copy the ones the site needs into .env.production before building.
-        - env | grep -E '^(SMTP_|MAIL_TO=|GOOGLE_PLACES_API_KEY=|GOOGLE_PLACE_ID=|NEXT_PUBLIC_|ELORA_S3_|APPROVAL_SECRET=|SITE_URL=|WHATSAPP_|APPROVER_WHATSAPP=)' >> .env.production || true
+        - env | grep -E '^(SMTP_|MAIL_TO=|GOOGLE_PLACES_API_KEY=|GOOGLE_PLACE_ID=|NEXT_PUBLIC_|ELORA_S3_|APPROVAL_SECRET=|SITE_URL=|WHATSAPP_|APPROVER_WHATSAPP=|ADMIN_PASSWORD=)' >> .env.production || true
         - npm run build
   artifacts:
     baseDirectory: .next

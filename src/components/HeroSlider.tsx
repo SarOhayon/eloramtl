@@ -2,15 +2,18 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { PHOTOS } from "@/data/photos";
+import { isUploaded } from "@/data/content";
+import type { Photo } from "@/data/photos";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 import { ChevronIcon } from "./icons";
 
-const SLIDES = [PHOTOS.lobby, PHOTOS.rooftop, PHOTOS.living, PHOTOS.gym, PHOTOS.facade];
 const INTERVAL = 6000;
 
-export function HeroSlider({ locale }: { locale: Locale }) {
-  const t = getDictionary(locale).hero;
+export type HeroText = { eyebrow: string; title: string; lead: string; primary: string; secondary: string };
+
+export function HeroSlider({ locale, slides: SLIDES, text }: { locale: Locale; slides: Photo[]; text: HeroText }) {
+  // Editable text comes from the admin; button labels stay in the dictionary.
+  const t = { ...getDictionary(locale).hero, ...text };
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -18,7 +21,7 @@ export function HeroSlider({ locale }: { locale: Locale }) {
     if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = window.setTimeout(() => setIndex((i) => (i + 1) % SLIDES.length), INTERVAL);
     return () => window.clearTimeout(id);
-  }, [index, paused]);
+  }, [index, paused, SLIDES.length]);
 
   const go = (n: number) => setIndex((n + SLIDES.length) % SLIDES.length);
 
@@ -43,6 +46,7 @@ export function HeroSlider({ locale }: { locale: Locale }) {
             alt={photo.alt[locale]}
             fill
             priority={i === 0}
+            unoptimized={isUploaded(photo.src)}
             sizes="100vw"
             className={`object-cover transition-transform duration-[7000ms] ease-out ${i === index ? "scale-105" : "scale-100"}`}
           />
@@ -90,7 +94,7 @@ export function HeroSlider({ locale }: { locale: Locale }) {
             <ChevronIcon className="size-4" />
           </button>
           <p className="hidden text-xs uppercase tracking-[0.25em] text-white/80 sm:block" aria-live="polite">
-            {t.slides[index]}
+            {SLIDES[index]?.alt[locale]}
           </p>
         </div>
       </div>

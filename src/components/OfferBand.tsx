@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { PHOTOS } from "@/data/photos";
-import { getDictionary, type Locale } from "@/i18n/dictionaries";
+import type { Dictionary, Locale } from "@/i18n/dictionaries";
 
 // Gold line icons from the "One month free" banner.
 const s = { fill: "none", stroke: "currentColor", strokeWidth: 1.4, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -21,8 +21,7 @@ const ICONS = [
   <svg key="rem" viewBox="0 0 48 48" {...s}><rect x="12" y="6" width="24" height="28" rx="5" /><path d="M12 20h24M18 12h12" /><circle cx="18" cy="27" r="1.5" /><circle cx="30" cy="27" r="1.5" /><path d="M16 34l-4 8M32 34l4 8M14 40h20" /></svg>,
 ];
 
-export function OfferBand({ locale }: { locale: Locale }) {
-  const o = getDictionary(locale).offerBand;
+export function OfferBand({ o }: { locale: Locale; o: Dictionary["offerBand"] }) {
   return (
     <section id="offer" className="relative overflow-hidden bg-brown-deep text-cream">
       <Image src={PHOTOS.alcoves.src} alt="" fill sizes="100vw" className="object-cover opacity-35" />

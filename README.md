@@ -69,6 +69,13 @@ WhatsApp only lets a business message someone freely within 24 hours of their la
 - **Storage:** a private S3 bucket (`ELORA_S3_*`) for conversations, photos and pending requests, plus `APPROVAL_SECRET` for the approval links. Locally a temp folder is used.
 - The site's WhatsApp buttons use `PHONE_WHATSAPP` in `src/data/building.ts`; it should be the same number as the bot.
 
+## Admin
+
+`/admin` (reached from the small "·" after the copyright in the footer) lets you manage, without a redeploy:
+photos (library, upload, delete, top slider and gallery order, amenity photos), suites (status, price, available date, plan per suite, plan per floor), starting prices, section text in FR and EN, and the "One month free" offer.
+
+Content is saved to `content/site.json` in the S3 bucket and uploads under `media/`; the site reads it on every visit. Sign-in uses `ADMIN_PASSWORD` (temporary single password; "admin" when testing locally). Code: `src/app/admin`, `src/components/admin`, `src/app/actions/admin.ts`, `src/data/content.ts`.
+
 ## Still placeholder
 
 - Suite list: only suites 112 and 113 are real. Every other suite in `building.ts` is marked `sample: true`.

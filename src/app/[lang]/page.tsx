@@ -1,5 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { Explorer } from "@/components/Explorer";
 import { Gallery } from "@/components/Gallery";
 import { Header } from "@/components/Header";
@@ -10,18 +12,20 @@ import { OfferBand } from "@/components/OfferBand";
 import { ContactForms } from "@/components/ContactForms";
 import { PrivacyDialog } from "@/components/PrivacyDialog";
 import { Wordmark } from "@/components/Wordmark";
-import { CheckIcon, ChevronIcon, InstagramIcon, PhoneIcon, PinIcon, WhatsAppIcon } from "@/components/icons";
+import { CheckIcon, InstagramIcon, PhoneIcon, PinIcon, WhatsAppIcon } from "@/components/icons";
 import {
   ADDRESS,
   INSTAGRAM_URL,
   PHONE_MAIN,
   PHONE_MAIN_DISPLAY,
   PHONE_WHATSAPP_DISPLAY,
-  TOURS_3D,
+  formatPrice,
   whatsappLink,
 } from "@/data/building";
-import { PHOTOS, type Photo } from "@/data/photos";
+import { applyText, isUploaded } from "@/data/content";
+import type { Photo } from "@/data/photos";
 import { getDictionary, hasLocale, type Locale } from "@/i18n/dictionaries";
+import { getContent } from "@/lib/content";
 import { getOfficeHours } from "@/lib/officeHours";
 
 function SectionHeading({ eyebrow, title, lead, light = false }: { eyebrow: string; title: string; lead?: string; light?: boolean }) {
@@ -41,6 +45,7 @@ function PhotoCard({ photo, locale, title, text, className = "" }: { photo: Phot
         src={photo.src}
         alt={photo.alt[locale]}
         fill
+        unoptimized={isUploaded(photo.src)}
         sizes="(min-width: 1024px) 40vw, 100vw"
         className="object-cover transition duration-700 group-hover:scale-[1.04]"
       />
@@ -67,24 +72,36 @@ function IconCard({ title, text, icon }: { title: string; text: string; icon: st
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
-  const locale = lang;
-  const t = getDictionary(locale);
+  return (
+    <>
+      <Header locale={lang} />
+      {/* Content comes from the admin, read on each visit. */}
+      <Suspense fallback={<div className="min-h-svh bg-cream" />}>
+        <Body locale={lang} />
+      </Suspense>
+    </>
+  );
+}
+
+async function Body({ locale }: { locale: Locale }) {
+  const [content, hours] = await Promise.all([getContent(), getOfficeHours()]);
+  const t = applyText(getDictionary(locale), content.text, locale);
   const a = t.amenities.items;
-  const hours = await getOfficeHours();
+  const amen = content.photos.amenities;
+  // The first fact is the studio's starting price, kept in sync with the admin prices.
+  const facts = t.hero.facts.map((f, i) => (i === 0 ? { ...f, value: formatPrice(content.prices.studio, locale) } : f));
 
   return (
     <>
-      <Header locale={locale} />
-
       <main>
         {/* Hero: full-screen photo slider */}
         <div className="pt-16 lg:pt-20">
-          <HeroSlider locale={locale} />
+          <HeroSlider locale={locale} slides={content.photos.hero} text={{ eyebrow: t.hero.eyebrow, title: t.hero.title, lead: t.hero.lead, primary: t.hero.primary, secondary: t.hero.secondary }} />
         </div>
         <section className="bg-cream py-8 lg:py-10">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-brown/10 ring-1 ring-brown/10 sm:grid-cols-4">
-              {t.hero.facts.map((f) => (
+              {facts.map((f) => (
                 <div key={f.label} className="bg-cream px-5 py-4">
                   <dt className="sr-only">{f.label}</dt>
                   <dd className="font-display text-4xl text-gold">{f.value}</dd>
@@ -95,13 +112,13 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           </div>
         </section>
 
-        <OfferBand locale={locale} />
+        {content.offer.enabled && <OfferBand locale={locale} o={t.offerBand} />}
 
         {/* Suites explorer */}
         <section id="suites" className="bg-cream-deep py-20 lg:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading eyebrow={t.explorer.eyebrow} title={t.explorer.title} lead={t.explorer.lead} />
-            <Explorer locale={locale} />
+            <Explorer locale={locale} prices={content.prices} suites={content.suites} floorPlans={content.floorPlans} />
           </div>
         </section>
 
@@ -111,11 +128,11 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
             <SectionHeading eyebrow={t.amenities.eyebrow} title={t.amenities.title} />
             <h3 className="mb-4 text-sm font-medium uppercase tracking-[0.2em] text-brown-soft">{t.amenities.building}</h3>
             <div className="grid auto-rows-[260px] gap-4 sm:grid-cols-2 lg:auto-rows-[300px] lg:grid-cols-4">
-              <PhotoCard photo={PHOTOS.rooftop} locale={locale} title={a.rooftop.title} text={a.rooftop.text} className="sm:col-span-2 lg:row-span-2" />
-              <PhotoCard photo={PHOTOS.gym} locale={locale} title={a.gym.title} text={a.gym.text} className="lg:col-span-2" />
-              <PhotoCard photo={PHOTOS.terrace} locale={locale} title={a.terrace.title} text={a.terrace.text} />
-              <PhotoCard photo={PHOTOS.workBooth} locale={locale} title={a.lounge.title} text={a.lounge.text} />
-              <PhotoCard photo={PHOTOS.ev} locale={locale} title={a.parking.title} text={a.parking.text} className="lg:col-span-2" />
+              <PhotoCard photo={amen.rooftop} locale={locale} title={a.rooftop.title} text={a.rooftop.text} className="sm:col-span-2 lg:row-span-2" />
+              <PhotoCard photo={amen.gym} locale={locale} title={a.gym.title} text={a.gym.text} className="lg:col-span-2" />
+              <PhotoCard photo={amen.terrace} locale={locale} title={a.terrace.title} text={a.terrace.text} />
+              <PhotoCard photo={amen.lounge} locale={locale} title={a.lounge.title} text={a.lounge.text} />
+              <PhotoCard photo={amen.parking} locale={locale} title={a.parking.title} text={a.parking.text} className="lg:col-span-2" />
               <IconCard icon="📦" title={a.storage.title} text={a.storage.text} />
               <IconCard icon="🐾" title={a.pets.title} text={a.pets.text} />
             </div>
@@ -125,7 +142,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
 
             <div className="mt-16 grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
               <div className="relative aspect-[4/3] overflow-hidden rounded-lg">
-                <Image src={PHOTOS.living.src} alt={PHOTOS.living.alt[locale]} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+                <Image src={amen.living.src} alt={amen.living.alt[locale]} fill unoptimized={isUploaded(amen.living.src)} sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
               </div>
               <div>
                 <h3 className="text-sm font-medium uppercase tracking-[0.2em] text-brown-soft">{t.amenities.suites}</h3>
@@ -163,27 +180,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <section id="gallery" className="bg-cream-deep py-20 lg:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading eyebrow={t.gallery.eyebrow} title={t.gallery.title} />
-            <Gallery locale={locale} />
-            <div className="mt-10 flex flex-col gap-4 rounded-lg bg-cream p-6 text-brown ring-1 ring-sand sm:flex-row sm:items-center sm:justify-between sm:p-8">
-              <div>
-                <p className="font-display text-3xl">{t.tours.title}</p>
-                <p className="mt-1 text-brown-soft">{t.tours.text}</p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {TOURS_3D.map((href, i) => (
-                  <a
-                    key={href}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-sm bg-action px-5 py-3 text-sm font-medium text-white transition hover:bg-action-deep"
-                  >
-                    {t.tours.model(i + 1)}
-                    <ChevronIcon className="size-4" />
-                  </a>
-                ))}
-              </div>
-            </div>
+            <Gallery locale={locale} photos={content.photos.gallery} />
           </div>
         </section>
 
@@ -266,19 +263,25 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <div className="flex flex-col gap-2 sm:items-end">
             <PrivacyDialog locale={locale} />
             <p>
-              © 2026 Elora MTL. {t.footer.rights}
+              © 2026 Elora MTL. {t.footer.rights}{" "}
+              {/* Discreet entrance to the admin. */}
+              <Link href="/admin" prefetch={false} rel="nofollow" className="text-brown-soft/40 transition hover:text-brown-soft">
+                ·
+              </Link>
             </p>
           </div>
         </div>
       </footer>
 
       {/* Limited-time offer tab, as on eloramtl.com */}
+      {content.offer.enabled && (
       <a
         href="#offer"
         className="fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 rotate-180 border border-l-0 border-gold/40 bg-cream px-3 py-8 text-sm uppercase tracking-[0.16em] text-brown shadow-lg transition [writing-mode:vertical-rl] hover:border-gold hover:bg-cream-deep hover:text-ink md:block"
       >
         {t.offer}
       </a>
+      )}
 
       {/* Floating WhatsApp on small screens */}
       <a

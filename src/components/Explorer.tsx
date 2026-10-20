@@ -7,7 +7,6 @@ import {
   FLOOR_OUTLINES,
   FLOORS,
   PHONE_MAIN,
-  PRICE_FROM,
   UNITS,
   UNIT_TYPES,
   layoutFor,
@@ -16,6 +15,7 @@ import {
   type Unit,
   type UnitType,
 } from "@/data/building";
+import type { SiteContent, SuiteStatus } from "@/data/content";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 import { UnitPlan } from "./UnitPlan";
 import { ChevronIcon, PhoneIcon, WhatsAppIcon } from "./icons";
@@ -27,29 +27,37 @@ const centroid = (p: [number, number][]) => {
   return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
 };
 
-export function Explorer({ locale }: { locale: Locale }) {
+type Props = { locale: Locale; prices: SiteContent["prices"]; suites: SiteContent["suites"]; floorPlans: SiteContent["floorPlans"] };
+type Suite = Unit & { status?: SuiteStatus; price?: number; plan?: string };
+
+export function Explorer({ locale, prices, suites, floorPlans }: Props) {
   const t = getDictionary(locale);
+  // Suite details set in the admin (status, price, date, plan) on top of the building data.
+  const units = useMemo<Suite[]>(
+    () => UNITS.map((u) => ({ ...u, ...suites[u.id], availableOn: suites[u.id]?.availableOn ?? u.availableOn })),
+    [suites],
+  );
   const [floor, setFloor] = useState(1);
   const [hoverFloor, setHoverFloor] = useState<number | null>(null);
   const [filter, setFilter] = useState<UnitType | "all">("all");
   const [selectedId, setSelectedId] = useState<string>("112");
 
-  const matches = (u: Unit) => filter === "all" || u.type === filter;
-  const floorUnits = useMemo(() => UNITS.filter((u) => u.floor === floor), [floor]);
-  const matchCount = (f: number) => UNITS.filter((u) => u.floor === f && matches(u)).length;
-  const selected = UNITS.find((u) => u.id === selectedId && u.floor === floor) ?? null;
+  const matches = (u: Suite) => filter === "all" || u.type === filter;
+  const floorUnits = useMemo(() => units.filter((u) => u.floor === floor), [units, floor]);
+  const matchCount = (f: number) => units.filter((u) => u.floor === f && matches(u)).length;
+  const selected = units.find((u) => u.id === selectedId && u.floor === floor) ?? null;
 
   const goFloor = (f: number) => {
     setFloor(f);
-    const first = UNITS.find((u) => u.floor === f && matches(u));
+    const first = units.find((u) => u.floor === f && matches(u));
     setSelectedId(first?.id ?? "");
   };
   const changeFilter = (next: UnitType | "all") => {
     setFilter(next);
-    const ok = (u: Unit) => next === "all" || u.type === next;
-    const current = UNITS.find((u) => u.id === selectedId);
+    const ok = (u: Suite) => next === "all" || u.type === next;
+    const current = units.find((u) => u.id === selectedId);
     if (!current || !ok(current) || current.floor !== floor) {
-      setSelectedId(UNITS.find((u) => u.floor === floor && ok(u))?.id ?? "");
+      setSelectedId(units.find((u) => u.floor === floor && ok(u))?.id ?? "");
     }
   };
 
@@ -79,7 +87,7 @@ export function Explorer({ locale }: { locale: Locale }) {
               ) : (
                 <span className={`mt-1 text-xs ${active ? "text-cream/75" : "text-brown-soft"}`}>
                   {t.explorer.from}{" "}
-                  <span className={`font-display text-lg ${active ? "text-cream" : "text-brown"}`}>{formatPrice(PRICE_FROM[k], locale)}</span>
+                  <span className={`font-display text-lg ${active ? "text-cream" : "text-brown"}`}>{formatPrice(prices[k], locale)}</span>
                   {t.explorer.perMonth}
                 </span>
               )}
@@ -231,7 +239,7 @@ export function Explorer({ locale }: { locale: Locale }) {
                 >
                   <polygon
                     points={pts(u.shape)}
-                    fill={isSel ? "#3b2a20" : ok ? "#efe2c8" : "#faf8f5"}
+                    fill={isSel ? "#503d32" : !ok ? "#faf8f5" : u.status === "leased" ? "#e8e2da" : "#efe2c8"}
                     stroke="#3b2a20"
                     strokeWidth={1.5}
                     className="transition-colors duration-150 hover:fill-[#e9d6ae]"
@@ -253,6 +261,13 @@ export function Explorer({ locale }: { locale: Locale }) {
             })}
           </svg>
           {matchCount(floor) === 0 && <p className="py-2 text-center text-sm text-brown-soft">{t.explorer.noMatch}</p>}
+          {floorPlans[String(floor)] && (
+            <p className="pt-2 text-center text-sm">
+              <a href={floorPlans[String(floor)]} target="_blank" rel="noopener noreferrer" className="font-medium text-brown underline underline-offset-4">
+                {t.explorer.viewFloorPlan}
+              </a>
+            </p>
+          )}
         </div>
 
         <div className="mt-auto grid gap-5 p-5 sm:grid-cols-[1fr_1.1fr] sm:items-start">
@@ -273,11 +288,17 @@ export function Explorer({ locale }: { locale: Locale }) {
                   </li>
                 </ul>
                 <p className="mt-3 text-brown">
-                  <span className="text-sm text-brown-soft">{t.explorer.from} </span>
-                  <span className="font-display text-2xl">{formatPrice(PRICE_FROM[selected.type], locale)}</span>
+                  {!selected.price && <span className="text-sm text-brown-soft">{t.explorer.from} </span>}
+                  <span className="font-display text-2xl">{formatPrice(selected.price ?? prices[selected.type], locale)}</span>
                   <span className="text-sm text-brown-soft">{t.explorer.perMonth}</span>
                 </p>
-                {selected.availableOn && (
+                {selected.status === "leased" && (
+                  <p className="mt-3 inline-block rounded-sm bg-sand px-3 py-1 text-sm text-brown">{t.explorer.leased}</p>
+                )}
+                {selected.status === "soon" && (
+                  <p className="mt-3 inline-block rounded-sm bg-gold-light px-3 py-1 text-sm text-brown">{t.explorer.soon}</p>
+                )}
+                {selected.status !== "leased" && selected.status !== "soon" && selected.availableOn && (
                   <p className="mt-3 inline-block rounded-sm bg-action-light/40 px-3 py-1 text-sm text-action-deep">
                     {t.explorer.availableOn} {dateFmt.format(new Date(selected.availableOn))}
                   </p>
@@ -302,8 +323,21 @@ export function Explorer({ locale }: { locale: Locale }) {
                 </div>
               </div>
               <figure className="rounded-lg bg-white/60 p-3 ring-1 ring-brown/10">
-                <UnitPlan type={selected.type} t={t} />
-                <figcaption className="mt-2 text-center text-[11px] text-brown-soft">{t.explorer.planNote}</figcaption>
+                {selected.plan && !selected.plan.endsWith(".pdf") ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- plan uploaded in the admin
+                  <img src={selected.plan} alt={`${t.explorer.unit} ${selected.id}`} className="h-auto w-full" />
+                ) : (
+                  <UnitPlan type={selected.type} t={t} />
+                )}
+                <figcaption className="mt-2 text-center text-[11px] text-brown-soft">
+                  {selected.plan ? (
+                    <a href={selected.plan} target="_blank" rel="noopener noreferrer" className="font-medium text-brown underline underline-offset-4">
+                      {t.explorer.viewPlan}
+                    </a>
+                  ) : (
+                    t.explorer.planNote
+                  )}
+                </figcaption>
               </figure>
             </>
           ) : (
