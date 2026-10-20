@@ -20,7 +20,14 @@ export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Prom
     metadataBase: new URL("https://www.eloramtl.com"),
     title: t.meta.title,
     description: t.meta.description,
-    icons: { icon: "/icon.svg" },
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/icon.svg", type: "image/svg+xml" },
+        { url: "/icon-32.png", type: "image/png", sizes: "32x32" },
+      ],
+      apple: "/apple-touch-icon.png",
+    },
     alternates: { languages: { fr: "/fr", en: "/en" } },
     openGraph: {
       title: t.meta.title,
