@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BUILDING_PHOTO,
   FLOOR_OUTLINES,
@@ -47,6 +47,24 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
   const [hoverFloor, setHoverFloor] = useState<number | null>(null);
   const [filter, setFilter] = useState<UnitType | "all">("all");
   const [selectedId, setSelectedId] = useState<string>("112");
+  const [showDetails, setShowDetails] = useState(false);
+
+  useEffect(() => {
+    if (!showDetails) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setShowDetails(false);
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [showDetails]);
+
+  // Clicking an apartment selects it and opens its details.
+  const openSuite = (id: string) => {
+    setSelectedId(id);
+    setShowDetails(true);
+  };
 
   const onPromo = (u: { id: string; type: UnitType }) => Boolean(promo && (promo.types.includes(u.type) || promo.suites.includes(u.id)));
   const matches = (u: Suite) => filter === "all" || u.type === filter;
@@ -71,6 +89,64 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
   const floorLabel = (f: number) => (f === 1 ? t.explorer.ground : `${t.explorer.floor} ${f}`);
   const shownFloor = hoverFloor ?? floor;
   const dateFmt = new Intl.DateTimeFormat(locale === "fr" ? "fr-CA" : "en-CA", { dateStyle: "long", timeZone: "UTC" });
+
+  // Apartment details, used by the side panel and the pop-up.
+  const details = (u: Suite) => (
+    <>
+      <p className="text-xs uppercase tracking-[0.2em] text-action">{t.types[u.type]}</p>
+      <h3 className="mt-1 font-display text-4xl text-brown">
+        {t.explorer.unit} {u.id}
+      </h3>
+      <ul className="mt-3 space-y-1 text-brown/90">
+        <li>
+          {t.explorer.beds(u.beds)} {u.type === "1br-den" ? t.explorer.den : ""}
+        </li>
+        <li>{t.explorer.baths(u.baths)}</li>
+        <li>
+          {u.sqft.toLocaleString(locale === "fr" ? "fr-CA" : "en-CA")} {t.explorer.sqft}
+        </li>
+      </ul>
+      <p className="mt-3 text-brown">
+        {!u.price && <span className="text-sm text-brown-soft">{t.explorer.from} </span>}
+        <span className="font-display text-2xl">{formatPrice(u.price ?? prices[u.type], locale)}</span>
+        <span className="text-sm text-brown-soft">{t.explorer.perMonth}</span>
+      </p>
+      {onPromo(u) && u.status !== "leased" && (
+        <p className="mt-3 mr-2 inline-block rounded-sm bg-gold px-3 py-1 text-sm font-medium text-white">{t.promo.badge}</p>
+      )}
+      {u.status === "leased" && (
+        <p className="mt-3 inline-block rounded-sm bg-sand px-3 py-1 text-sm text-brown">{t.explorer.leased}</p>
+      )}
+      {u.status === "soon" && (
+        <p className="mt-3 inline-block rounded-sm bg-gold-light px-3 py-1 text-sm text-brown">{t.explorer.soon}</p>
+      )}
+      {u.status !== "leased" && u.status !== "soon" && u.availableOn && (
+        <p className="mt-3 inline-block rounded-sm bg-action-light/40 px-3 py-1 text-sm text-action-deep">
+          {t.explorer.availableOn} {dateFmt.format(new Date(u.availableOn))}
+        </p>
+      )}
+    </>
+  );
+  const contactButtons = (u: Suite) => (
+    <div className="mt-5 flex flex-col gap-2">
+      <a
+        href={whatsappLink(t.explorer.askAbout(u.id))}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center justify-center gap-2 rounded-sm bg-whatsapp px-5 py-3 text-sm font-medium text-white transition hover:brightness-95"
+      >
+        <WhatsAppIcon className="size-4" />
+        {t.explorer.whatsapp}
+      </a>
+      <a
+        href={`tel:+${PHONE_MAIN}`}
+        className="inline-flex items-center justify-center gap-2 rounded-sm px-5 py-3 text-sm font-medium text-brown ring-1 ring-brown/25 transition hover:bg-cream-deep"
+      >
+        <PhoneIcon className="size-4" />
+        {t.explorer.call}
+      </a>
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-6 lg:gap-8">
@@ -235,11 +311,11 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
                   tabIndex={ok ? 0 : -1}
                   aria-label={`${t.explorer.unit} ${u.id}, ${t.types[u.type]}`}
                   aria-pressed={isSel}
-                  onClick={() => ok && setSelectedId(u.id)}
+                  onClick={() => ok && openSuite(u.id)}
                   onKeyDown={(e) => {
                     if (ok && (e.key === "Enter" || e.key === " ")) {
                       e.preventDefault();
-                      setSelectedId(u.id);
+                      openSuite(u.id);
                     }
                   }}
                   className={`${ok ? "cursor-pointer" : "cursor-not-allowed"} outline-none [&:focus-visible>polygon]:stroke-action [&:focus-visible>polygon]:stroke-[4]`}
@@ -282,39 +358,15 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
           {selected ? (
             <>
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-action">{t.types[selected.type]}</p>
-                <h3 className="mt-1 font-display text-4xl text-brown">
-                  {t.explorer.unit} {selected.id}
-                </h3>
-                <ul className="mt-3 space-y-1 text-brown/90">
-                  <li>
-                    {t.explorer.beds(selected.beds)} {selected.type === "1br-den" ? t.explorer.den : ""}
-                  </li>
-                  <li>{t.explorer.baths(selected.baths)}</li>
-                  <li>
-                    {selected.sqft.toLocaleString(locale === "fr" ? "fr-CA" : "en-CA")} {t.explorer.sqft}
-                  </li>
-                </ul>
-                <p className="mt-3 text-brown">
-                  {!selected.price && <span className="text-sm text-brown-soft">{t.explorer.from} </span>}
-                  <span className="font-display text-2xl">{formatPrice(selected.price ?? prices[selected.type], locale)}</span>
-                  <span className="text-sm text-brown-soft">{t.explorer.perMonth}</span>
-                </p>
-                {onPromo(selected) && selected.status !== "leased" && (
-                  <p className="mt-3 mr-2 inline-block rounded-sm bg-gold px-3 py-1 text-sm font-medium text-white">{t.promo.badge}</p>
-                )}
-                {selected.status === "leased" && (
-                  <p className="mt-3 inline-block rounded-sm bg-sand px-3 py-1 text-sm text-brown">{t.explorer.leased}</p>
-                )}
-                {selected.status === "soon" && (
-                  <p className="mt-3 inline-block rounded-sm bg-gold-light px-3 py-1 text-sm text-brown">{t.explorer.soon}</p>
-                )}
-                {selected.status !== "leased" && selected.status !== "soon" && selected.availableOn && (
-                  <p className="mt-3 inline-block rounded-sm bg-action-light/40 px-3 py-1 text-sm text-action-deep">
-                    {t.explorer.availableOn} {dateFmt.format(new Date(selected.availableOn))}
-                  </p>
-                )}
-                <div className="mt-5 flex flex-col gap-2">
+                {details(selected)}
+                <button
+                  type="button"
+                  onClick={() => setShowDetails(true)}
+                  className="mt-5 inline-flex w-full items-center justify-center rounded-sm bg-action px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-white transition hover:bg-action-deep"
+                >
+                  {selected.plan ? t.explorer.detailsAndPlan : t.explorer.details}
+                </button>
+                <div className="mt-2 flex flex-col gap-2">
                   <a
                     href={whatsappLink(t.explorer.askAbout(selected.id))}
                     target="_blank"
@@ -360,6 +412,53 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
         </div>
       </div>
     </div>
+
+      {showDetails && selected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label={`${t.explorer.unit} ${selected.id}`} onClick={() => setShowDetails(false)}>
+          <div className="relative grid max-h-[94svh] w-full max-w-6xl overflow-auto rounded-sm bg-cream shadow-2xl md:grid-cols-[340px_1fr]" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setShowDetails(false)}
+              aria-label={t.promo.close}
+              className="absolute right-3 top-3 z-10 inline-flex size-10 items-center justify-center rounded-full bg-cream text-2xl text-brown shadow ring-1 ring-brown/10 hover:bg-cream-deep"
+            >
+              ×
+            </button>
+            <div className="border-b border-sand p-6 md:border-b-0 md:border-r">
+              {details(selected)}
+              <a
+                href="#visit"
+                onClick={() => setShowDetails(false)}
+                className="mt-5 inline-flex w-full items-center justify-center rounded-sm bg-action px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-white transition hover:bg-action-deep"
+              >
+                {t.explorer.bookVisit}
+              </a>
+              {contactButtons(selected)}
+            </div>
+            <div className="flex min-h-[50svh] flex-col bg-white p-3 sm:p-4">
+              {selected.plan?.endsWith(".pdf") ? (
+                <iframe src={`${selected.plan}#view=FitH`} title={`${t.explorer.unit} ${selected.id}`} className="min-h-[70svh] w-full flex-1 rounded-sm ring-1 ring-sand" />
+              ) : selected.plan ? (
+                // eslint-disable-next-line @next/next/no-img-element -- plan uploaded in the admin
+                <img src={selected.plan} alt={`${t.explorer.unit} ${selected.id}`} className="mx-auto h-auto max-h-[80svh] w-auto" />
+              ) : (
+                <div className="mx-auto w-full max-w-xl py-6">
+                  <UnitPlan type={selected.type} t={t} />
+                </div>
+              )}
+              <p className="mt-3 text-center text-sm text-brown-soft">
+                {selected.plan ? (
+                  <a href={selected.plan} target="_blank" rel="noopener noreferrer" className="font-medium text-brown underline underline-offset-4">
+                    {t.explorer.openPlan}
+                  </a>
+                ) : (
+                  t.explorer.planNote
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
