@@ -1,7 +1,7 @@
-// Official Elora logo (from eloramtl.com), recoloured with currentColor.
+// Official ELORA MTL logo, recoloured with currentColor. "MTL" traced from the brand file.
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 196.047 40" className={className} role="img" aria-label="Elora" fill="currentColor">
+    <svg viewBox="0 0 196.047 67" className={className} role="img" aria-label="Elora MTL" fill="currentColor">
       <path d="M76.4,39.952V1.2H79V37.611H96.686v2.341Z" transform="translate(-36.66 -0.576)" />
       <path d="M178.471,19.974a21.385,21.385,0,0,1-1.482,8.088,19.405,19.405,0,0,1-4.083,6.346,18.053,18.053,0,0,1-6.06,4.135A18.735,18.735,0,0,1,159.486,40V37.5a15.789,15.789,0,0,0,6.658-1.378,15.468,15.468,0,0,0,5.2-3.823,17.323,17.323,0,0,0,3.355-5.618,19.2,19.2,0,0,0,1.17-6.71,18.731,18.731,0,0,0-1.17-6.632,17.7,17.7,0,0,0-3.329-5.592A16.2,16.2,0,0,0,152.828,3.9a15.953,15.953,0,0,0-5.2,3.849,17.48,17.48,0,0,0-3.355,5.592,18.9,18.9,0,0,0-1.17,6.632V20h-2.6v-.026a21.211,21.211,0,0,1,1.482-8.062,19.459,19.459,0,0,1,4.109-6.32,18.749,18.749,0,0,1,26.788,0,19.273,19.273,0,0,1,4.109,6.346,21.249,21.249,0,0,1,1.482,8.036Z" transform="translate(-67.418 0)" />
       <path d="M274.091,39.952h-3.069l-8.91-15.6H251.1V22.006h10.091a10.355,10.355,0,0,0,5.02-1.17,8.708,8.708,0,0,0,3.407-3.277,9.253,9.253,0,0,0,1.248-4.811,9.309,9.309,0,0,0-1.222-4.811,8.592,8.592,0,0,0-3.407-3.225,10.517,10.517,0,0,0-5.046-1.17H251.1V1.2h10.091a13.53,13.53,0,0,1,6.4,1.456,10.779,10.779,0,0,1,4.317,4.083,11.642,11.642,0,0,1,1.56,6.06,11,11,0,0,1-8.635,11.131Z" transform="translate(-120.489 -0.576)" />
@@ -9,6 +9,11 @@ export function Wordmark({ className = "" }: { className?: string }) {
       <rect width="23.927" height="2.341" />
       <rect width="17.28" height="2.341" transform="translate(0 18.153)" />
       <rect width="23.927" height="2.341" transform="translate(0 36.411)" />
+      <g fill="none" stroke="currentColor" strokeWidth="1.17">
+        <path d="M82.3 67V57.2L86.3 62.8L90.2 57.2V67" strokeLinejoin="miter" />
+        <path d="M94.7 57.4H101.3M98 57.4V67" />
+        <path d="M105.9 56.8V66.4H111" />
+      </g>
     </svg>
   );
 }

@@ -38,7 +38,7 @@ export function Header({ locale }: { locale: Locale }) {
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
         <Link href={`/${locale}`} className="shrink-0" aria-label="Elora">
-          <Wordmark className="h-6 w-auto lg:h-7" />
+          <Wordmark className="h-10 w-auto lg:h-11" />
         </Link>
 
         <nav className="hidden items-center gap-8 text-sm uppercase tracking-[0.06em] lg:flex" aria-label="Main">

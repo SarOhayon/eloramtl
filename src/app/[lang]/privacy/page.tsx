@@ -21,7 +21,7 @@ export default async function PrivacyPage({ params }: PageProps<"/[lang]/privacy
   return (
     <main className="mx-auto max-w-3xl px-4 py-16 text-brown sm:px-6">
       <Link href={`/${lang}`} aria-label="Elora">
-        <Wordmark className="h-7 w-auto" />
+        <Wordmark className="h-12 w-auto" />
       </Link>
       <h1 className="mt-12 font-display text-5xl text-ink">{p.link}</h1>
       <p className="mt-2 text-sm text-brown-soft">{p.updated}</p>

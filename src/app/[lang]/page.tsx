@@ -255,7 +255,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
 
       <footer className="border-t border-sand bg-cream-deep py-10 text-brown-soft">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-4 text-sm sm:flex-row sm:items-center sm:px-6 lg:px-8">
-          <Wordmark className="h-5 w-auto text-brown" />
+          <Wordmark className="h-9 w-auto text-brown" />
           <div className="flex flex-col gap-2">
             <p>{ADDRESS}</p>
             <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-brown transition hover:text-gold">
