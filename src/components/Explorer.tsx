@@ -67,10 +67,12 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
   };
 
   const onPromo = (u: { id: string; type: UnitType }) => Boolean(promo && (promo.types.includes(u.type) || promo.suites.includes(u.id)));
-  const matches = (u: Suite) => filter === "all" || u.type === filter;
+  // Suites marked "Rented" in the admin can't be opened.
+  const rentable = (u: Suite) => u.status !== "leased";
+  const matches = (u: Suite) => rentable(u) && (filter === "all" || u.type === filter);
   const floorUnits = useMemo(() => units.filter((u) => u.floor === floor), [units, floor]);
   const matchCount = (f: number) => units.filter((u) => u.floor === f && matches(u)).length;
-  const selected = units.find((u) => u.id === selectedId && u.floor === floor) ?? null;
+  const selected = units.find((u) => u.id === selectedId && u.floor === floor && rentable(u)) ?? null;
 
   const goFloor = (f: number) => {
     setFloor(f);
@@ -79,7 +81,7 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
   };
   const changeFilter = (next: UnitType | "all") => {
     setFilter(next);
-    const ok = (u: Suite) => next === "all" || u.type === next;
+    const ok = (u: Suite) => rentable(u) && (next === "all" || u.type === next);
     const current = units.find((u) => u.id === selectedId);
     if (!current || !ok(current) || current.floor !== floor) {
       setSelectedId(units.find((u) => u.floor === floor && ok(u))?.id ?? "");
@@ -311,7 +313,8 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
                     key={u.id}
                     role="button"
                     tabIndex={ok ? 0 : -1}
-                    aria-label={`${t.explorer.unit} ${u.id}, ${t.types[u.type]}`}
+                    aria-label={`${t.explorer.unit} ${u.id}, ${u.status === "leased" ? t.explorer.leased : t.types[u.type]}`}
+                      aria-disabled={!ok}
                     aria-pressed={isSel}
                     onClick={() => ok && openSuite(u.id)}
                     onKeyDown={(e) => {
@@ -324,10 +327,10 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
                   >
                     <polygon
                       points={pts(u.shape)}
-                      fill={isSel ? "#503d32" : !ok ? "#faf8f5" : u.status === "leased" ? "#e8e2da" : "#efe2c8"}
+                      fill={isSel ? "#503d32" : u.status === "leased" ? "#e8e2da" : !ok ? "#faf8f5" : "#efe2c8"}
                       stroke="#3b2a20"
                       strokeWidth={1.5}
-                      className="transition-colors duration-150 hover:fill-[#e9d6ae]"
+                      className={ok ? "transition-colors duration-150 hover:fill-[#e9d6ae]" : undefined}
                       opacity={ok ? 1 : 0.55}
                     />
                     <text

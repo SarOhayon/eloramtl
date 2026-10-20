@@ -88,7 +88,7 @@ const fr = {
     secondary: "Réserver une visite",
     facts: [
       { value: "1 470 $", label: "par mois pour un studio" },
-      { value: "500 m", label: "du REM Canora, 7 min à pied" },
+      { value: "7 min", label: "à pied de la station REM Canora" },
       { value: "7 min", label: "du centre-ville en REM" },
       { value: "Oui", label: "aux animaux" },
     ],
@@ -223,7 +223,7 @@ const fr = {
       parking: { title: "Stationnement intérieur + bornes VÉ", text: "Places chauffées au sous-sol avec recharge pour véhicules électriques." },
       storage: { title: "Casiers de rangement", text: "Pour les vélos, les skis et tout ce qui ne rentre pas dans le placard." },
       pets: { title: "Animaux bienvenus", text: "Chiens et chats font partie de la famille." },
-      more: { title: "Et aussi :", text: "Espace social, ascenseurs, espaces pour bicyclettes, caméras de surveillance, accès pour personnes à mobilité réduite." },
+      more: { title: "Et aussi :", text: "Ascenseurs, espaces pour bicyclettes, caméras de surveillance, accès pour personnes à mobilité réduite." },
     },
     suiteItems: [
       "Laveuse et sécheuse dans chaque logement",
@@ -353,7 +353,7 @@ const en: Dictionary = {
     secondary: "Book a showing",
     facts: [
       { value: "$1,470", label: "per month for a studio" },
-      { value: "500 m", label: "to Canora REM, a 7-min walk" },
+      { value: "7 min", label: "to Canora REM Station" },
       { value: "7 min", label: "to downtown by REM" },
       { value: "Yes", label: "to pets" },
     ],
@@ -489,7 +489,7 @@ const en: Dictionary = {
       parking: { title: "Indoor parking + EV charging", text: "Heated underground spots with electric vehicle chargers." },
       storage: { title: "Storage lockers", text: "For bikes, skis and everything that doesn't fit in the closet." },
       pets: { title: "Pet friendly", text: "Dogs and cats are part of the family." },
-      more: { title: "Also:", text: "Social room, elevators, bicycle room, video surveillance, wheelchair access." },
+      more: { title: "Also:", text: "Elevators, bicycle room, video surveillance, wheelchair access." },
     },
     suiteItems: [
       "In-suite washer and dryer",

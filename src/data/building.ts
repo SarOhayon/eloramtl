@@ -29,16 +29,17 @@ export const BUILDING_LATLNG: [number, number] = [45.5121, -73.6318];
 export const whatsappLink = (text: string) =>
   `https://wa.me/${PHONE_WHATSAPP}?text=${encodeURIComponent(text)}`;
 
-// Floor outlines on /photos/elora-6.jpg (2000 x 1333).
-export const BUILDING_PHOTO = { src: "/photos/elora-6.jpg", width: 2000, height: 1333 };
+// Floor outlines on /photos/elora-render.jpg (1110 x 800). The set-back 7th floor
+// isn't visible in the rendering, so it is the strip along the roofline.
+export const BUILDING_PHOTO = { src: "/photos/elora-render.jpg", width: 1110, height: 800 };
 export const FLOOR_OUTLINES: Record<number, [number, number][]> = {
-  1: [[80, 842], [1865, 967], [1865, 1107], [80, 982]],
-  2: [[80, 756], [1865, 818], [1865, 967], [80, 842]],
-  3: [[80, 670], [1865, 670], [1865, 818], [80, 756]],
-  4: [[80, 584], [1865, 522], [1865, 670], [80, 670]],
-  5: [[80, 498], [1865, 373], [1865, 522], [80, 584]],
-  6: [[80, 396], [340, 375], [1800, 241], [1865, 300], [1865, 373], [80, 498]],
-  7: [[400, 290], [1800, 205], [1800, 241], [400, 367]],
+  1: [[110, 642], [695, 632], [1055, 639], [1055, 704], [695, 752], [110, 683]],
+  2: [[110, 600], [695, 510], [1055, 572], [1055, 639], [695, 632], [110, 642]],
+  3: [[110, 558], [695, 387], [1055, 505], [1055, 572], [695, 510], [110, 600]],
+  4: [[110, 517], [695, 265], [1055, 439], [1055, 505], [695, 387], [110, 558]],
+  5: [[110, 475], [695, 142], [1055, 372], [1055, 439], [695, 265], [110, 517]],
+  6: [[110, 440], [695, 40], [1055, 317], [1055, 372], [695, 142], [110, 475]],
+  7: [[170, 387], [695, 10], [1015, 268], [1015, 286], [695, 40], [170, 399]],
 };
 export const FLOORS = [7, 6, 5, 4, 3, 2, 1];
 
