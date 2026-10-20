@@ -71,7 +71,7 @@ const fr = {
     menu: "Menu",
   },
   hero: {
-    eyebrow: "Elora · 2855 chemin Bates",
+    eyebrow: "ELORA MTL",
     title: "Bienvenue chez vous",
     lead: "Une adresse locative raffinée à la croisée d'Outremont, de Ville Mont-Royal et de Glenmount, où le bois de noyer, les lustres de cristal et la lumière naturelle donnent le ton.",
     primary: "Découvrir les résidences",
@@ -327,7 +327,7 @@ const en: Dictionary = {
     menu: "Menu",
   },
   hero: {
-    eyebrow: "Elora · 2855 chemin Bates",
+    eyebrow: "ELORA MTL",
     title: "Welcome home",
     lead: "A refined rental address where Outremont, Ville Mont-Royal and Glenmount meet, set in walnut, crystal and natural light.",
     primary: "Discover the residences",
