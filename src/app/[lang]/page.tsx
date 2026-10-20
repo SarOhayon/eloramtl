@@ -275,7 +275,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       {/* Limited-time offer tab, as on eloramtl.com */}
       <a
         href="#offer"
-        className="fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 rotate-180 border border-l-0 border-gold/40 bg-cream px-3 py-8 text-sm uppercase tracking-[0.16em] text-brown shadow-lg transition [writing-mode:vertical-rl] hover:bg-brown md:block"
+        className="fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 rotate-180 border border-l-0 border-gold/40 bg-cream px-3 py-8 text-sm uppercase tracking-[0.16em] text-brown shadow-lg transition [writing-mode:vertical-rl] hover:border-gold hover:bg-cream-deep hover:text-ink md:block"
       >
         {t.offer}
       </a>
