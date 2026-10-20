@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { burstLogos } from "./logoBurst";
 import { PromoCard, type PromoCardText } from "./PromoCard";
 
 // Shows the promotion once per visitor (remembered in the browser), and a side tab to reopen it.
@@ -59,6 +60,7 @@ export function PromoPopup({ id, text, tab, photo, showTab, closeLabel }: { id: 
               onClose={close}
               onCta={() => {
                 close();
+                burstLogos();
                 document.getElementById("visit")?.scrollIntoView({ behavior: "smooth" });
               }}
             />

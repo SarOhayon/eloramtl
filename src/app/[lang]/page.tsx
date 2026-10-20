@@ -6,6 +6,7 @@ import { Explorer } from "@/components/Explorer";
 import { Gallery } from "@/components/Gallery";
 import { Header } from "@/components/Header";
 import { HeroSlider } from "@/components/HeroSlider";
+import { BackToTop } from "@/components/BackToTop";
 import { NeighbourhoodMap } from "@/components/NeighbourhoodMap";
 import { OfficeHoursCard } from "@/components/OfficeHoursCard";
 import { OfferBand } from "@/components/OfferBand";
@@ -310,6 +311,8 @@ async function Body({ locale }: { locale: Locale }) {
       {promoLive && (
         <PromoPopup id={promoId} text={promoText} tab={promo.tab[locale]} photo={promo.photo} showTab={promo.showTab} closeLabel={t.promo.close} />
       )}
+
+      <BackToTop label={t.backToTop} />
 
       {/* Floating WhatsApp on small screens */}
       <a

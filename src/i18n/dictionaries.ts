@@ -246,12 +246,21 @@ const fr = {
     prev: "Photo précédente",
     next: "Photo suivante",
   },
+  backToTop: "Retour en haut",
   neighbourhood: {
     eyebrow: "Le quartier",
     title: "Une adresse convoitée",
     intro: "Les boutiques d'Outremont, l'ambiance familiale de Ville Mont-Royal et le calme de Glenmount, à sept minutes à pied du REM.",
     categories: { transit: "Transport", school: "Écoles", shopping: "Commerces", park: "Parcs", health: "Santé" },
     you: "Elora",
+    bus: {
+      label: "Arrêts d'autobus",
+      title: "Arrêts d'autobus les plus proches",
+      stop: "Arrêt",
+      walk: (n: number) => `${n} min à pied`,
+      night: "nuit",
+      dir: { both: "nord et sud", north: "vers le nord", south: "vers le sud", east: "vers l'est", west: "vers l'ouest" },
+    },
   },
   contact: {
     eyebrow: "Contact",
@@ -512,12 +521,21 @@ const en: Dictionary = {
     prev: "Previous photo",
     next: "Next photo",
   },
+  backToTop: "Back to top",
   neighbourhood: {
     eyebrow: "Neighbourhood",
     title: "A coveted address",
     intro: "Outremont's boutiques, the family feel of Ville Mont-Royal and the calm of Glenmount, a seven-minute walk from the REM.",
     categories: { transit: "Transit", school: "Schools", shopping: "Shopping", park: "Parks", health: "Health" },
     you: "Elora",
+    bus: {
+      label: "Bus stops",
+      title: "Nearest bus stops",
+      stop: "Stop",
+      walk: (n: number) => `${n} min walk`,
+      night: "night",
+      dir: { both: "north & south", north: "northbound", south: "southbound", east: "eastbound", west: "westbound" },
+    },
   },
   contact: {
     eyebrow: "Contact",
