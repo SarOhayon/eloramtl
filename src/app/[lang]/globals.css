@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 @theme {
-  /* "Lobby luxe": walnut panelling, brushed gold, champagne and ivory stone. */
-  --color-cream: #fbf8f3;
-  --color-cream-deep: #f3ede4;
-  --color-sand: #e6d9c3;
-  --color-brown: #3b2a20;
-  --color-brown-deep: #241912;
-  --color-brown-soft: #8a7461;
-  --color-action: #3b2a20;
-  --color-action-deep: #241912;
-  --color-action-light: #e9d6ae;
-  --color-gold: #b48a4a;
-  --color-gold-light: #e8d3a3;
-  --color-ink: #1f1712;
+  /* Bright and light, close to eloramtl.com: white, soft beige, warm brown, champagne accents. */
+  --color-cream: #ffffff;
+  --color-cream-deep: #f7f5f2;
+  --color-sand: #e8e2da;
+  --color-brown: #503d32;
+  --color-brown-deep: #2d241c;
+  --color-brown-soft: #7d6b5d;
+  --color-action: #503d32;
+  --color-action-deep: #3a2c24;
+  --color-action-light: #e6ddd0;
+  --color-gold: #a8875a;
+  --color-gold-light: #e9dcc6;
+  --color-ink: #1d1814;
   --color-whatsapp: #1fa855;
 
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
@@ -39,7 +39,7 @@ body {
 
 /* Brushed-gold lettering, like "FREE" on the banner. */
 .text-gold-foil {
-  background: linear-gradient(175deg, #f6e7c1 0%, #d9b46e 38%, #b4884a 62%, #e9cf94 100%);
+  background: linear-gradient(175deg, #c9a46a 0%, #a8875a 45%, #8c6d44 70%, #b8955f 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

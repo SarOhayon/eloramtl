@@ -9,7 +9,7 @@ export function PrivacyDialog({ locale }: { locale: Locale }) {
 
   return (
     <>
-      <button type="button" onClick={() => ref.current?.showModal()} className="text-left underline-offset-4 hover:text-cream hover:underline">
+      <button type="button" onClick={() => ref.current?.showModal()} className="text-left underline-offset-4 hover:text-brown hover:underline">
         {p.link}
       </button>
       <dialog

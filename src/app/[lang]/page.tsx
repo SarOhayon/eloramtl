@@ -44,7 +44,7 @@ function PhotoCard({ photo, locale, title, text, className = "" }: { photo: Phot
         sizes="(min-width: 1024px) 40vw, 100vw"
         className="object-cover transition duration-700 group-hover:scale-[1.04]"
       />
-      <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brown-deep/85 via-brown-deep/40 to-transparent p-6 pt-16 text-cream">
+      <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-6 pt-16 text-cream">
         <p className="font-display text-2xl">{title}</p>
         <p className="mt-1 max-w-md text-sm text-cream/85">{text}</p>
       </figcaption>
@@ -164,10 +164,10 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading eyebrow={t.gallery.eyebrow} title={t.gallery.title} />
             <Gallery locale={locale} />
-            <div className="mt-10 flex flex-col gap-4 rounded-lg bg-brown p-6 text-cream sm:flex-row sm:items-center sm:justify-between sm:p-8">
+            <div className="mt-10 flex flex-col gap-4 rounded-lg bg-cream p-6 text-brown ring-1 ring-sand sm:flex-row sm:items-center sm:justify-between sm:p-8">
               <div>
                 <p className="font-display text-3xl">{t.tours.title}</p>
-                <p className="mt-1 text-cream/80">{t.tours.text}</p>
+                <p className="mt-1 text-brown-soft">{t.tours.text}</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 {TOURS_3D.map((href, i) => (
@@ -176,7 +176,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-sm bg-cream px-5 py-3 text-sm font-medium text-brown transition hover:bg-white"
+                    className="inline-flex items-center gap-2 rounded-sm bg-action px-5 py-3 text-sm font-medium text-white transition hover:bg-action-deep"
                   >
                     {t.tours.model(i + 1)}
                     <ChevronIcon className="size-4" />
@@ -253,12 +253,12 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         </section>
       </main>
 
-      <footer className="border-t-2 border-gold bg-brown-deep py-10 text-cream/70">
+      <footer className="border-t border-sand bg-cream-deep py-10 text-brown-soft">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-4 text-sm sm:flex-row sm:items-center sm:px-6 lg:px-8">
-          <Wordmark className="h-5 w-auto text-gold-light" />
+          <Wordmark className="h-5 w-auto text-brown" />
           <div className="flex flex-col gap-2">
             <p>{ADDRESS}</p>
-            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-gold-light transition hover:text-cream">
+            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-brown transition hover:text-gold">
               <InstagramIcon className="size-4" />
               @eloramtl
             </a>
@@ -275,7 +275,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       {/* Limited-time offer tab, as on eloramtl.com */}
       <a
         href="#offer"
-        className="fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 rotate-180 border border-l-0 border-gold/60 bg-brown-deep px-3 py-8 text-sm uppercase tracking-[0.16em] text-gold-light shadow-lg transition [writing-mode:vertical-rl] hover:bg-brown md:block"
+        className="fixed left-0 top-1/2 z-30 hidden -translate-y-1/2 rotate-180 border border-l-0 border-gold/40 bg-cream px-3 py-8 text-sm uppercase tracking-[0.16em] text-brown shadow-lg transition [writing-mode:vertical-rl] hover:bg-brown md:block"
       >
         {t.offer}
       </a>

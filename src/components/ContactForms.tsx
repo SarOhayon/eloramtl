@@ -80,7 +80,7 @@ function InquiryForm({ locale }: { locale: Locale }) {
       <button
         type="submit"
         disabled={pending}
-        className="mt-6 inline-flex w-full items-center justify-center rounded-sm bg-gold px-6 py-4 text-sm font-medium uppercase tracking-[0.18em] text-brown-deep transition hover:bg-gold-light disabled:opacity-60"
+        className="mt-6 inline-flex w-full items-center justify-center rounded-sm bg-action px-6 py-4 text-sm font-medium uppercase tracking-[0.18em] text-white transition hover:bg-action-deep disabled:opacity-60"
       >
         {pending ? f.sending : f.submit}
       </button>
@@ -105,10 +105,10 @@ export function ContactForms({ locale }: { locale: Locale }) {
         <InquiryForm locale={locale} />
       </div>
       {/* Residents report maintenance through the WhatsApp assistant. */}
-      <div id="maintenance" className="flex flex-col gap-4 rounded-lg bg-brown-deep p-6 text-cream sm:flex-row sm:items-center sm:justify-between">
+      <div id="maintenance" className="flex flex-col gap-4 rounded-lg bg-cream p-6 text-brown ring-1 ring-sand sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-display text-2xl">{m.title}</p>
-          <p className="mt-1 text-sm text-cream/75">{m.text}</p>
+          <p className="mt-1 text-sm text-brown-soft">{m.text}</p>
         </div>
         <a
           href={whatsappLink(m.message)}

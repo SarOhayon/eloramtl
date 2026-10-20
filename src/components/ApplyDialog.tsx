@@ -99,7 +99,7 @@ export function ApplyDialog({ locale, className }: { locale: Locale; className?:
               <button
                 type="submit"
                 disabled={pending}
-                className="mt-6 inline-flex w-full items-center justify-center rounded-sm bg-gold px-6 py-4 text-sm font-medium uppercase tracking-[0.18em] text-brown-deep transition hover:bg-gold-light disabled:opacity-60"
+                className="mt-6 inline-flex w-full items-center justify-center rounded-sm bg-action px-6 py-4 text-sm font-medium uppercase tracking-[0.18em] text-white transition hover:bg-action-deep disabled:opacity-60"
               >
                 {pending ? a.sending : a.submit}
               </button>

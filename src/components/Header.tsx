@@ -78,7 +78,7 @@ export function Header({ locale }: { locale: Locale }) {
           </a>
           <ApplyDialog
             locale={locale}
-            className="inline-flex items-center rounded-sm bg-gold px-4 py-2.5 text-xs font-medium uppercase tracking-[0.14em] text-brown-deep transition hover:bg-gold-light sm:px-6 sm:py-3 sm:text-sm"
+            className="inline-flex items-center rounded-sm bg-action px-4 py-2.5 text-xs font-medium uppercase tracking-[0.14em] text-white transition hover:bg-action-deep sm:px-6 sm:py-3 sm:text-sm"
           />
           <button
             type="button"

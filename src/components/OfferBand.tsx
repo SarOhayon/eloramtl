@@ -1,5 +1,3 @@
-import Image from "next/image";
-import { PHOTOS } from "@/data/photos";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 
 // Gold line icons from the "One month free" banner.
@@ -24,17 +22,15 @@ const ICONS = [
 export function OfferBand({ locale }: { locale: Locale }) {
   const o = getDictionary(locale).offerBand;
   return (
-    <section id="offer" className="relative overflow-hidden bg-brown-deep text-cream">
-      <Image src={PHOTOS.alcoves.src} alt="" fill sizes="100vw" className="object-cover opacity-35" />
-      <div className="absolute inset-0 bg-gradient-to-r from-brown-deep via-brown-deep/85 to-brown-deep/40" />
+    <section id="offer" className="relative overflow-hidden bg-cream-deep text-brown">
       <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <div className="border border-gold/60 px-6 py-12 sm:px-12 lg:px-16">
+        <div className="border border-gold/40 bg-cream px-6 py-12 sm:px-12 lg:px-16">
           <div className="grid items-center gap-10 lg:grid-cols-[1.2fr_1fr]">
             <div>
-              <p className="font-display text-4xl uppercase tracking-[0.04em] text-white sm:text-5xl">{o.kicker}</p>
+              <p className="font-display text-4xl uppercase tracking-[0.04em] text-ink sm:text-5xl">{o.kicker}</p>
               <p className="text-gold-foil font-display text-7xl font-semibold uppercase leading-[0.9] sm:text-8xl lg:text-9xl">{o.big}</p>
-              <p className="mt-4 text-lg uppercase tracking-[0.35em] text-white sm:text-xl">{o.sub}</p>
-              <p className="mt-3 flex items-center gap-4 text-[11px] uppercase tracking-[0.25em] text-cream/75">
+              <p className="mt-4 text-lg uppercase tracking-[0.35em] text-brown sm:text-xl">{o.sub}</p>
+              <p className="mt-3 flex items-center gap-4 text-[11px] uppercase tracking-[0.25em] text-brown-soft">
                 <span className="h-px w-10 bg-gold/70" />
                 {o.fine}
                 <span className="h-px w-10 bg-gold/70" />
@@ -43,18 +39,18 @@ export function OfferBand({ locale }: { locale: Locale }) {
             <div className="lg:justify-self-end">
               <a
                 href="#visit"
-                className="inline-flex items-center justify-center rounded-sm bg-gold px-8 py-4 text-sm font-medium uppercase tracking-[0.18em] text-brown-deep transition hover:bg-gold-light"
+                className="inline-flex items-center justify-center rounded-sm bg-action px-8 py-4 text-sm font-medium uppercase tracking-[0.18em] text-white transition hover:bg-action-deep"
               >
                 {o.cta}
               </a>
             </div>
           </div>
 
-          <ul className="mt-12 grid grid-cols-2 gap-y-8 border-t border-gold/40 pt-10 sm:grid-cols-4 lg:grid-cols-7 lg:divide-x lg:divide-gold/40">
+          <ul className="mt-12 grid grid-cols-2 gap-y-8 border-t border-sand pt-10 sm:grid-cols-4 lg:grid-cols-7 lg:divide-x lg:divide-sand">
             {o.features.map((label, i) => (
               <li key={label} className="flex flex-col items-center px-3 text-center">
-                <span className="size-12 text-gold-light">{ICONS[i]}</span>
-                <span className="mt-3 text-[11px] uppercase leading-snug tracking-[0.12em] text-cream/90">{label}</span>
+                <span className="size-12 text-gold">{ICONS[i]}</span>
+                <span className="mt-3 text-[11px] uppercase leading-snug tracking-[0.12em] text-brown">{label}</span>
               </li>
             ))}
           </ul>
