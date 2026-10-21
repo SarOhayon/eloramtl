@@ -7,6 +7,7 @@ import { Gallery } from "@/components/Gallery";
 import { Header } from "@/components/Header";
 import { HeroSlider } from "@/components/HeroSlider";
 import { BackToTop } from "@/components/BackToTop";
+import { InquiryDialog } from "@/components/InquiryDialog";
 import { NeighbourhoodMap } from "@/components/NeighbourhoodMap";
 import { OfficeHoursCard } from "@/components/OfficeHoursCard";
 import { OfferBand } from "@/components/OfferBand";
@@ -313,6 +314,7 @@ async function Body({ locale }: { locale: Locale }) {
       )}
 
       <BackToTop label={t.backToTop} />
+      <InquiryDialog locale={locale} />
 
       {/* Floating WhatsApp on small screens */}
       <a

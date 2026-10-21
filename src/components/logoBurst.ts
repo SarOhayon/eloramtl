@@ -34,7 +34,7 @@ export function burstLogos({ burst = 16, rain = 32 } = {}) {
     const dx = rand(-0.45, 0.45) * w;
     const up = -rand(0.1, 0.35) * h;
     const spin = rand(-1, 1) * 360;
-    const duration = rand(3800, 5200);
+    const duration = rand(6000, 8000);
     last = Math.max(last, duration);
     el.animate(
       [
@@ -52,8 +52,8 @@ export function burstLogos({ burst = 16, rain = 32 } = {}) {
     const el = piece(i + 1, rand(0, w), -160);
     const sway = rand(30, 90) * (Math.random() < 0.5 ? -1 : 1);
     const spin = rand(-1, 1) * 300;
-    const delay = rand(0, 1600);
-    const duration = rand(3800, 5600);
+    const delay = rand(0, 2500);
+    const duration = rand(6500, 9000);
     last = Math.max(last, delay + duration);
     el.animate(
       [

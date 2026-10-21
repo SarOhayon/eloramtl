@@ -1,8 +1,9 @@
 "use client";
 
+import { openInquiry } from "./inquiry";
 import { burstLogos } from "./logoBurst";
 
-// "Claim the offer" link: sprinkles the logo and glides to the contact form.
+// "Claim the offer" link: sprinkles the logo and opens the inquiry form.
 export function ClaimOfferLink({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
     <a
@@ -11,7 +12,7 @@ export function ClaimOfferLink({ className, children }: { className?: string; ch
       onClick={(e) => {
         e.preventDefault();
         burstLogos();
-        document.getElementById("visit")?.scrollIntoView({ behavior: "smooth" });
+        openInquiry();
       }}
     >
       {children}

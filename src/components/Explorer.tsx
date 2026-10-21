@@ -400,6 +400,7 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
               {details(selected)}
               <a
                 href="#visit"
+                data-suite-type={t.types[selected.type]}
                 onClick={() => setShowDetails(false)}
                 className="mt-5 inline-flex w-full items-center justify-center rounded-sm bg-action px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-white transition hover:bg-action-deep"
               >

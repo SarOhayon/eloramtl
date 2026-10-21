@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { openInquiry } from "./inquiry";
 import { burstLogos } from "./logoBurst";
 import { PromoCard, type PromoCardText } from "./PromoCard";
 
@@ -61,7 +62,7 @@ export function PromoPopup({ id, text, tab, photo, showTab, closeLabel }: { id: 
               onCta={() => {
                 close();
                 burstLogos();
-                document.getElementById("visit")?.scrollIntoView({ behavior: "smooth" });
+                openInquiry();
               }}
             />
           </div>

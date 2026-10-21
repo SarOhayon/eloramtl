@@ -22,7 +22,7 @@ function Field({ label, required, children, wide }: { label: string; required?: 
   );
 }
 
-function InquiryForm({ locale }: { locale: Locale }) {
+export function InquiryForm({ locale, initialType }: { locale: Locale; initialType?: string }) {
   const t = getDictionary(locale);
   const f = t.forms;
   const [state, formAction, pending] = useActionState<ContactState, FormData>(submitContact, { status: "idle" });
@@ -54,7 +54,7 @@ function InquiryForm({ locale }: { locale: Locale }) {
         </Field>
 
         <Field label={f.inquiry.type}>
-          <select name="type" className={field} defaultValue={v.type ?? ""}>
+          <select name="type" className={field} defaultValue={v.type ?? initialType ?? ""}>
             <option value="">{f.inquiry.any}</option>
             {UNIT_TYPES.map((k) => (
               <option key={k} value={t.types[k]}>
