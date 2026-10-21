@@ -63,11 +63,11 @@ export function InquiryForm({ locale, initialType }: { locale: Locale; initialTy
             ))}
           </select>
         </Field>
-        <Field label={f.inquiry.moveIn}>
-          <input name="moveIn" type="date" className={field} defaultValue={v.moveIn} />
+        <Field label={f.inquiry.moveIn} required>
+          <input name="moveIn" type="date" className={field} required defaultValue={v.moveIn} />
         </Field>
-        <Field label={f.inquiry.comments} required wide>
-          <textarea name="comments" rows={4} className={field} placeholder={f.inquiry.commentsHint} required defaultValue={v.comments} />
+        <Field label={f.inquiry.comments} wide>
+          <textarea name="comments" rows={4} className={field} placeholder={f.inquiry.commentsHint} defaultValue={v.comments} />
         </Field>
       </div>
 

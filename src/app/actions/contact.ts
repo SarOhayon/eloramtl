@@ -9,17 +9,16 @@ export async function submitContact(_prev: ContactState, formData: FormData): Pr
   const v: Record<string, string> = {};
   for (const k of ["name", "email", "phone", "type", "moveIn", "comments"]) v[k] = get(k);
 
-  if (!v.name || !v.phone || !v.comments || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)) return { status: "invalid", values: v };
+  if (!v.name || !v.phone || !/^\d{4}-\d{2}-\d{2}$/.test(v.moveIn) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)) return { status: "invalid", values: v };
 
   const lines = [
     `Name: ${v.name}`,
     `Email: ${v.email}`,
     `Phone: ${v.phone}`,
     `Suite type: ${v.type || "Not sure yet"}`,
-    v.moveIn ? `Move-in date: ${v.moveIn}` : null,
-    "",
-    v.comments,
+    `Move-in date: ${v.moveIn}`,
+    ...(v.comments ? ["", v.comments] : []),
   ];
-  const sent = await sendMail({ subject: `Elora inquiry: ${v.name}`, text: lines.filter((l) => l !== null).join("\n"), replyTo: v.email });
+  const sent = await sendMail({ subject: `Elora inquiry: ${v.name}`, text: lines.join("\n"), replyTo: v.email });
   return sent ? { status: "sent" } : { status: "error", values: v };
 }
