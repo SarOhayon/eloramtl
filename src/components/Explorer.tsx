@@ -67,8 +67,8 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
   };
 
   const onPromo = (u: { id: string; type: UnitType }) => Boolean(promo && (promo.types.includes(u.type) || promo.suites.includes(u.id)));
-  // Suites marked "Rented" in the admin can't be opened.
-  const rentable = (u: Suite) => u.status !== "leased";
+  // Only suites marked Available or Coming soon in the admin can be opened (and show contact options).
+  const rentable = (u: Suite) => u.status === "available" || u.status === "soon";
   const matches = (u: Suite) => rentable(u) && (filter === "all" || u.type === filter);
   const floorUnits = useMemo(() => units.filter((u) => u.floor === floor), [units, floor]);
   const matchCount = (f: number) => units.filter((u) => u.floor === f && matches(u)).length;
@@ -313,7 +313,7 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
                     key={u.id}
                     role="button"
                     tabIndex={ok ? 0 : -1}
-                    aria-label={`${t.explorer.unit} ${u.id}, ${u.status === "leased" ? t.explorer.leased : t.types[u.type]}`}
+                    aria-label={`${t.explorer.unit} ${u.id}, ${rentable(u) ? t.types[u.type] : t.explorer.unavailable}`}
                       aria-disabled={!ok}
                     aria-pressed={isSel}
                     onClick={() => ok && openSuite(u.id)}
@@ -327,7 +327,7 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
                   >
                     <polygon
                       points={pts(u.shape)}
-                      fill={isSel ? "#503d32" : u.status === "leased" ? "#e8e2da" : !ok ? "#faf8f5" : "#efe2c8"}
+                      fill={isSel ? "#503d32" : !rentable(u) ? "#e8e2da" : !ok ? "#faf8f5" : "#efe2c8"}
                       stroke="#3b2a20"
                       strokeWidth={1.5}
                       className={ok ? "transition-colors duration-150 hover:fill-[#e9d6ae]" : undefined}
@@ -344,12 +344,12 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
                     >
                       {u.id}
                     </text>
-                    {onPromo(u) && u.status !== "leased" && <circle cx={cx + 22} cy={cy - 8} r={4.5} fill="#a8875a" stroke="#fff" strokeWidth={1.5} pointerEvents="none" />}
+                    {onPromo(u) && rentable(u) && <circle cx={cx + 22} cy={cy - 8} r={4.5} fill="#a8875a" stroke="#fff" strokeWidth={1.5} pointerEvents="none" />}
                   </g>
                 );
               })}
             </svg>
-            {matchCount(floor) === 0 && <p className="py-2 text-center text-sm text-brown-soft">{t.explorer.noMatch}</p>}
+            {matchCount(floor) === 0 && <p className="py-2 text-center text-sm text-brown-soft">{filter === "all" ? t.explorer.noneAvailable : t.explorer.noMatch}</p>}
             {floorPlans[String(floor)] && (
               <p className="pt-2 text-center text-sm">
                 <a href={floorPlans[String(floor)]} target="_blank" rel="noopener noreferrer" className="font-medium text-brown underline underline-offset-4">
