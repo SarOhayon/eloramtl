@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { PHOTOS } from "@/data/photos";
+import { ClaimOfferLink } from "./ClaimOfferLink";
 import type { Dictionary, Locale } from "@/i18n/dictionaries";
 
 // Gold line icons from the "One month free" banner.
@@ -40,12 +41,9 @@ export function OfferBand({ o }: { locale: Locale; o: Dictionary["offerBand"] })
               </p>
             </div>
             <div className="lg:justify-self-end">
-              <a
-                href="#visit"
-                className="inline-flex items-center justify-center rounded-sm bg-cream px-8 py-4 text-sm font-medium uppercase tracking-[0.18em] text-brown transition hover:bg-gold-light"
-              >
+              <ClaimOfferLink className="inline-flex items-center justify-center rounded-sm bg-cream px-8 py-4 text-sm font-medium uppercase tracking-[0.18em] text-brown transition hover:bg-gold-light">
                 {o.cta}
-              </a>
+              </ClaimOfferLink>
             </div>
           </div>
 
