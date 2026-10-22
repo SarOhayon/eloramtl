@@ -4,17 +4,39 @@ import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap, LayerGroup } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { BUILDING_LATLNG } from "@/data/building";
-import { PLACES, type PlaceCategory } from "@/data/places";
+import { BUS_STOPS, PLACES, type PlaceCategory } from "@/data/places";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 
 const COLORS: Record<PlaceCategory, string> = {
-  transit: "#5d6b4f",
+  transit: "#3b2a20",
   school: "#8a6a3e",
   shopping: "#b0704f",
-  park: "#6f8f5a",
+  park: "#7d8c6a",
   health: "#9a5a5a",
 };
 const CATS = Object.keys(COLORS) as PlaceCategory[];
+const BUS = "#0a7fb5"; // STM blue
+
+// Mapbox when a token is configured (NEXT_PUBLIC_MAPBOX_TOKEN), otherwise CARTO's free basemap.
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+const MAPBOX_STYLE = process.env.NEXT_PUBLIC_MAPBOX_STYLE || "mapbox/light-v11";
+const OSM = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
+function tileLayer(L: typeof import("leaflet")) {
+  if (MAPBOX_TOKEN) {
+    return L.tileLayer(`https://api.mapbox.com/styles/v1/${MAPBOX_STYLE}/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`, {
+      attribution: `&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> ${OSM} <a href="https://www.mapbox.com/map-feedback/">Improve this map</a>`,
+      tileSize: 512,
+      zoomOffset: -1,
+      maxZoom: 20,
+    });
+  }
+  return L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    attribution: `${OSM} &copy; <a href="https://carto.com/">CARTO</a>`,
+    subdomains: "abcd",
+    maxZoom: 19,
+  });
+}
 
 export function NeighbourhoodMap({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
@@ -22,6 +44,7 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
   const map = useRef<LeafletMap | null>(null);
   const layer = useRef<LayerGroup | null>(null);
   const [active, setActive] = useState<Set<PlaceCategory>>(new Set(CATS));
+  const [showBus, setShowBus] = useState(true);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -29,17 +52,13 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
     import("leaflet").then((L) => {
       if (cancelled || !el.current || map.current) return;
       const m = L.map(el.current, { scrollWheelZoom: false, zoomControl: true }).setView(BUILDING_LATLNG, 14);
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains: "abcd",
-        maxZoom: 19,
-      }).addTo(m);
+      tileLayer(L).addTo(m);
       L.marker(BUILDING_LATLNG, {
         icon: L.divIcon({
           className: "",
           iconSize: [36, 36],
           iconAnchor: [18, 18],
-          html: `<div style="position:relative;width:36px;height:36px"><div style="width:36px;height:36px;border-radius:50%;background:#4a3628;color:#f6f0e6;display:flex;align-items:center;justify-content:center;font:600 16px/1 Georgia,serif;box-shadow:0 0 0 6px rgba(74,54,40,.25)">E</div><span style="position:absolute;left:44px;top:7px;background:#4a3628;color:#f6f0e6;padding:3px 9px;border-radius:999px;font:500 12px/1.4 system-ui,sans-serif;white-space:nowrap">Elora</span></div>`,
+          html: `<div style="position:relative;width:36px;height:36px"><div style="width:36px;height:36px;border-radius:50%;background:#3b2a20;color:#faf8f5;display:flex;align-items:center;justify-content:center;font:600 16px/1 Georgia,serif;box-shadow:0 0 0 6px rgba(74,54,40,.25)">E</div><span style="position:absolute;left:44px;top:7px;background:#3b2a20;color:#faf8f5;padding:3px 9px;border-radius:999px;font:500 12px/1.4 system-ui,sans-serif;white-space:nowrap">Elora</span></div>`,
         }),
         zIndexOffset: 1000,
         keyboard: false,
@@ -66,8 +85,23 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
           .bindTooltip(`${p.name}${p.walk ? ` · ${p.walk[locale]}` : ""}`, { direction: "top", offset: [0, -6] })
           .addTo(g);
       }
+      if (!showBus) return;
+      for (const s of BUS_STOPS) {
+        const lines = s.routes.map((r) => `<b>${r.n}</b> ${r.name} · ${t.neighbourhood.bus.dir[r.dir]}${r.night ? ` (${t.neighbourhood.bus.night})` : ""}`).join("<br>");
+        L.marker(s.latlng, {
+          icon: L.divIcon({
+            className: "",
+            iconSize: [18, 18],
+            iconAnchor: [9, 9],
+            html: `<div style="width:18px;height:18px;border-radius:5px;background:${BUS};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3);color:#fff;font:700 10px/14px system-ui,sans-serif;text-align:center">B</div>`,
+          }),
+          keyboard: false,
+        })
+          .bindTooltip(`${t.neighbourhood.bus.stop} <b>${s.code}</b> · ${s.name}<br>${lines}<br>${t.neighbourhood.bus.walk(s.walkMin)}`, { direction: "top", offset: [0, -8] })
+          .addTo(g);
+      }
     });
-  }, [active, ready, locale]);
+  }, [active, showBus, ready, locale, t]);
 
   const toggle = (c: PlaceCategory) =>
     setActive((s) => {
@@ -78,7 +112,7 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
     });
 
   return (
-    <div className="overflow-hidden rounded-3xl bg-cream shadow-xl shadow-brown/10 ring-1 ring-brown/10">
+    <div className="overflow-hidden rounded-lg bg-cream shadow-xl shadow-brown/10 ring-1 ring-brown/10">
       <div className="flex flex-wrap gap-2 p-4">
         {CATS.map((c) => (
           <button
@@ -86,7 +120,7 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
             type="button"
             aria-pressed={active.has(c)}
             onClick={() => toggle(c)}
-            className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm ring-1 transition ${
+            className={`inline-flex items-center gap-2 rounded-sm px-3.5 py-1.5 text-sm ring-1 transition ${
               active.has(c) ? "bg-cream-deep text-brown ring-brown/20" : "text-brown/50 ring-brown/10"
             }`}
           >
@@ -94,24 +128,50 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
             {t.neighbourhood.categories[c]}
           </button>
         ))}
+        <button
+          type="button"
+          aria-pressed={showBus}
+          onClick={() => setShowBus((v) => !v)}
+          className={`inline-flex items-center gap-2 rounded-sm px-3.5 py-1.5 text-sm ring-1 transition ${
+            showBus ? "bg-cream-deep text-brown ring-brown/20" : "text-brown/50 ring-brown/10"
+          }`}
+        >
+          <span className="size-2.5 rounded-[3px]" style={{ background: BUS, opacity: showBus ? 1 : 0.35 }} />
+          {t.neighbourhood.bus.label}
+        </button>
       </div>
-      <div ref={el} className="h-[420px] w-full sm:h-[520px]" aria-label={t.nav.neighbourhood} />
-      <ul className="grid gap-x-6 gap-y-2 p-5 text-sm sm:grid-cols-2">
-        {PLACES.filter((p) => active.has(p.category)).map((p) => (
-          <li key={p.name} className="flex items-center gap-2">
-            <span className="size-2 shrink-0 rounded-full" style={{ background: COLORS[p.category] }} />
-            <button
-              type="button"
-              className="text-left text-brown hover:underline"
-              onClick={() => map.current?.flyTo(p.latlng, 16, { duration: 0.6 })}
-            >
-              {p.name}
-            </button>
-            {p.walk && <span className="text-brown-soft">· {p.walk[locale]}</span>}
-          </li>
-        ))}
-      </ul>
-      <p className="px-5 pb-4 text-xs text-brown-soft">{t.neighbourhood.mapNote}</p>
+      <div ref={el} className="h-[380px] w-full sm:h-[460px]" aria-label={t.nav.neighbourhood} />
+      {showBus && (
+        <div className="border-t border-brown/10 p-4 sm:p-5">
+          <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-brown-soft">{t.neighbourhood.bus.title}</p>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {BUS_STOPS.map((s) => (
+              <li key={s.code} className="rounded-md bg-white p-3.5 ring-1 ring-brown/10">
+                <p className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm text-brown">
+                    {t.neighbourhood.bus.stop} <span className="font-semibold tabular-nums">{s.code}</span>
+                  </span>
+                  <span className="text-xs text-brown-soft">{t.neighbourhood.bus.walk(s.walkMin)}</span>
+                </p>
+                <p className="mt-0.5 text-xs text-brown-soft">{s.name}</p>
+                <ul className="mt-2.5 space-y-1.5">
+                  {s.routes.map((r) => (
+                    <li key={r.n + r.dir} className="flex items-center gap-2 text-sm text-brown">
+                      <span className="inline-flex min-w-9 justify-center rounded-sm px-1.5 py-0.5 text-xs font-bold text-white" style={{ background: r.night ? "#3b2a20" : BUS }}>
+                        {r.n}
+                      </span>
+                      <span>
+                        {r.name} · {t.neighbourhood.bus.dir[r.dir]}
+                        {r.night && <span className="text-brown-soft"> ({t.neighbourhood.bus.night})</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
