@@ -22,7 +22,6 @@ import {
   INSTAGRAM_URL,
   PHONE_MAIN,
   PHONE_MAIN_DISPLAY,
-  PHONE_WHATSAPP_DISPLAY,
   formatPrice,
   whatsappLink,
 } from "@/data/building";
@@ -253,33 +252,30 @@ async function Body({ locale }: { locale: Locale }) {
               <div className="mt-6">
                 <OfficeHoursCard hours={hours} locale={locale} />
               </div>
-              <div className="mt-8 flex flex-col gap-4">
-                <a
-                  href={whatsappLink(t.contact.whatsappText)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-5 rounded-lg bg-cream p-6 text-brown ring-1 ring-brown/10 transition hover:ring-action/40"
-                >
-                  <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-whatsapp text-white">
-                    <WhatsAppIcon className="size-7" />
-                  </span>
-                  <span>
-                    <span className="block text-sm uppercase tracking-[0.2em] text-action">{t.contact.whatsapp}</span>
-                    <span className="block font-display text-3xl">{PHONE_WHATSAPP_DISPLAY}</span>
-                  </span>
-                </a>
-                <a
-                  href={`tel:+${PHONE_MAIN}`}
-                  className="flex items-center gap-5 rounded-lg bg-cream p-6 ring-1 ring-brown/10 transition hover:ring-action/40"
-                >
-                  <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-action text-white">
-                    <PhoneIcon className="size-6" />
-                  </span>
-                  <span>
-                    <span className="block text-sm uppercase tracking-[0.2em] text-action">{t.contact.call}</span>
-                    <span className="block font-display text-3xl">{PHONE_MAIN_DISPLAY}</span>
-                  </span>
-                </a>
+              {/* One number for WhatsApp and calls. */}
+              <div className="mt-8 flex flex-col gap-5 rounded-lg bg-cream p-6 text-brown ring-1 ring-brown/10 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <span className="block text-sm uppercase tracking-[0.2em] text-action">{t.contact.phone}</span>
+                  <span className="block font-display text-3xl">{PHONE_MAIN_DISPLAY}</span>
+                </div>
+                <div className="flex gap-2">
+                  <a
+                    href={whatsappLink(t.contact.whatsappText)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-sm bg-whatsapp px-5 py-3 text-sm font-medium text-white transition hover:brightness-95"
+                  >
+                    <WhatsAppIcon className="size-4" />
+                    {t.contact.whatsapp}
+                  </a>
+                  <a
+                    href={`tel:+${PHONE_MAIN}`}
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-sm px-5 py-3 text-sm font-medium text-brown ring-1 ring-brown/25 transition hover:bg-cream-deep"
+                  >
+                    <PhoneIcon className="size-4" />
+                    {t.contact.call}
+                  </a>
+                </div>
               </div>
             </div>
             <div className="lg:pt-6">
