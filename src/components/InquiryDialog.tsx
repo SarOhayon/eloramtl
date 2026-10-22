@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 import { InquiryForm } from "./ContactForms";
+import { CloseIcon } from "./icons";
 import { INQUIRY_EVENT } from "./inquiry";
 
 // The building inquiry form in a pop-up. Opens from openInquiry() and from any link to #visit
@@ -48,9 +49,9 @@ export function InquiryDialog({ locale }: { locale: Locale }) {
           type="button"
           onClick={() => setOpen(null)}
           aria-label={t.promo.close}
-          className="absolute right-3 top-3 inline-flex size-10 items-center justify-center rounded-full bg-cream text-2xl text-brown ring-1 ring-brown/10 hover:bg-cream-deep"
+          className="absolute right-3 top-3 inline-flex size-10 items-center justify-center rounded-full bg-cream text-brown ring-1 ring-brown/10 hover:bg-cream-deep"
         >
-          ×
+          <CloseIcon className="size-4" />
         </button>
         <InquiryForm key={open.n} locale={locale} initialType={open.type} />
       </div>

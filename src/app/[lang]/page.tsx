@@ -11,6 +11,7 @@ import { InquiryDialog } from "@/components/InquiryDialog";
 import { NeighbourhoodMap } from "@/components/NeighbourhoodMap";
 import { OfficeHoursCard } from "@/components/OfficeHoursCard";
 import { OfferBand } from "@/components/OfferBand";
+import { PawTrail } from "@/components/PawTrail";
 import { PromoPopup } from "@/components/PromoPopup";
 import { ContactForms } from "@/components/ContactForms";
 import { PrivacyDialog } from "@/components/PrivacyDialog";
@@ -123,11 +124,13 @@ async function Body({ locale }: { locale: Locale }) {
         <section className="bg-cream py-8 lg:py-10">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-brown/10 ring-1 ring-brown/10 sm:grid-cols-4">
-              {facts.map((f) => (
-                <div key={f.label} className="bg-cream px-5 py-4">
+              {facts.map((f, i) => (
+                <div key={f.label} className="relative overflow-hidden bg-cream px-5 py-4">
+                  {/* The last fact is "Yes to pets". */}
+                  {i === facts.length - 1 && <PawTrail />}
                   <dt className="sr-only">{f.label}</dt>
-                  <dd className="font-display text-4xl text-gold">{f.value}</dd>
-                  <dd className="text-sm text-brown/75">{f.label}</dd>
+                  <dd className="relative font-display text-4xl text-gold">{f.value}</dd>
+                  <dd className="relative text-sm text-brown/75">{f.label}</dd>
                 </div>
               ))}
             </dl>

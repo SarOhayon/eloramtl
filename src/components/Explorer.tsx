@@ -15,10 +15,10 @@ import {
   type Unit,
   type UnitType,
 } from "@/data/building";
-import type { SiteContent, SuiteStatus } from "@/data/content";
+import { todayInMontreal, type SiteContent, type SuiteStatus } from "@/data/content";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 import { UnitPlan } from "./UnitPlan";
-import { ChevronIcon, PhoneIcon, WhatsAppIcon } from "./icons";
+import { ChevronIcon, CloseIcon, PhoneIcon, WhatsAppIcon } from "./icons";
 
 const pts = (p: [number, number][]) => p.map((xy) => xy.join(",")).join(" ");
 const centroid = (p: [number, number][]) => {
@@ -120,9 +120,10 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
         <p className="mt-3 inline-block rounded-sm bg-sand px-3 py-1 text-sm text-brown">{t.explorer.leased}</p>
       )}
       {u.status === "soon" && (
-        <p className="mt-3 inline-block rounded-sm bg-gold-light px-3 py-1 text-sm text-brown">{t.explorer.soon}</p>
+        <p className="mt-3 mr-2 inline-block rounded-sm bg-gold-light px-3 py-1 text-sm text-brown">{t.explorer.soon}</p>
       )}
-      {u.status !== "leased" && u.status !== "soon" && u.availableOn && (
+      {/* The move-in date set in the admin, until that day arrives. */}
+      {u.status !== "leased" && u.availableOn && u.availableOn > todayInMontreal() && (
         <p className="mt-3 inline-block rounded-sm bg-action-light/40 px-3 py-1 text-sm text-action-deep">
           {t.explorer.availableOn} {dateFmt.format(new Date(u.availableOn))}
         </p>
@@ -392,9 +393,9 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
               type="button"
               onClick={() => setShowDetails(false)}
               aria-label={t.promo.close}
-              className="absolute right-3 top-3 z-10 inline-flex size-10 items-center justify-center rounded-full bg-cream text-2xl text-brown shadow ring-1 ring-brown/10 hover:bg-cream-deep"
+              className="absolute right-3 top-3 z-10 inline-flex size-10 items-center justify-center rounded-full bg-cream text-brown shadow ring-1 ring-brown/10 hover:bg-cream-deep"
             >
-              ×
+              <CloseIcon className="size-4" />
             </button>
             <div className="border-b border-sand p-6 md:border-b-0 md:border-r">
               {details(selected)}

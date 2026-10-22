@@ -1,5 +1,6 @@
-// The promotion card: used by the site's pop-up and the admin's live preview.
+import { CloseIcon } from "./icons";
 
+// The promotion card: used by the site's pop-up and the admin's live preview.
 export type PromoCardText = { kicker: string; big: string; sub: string; fine: string; cta: string; dates?: string; applies?: string };
 
 export function PromoCard({ text, photo, onCta, onClose, closeLabel = "Close" }: { text: PromoCardText; photo?: string; onCta?: () => void; onClose?: () => void; closeLabel?: string }) {
@@ -15,9 +16,9 @@ export function PromoCard({ text, photo, onCta, onClose, closeLabel = "Close" }:
             type="button"
             onClick={onClose}
             aria-label={closeLabel}
-            className="absolute right-3 top-3 inline-flex size-10 items-center justify-center rounded-full text-2xl text-cream/80 transition hover:bg-white/10 hover:text-white"
+            className="absolute right-3 top-3 inline-flex size-10 items-center justify-center rounded-full text-cream/80 transition hover:bg-white/10 hover:text-white"
           >
-            ×
+            <CloseIcon className="size-4" />
           </button>
         )}
         <div className="border border-gold/50 px-6 py-8 text-center">

@@ -540,8 +540,15 @@ function ApartmentsScreen({ content, update, upload }: { content: SiteContent; u
                   </div>
                 </label>
                 <label className="block">
-                  <span className="mb-2 block text-sm font-medium">Available on</span>
+                  <span className="mb-2 block text-sm font-medium">Available from (move-in date)</span>
                   <input className={field} type="date" value={s.availableOn ?? ""} onChange={(e) => setSuite(u.id, { availableOn: e.target.value || undefined })} />
+                  <span className="mt-1.5 block text-sm text-brown-soft">
+                    {!s.availableOn
+                      ? "Leave empty if it's free now."
+                      : s.status === "available" || s.status === "soon"
+                        ? "The website shows “Available on …” until that day."
+                        : "Choose Available or Coming soon so visitors can see this date."}
+                  </span>
                 </label>
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-3">

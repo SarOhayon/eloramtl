@@ -1,9 +1,8 @@
 // Sprinkles copies of the ELORA MTL logo over the screen (used when a visitor claims the offer):
-// a few burst up from the centre, the rest rain down from the top, all falling past the bottom
-// (about 5 seconds in all).
+// they drift down from the top and fall past the bottom, about 5 seconds in all.
 const COLORS = ["#503d32", "#a8875a", "#7d6b5d", "#c9a978"];
 
-export function burstLogos({ burst = 16, rain = 32 } = {}) {
+export function burstLogos(count = 44) {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   // Reuse the logo already on the page (header) so there's a single copy of the artwork.
   const logo = document.querySelector<SVGSVGElement>('svg[aria-label="Elora MTL"]');
@@ -29,28 +28,9 @@ export function burstLogos({ burst = 16, rain = 32 } = {}) {
     return el;
   };
 
-  // Burst: pop up and out from the centre, then fall slowly off the bottom.
-  for (let i = 0; i < burst; i++) {
-    const el = piece(i, w / 2, h * 0.45);
-    const dx = rand(-0.45, 0.45) * w;
-    const up = -rand(0.1, 0.35) * h;
-    const spin = rand(-1, 1) * 360;
-    const duration = rand(4200, 5000);
-    last = Math.max(last, duration);
-    el.animate(
-      [
-        { transform: "translate(0,0) scale(0.2) rotate(0deg)", opacity: 0, easing: "cubic-bezier(.2,.8,.4,1)" },
-        { transform: `translate(${dx * 0.6}px,${up}px) scale(1) rotate(${spin * 0.3}deg)`, opacity: 1, offset: 0.22, easing: "cubic-bezier(.45,0,.8,.6)" },
-        { transform: `translate(${dx}px,${h * 0.75}px) scale(0.95) rotate(${spin}deg)`, opacity: 1, offset: 0.85 },
-        { transform: `translate(${dx * 1.05}px,${h * 0.95}px) scale(0.9) rotate(${spin * 1.1}deg)`, opacity: 0 },
-      ],
-      { duration, fill: "forwards" },
-    );
-  }
-
-  // Rain: drift down from above the screen, swaying gently.
-  for (let i = 0; i < rain; i++) {
-    const el = piece(i + 1, rand(0, w), -160);
+  // Each logo drifts down from above the screen, swaying gently.
+  for (let i = 0; i < count; i++) {
+    const el = piece(i, rand(0, w), -160);
     const sway = rand(30, 90) * (Math.random() < 0.5 ? -1 : 1);
     const spin = rand(-1, 1) * 300;
     const delay = rand(0, 1000);

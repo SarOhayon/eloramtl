@@ -66,3 +66,18 @@ body {
   font-family: var(--font-sans);
   background: var(--color-cream-deep);
 }
+
+/* Paw prints in the "Yes to pets" box: each step appears in turn, then fades. */
+@keyframes paw-step {
+  0% { opacity: 0; scale: 0.6; }
+  6% { opacity: 0.8; scale: 1; }
+  45% { opacity: 0.8; }
+  70%, 100% { opacity: 0; }
+}
+.paw-step {
+  opacity: 0;
+  animation: paw-step 5s ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .paw-step { animation: none; opacity: 0.35; }
+}
