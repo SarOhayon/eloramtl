@@ -17,6 +17,7 @@ import {
 } from "@/data/building";
 import { todayInMontreal, type SiteContent, type SuiteStatus } from "@/data/content";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
+import { PdfPicture } from "./PdfPicture";
 import { UnitPlan } from "./UnitPlan";
 import { ChevronIcon, CloseIcon, PhoneIcon, WhatsAppIcon } from "./icons";
 
@@ -411,7 +412,16 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
             </div>
             <div className="flex min-h-[50svh] flex-col bg-white p-3 sm:p-4">
               {selected.plan?.endsWith(".pdf") ? (
-                <iframe src={`${selected.plan}#view=FitH`} title={`${t.explorer.unit} ${selected.id}`} className="min-h-[70svh] w-full flex-1 rounded-sm ring-1 ring-sand" />
+                <PdfPicture
+                  src={selected.plan}
+                  alt={`${t.explorer.unit} ${selected.id}`}
+                  className="mx-auto h-auto max-h-[80svh] w-auto max-w-full"
+                  fallback={
+                    <div className="mx-auto w-full max-w-xl py-6">
+                      <UnitPlan type={selected.type} t={t} />
+                    </div>
+                  }
+                />
               ) : selected.plan ? (
                 // eslint-disable-next-line @next/next/no-img-element -- plan uploaded in the admin
                 <img src={selected.plan} alt={`${t.explorer.unit} ${selected.id}`} className="mx-auto h-auto max-h-[80svh] w-auto" />
