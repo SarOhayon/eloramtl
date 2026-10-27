@@ -140,38 +140,8 @@ export function NeighbourhoodMap({ locale }: { locale: Locale }) {
           {t.neighbourhood.bus.label}
         </button>
       </div>
-      <div ref={el} className="h-[380px] w-full sm:h-[460px]" aria-label={t.nav.neighbourhood} />
-      {showBus && (
-        <div className="border-t border-brown/10 p-4 sm:p-5">
-          <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-brown-soft">{t.neighbourhood.bus.title}</p>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {BUS_STOPS.map((s) => (
-              <li key={s.code} className="rounded-md bg-white p-3.5 ring-1 ring-brown/10">
-                <p className="flex items-baseline justify-between gap-2">
-                  <span className="text-sm text-brown">
-                    {t.neighbourhood.bus.stop} <span className="font-semibold tabular-nums">{s.code}</span>
-                  </span>
-                  <span className="text-xs text-brown-soft">{t.neighbourhood.bus.walk(s.walkMin)}</span>
-                </p>
-                <p className="mt-0.5 text-xs text-brown-soft">{s.name}</p>
-                <ul className="mt-2.5 space-y-1.5">
-                  {s.routes.map((r) => (
-                    <li key={r.n + r.dir} className="flex items-center gap-2 text-sm text-brown">
-                      <span className="inline-flex min-w-9 justify-center rounded-sm px-1.5 py-0.5 text-xs font-bold text-white" style={{ background: r.night ? "#3b2a20" : BUS }}>
-                        {r.n}
-                      </span>
-                      <span>
-                        {r.name} · {t.neighbourhood.bus.dir[r.dir]}
-                        {r.night && <span className="text-brown-soft"> ({t.neighbourhood.bus.night})</span>}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {/* isolate: keeps the map's own layers (zoom buttons…) under the site's pop-ups. */}
+      <div ref={el} className="isolate h-[380px] w-full sm:h-[460px]" aria-label={t.nav.neighbourhood} />
     </div>
   );
 }

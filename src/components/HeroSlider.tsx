@@ -7,7 +7,7 @@ import type { Photo } from "@/data/photos";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 import { ChevronIcon } from "./icons";
 
-const INTERVAL = 6000;
+const INTERVAL = 4000;
 
 export type HeroText = { eyebrow: string; title: string; lead: string; primary: string; secondary: string };
 
@@ -48,7 +48,7 @@ export function HeroSlider({ locale, slides: SLIDES, text }: { locale: Locale; s
             priority={i === 0}
             unoptimized={isUploaded(photo.src)}
             sizes="100vw"
-            className={`object-cover transition-transform duration-[7000ms] ease-out ${i === index ? "scale-105" : "scale-100"}`}
+            className={`object-cover transition-transform duration-[5000ms] ease-out ${i === index ? "scale-105" : "scale-100"}`}
           />
         </div>
       ))}

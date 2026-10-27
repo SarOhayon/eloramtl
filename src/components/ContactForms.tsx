@@ -2,9 +2,8 @@
 
 import { useActionState } from "react";
 import { submitContact, type ContactState } from "@/app/actions/contact";
-import { UNIT_TYPES, whatsappLink } from "@/data/building";
+import { UNIT_TYPES } from "@/data/building";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
-import { WhatsAppIcon } from "./icons";
 
 export const field =
   "w-full rounded-sm border-0 bg-white px-4 py-3 text-brown ring-1 ring-brown/15 placeholder:text-brown-soft/60 focus:outline-none focus:ring-2 focus:ring-action";
@@ -85,42 +84,14 @@ export function InquiryForm({ locale, initialType }: { locale: Locale; initialTy
       >
         {pending ? f.sending : f.submit}
       </button>
-      <a
-        href={whatsappLink(f.inquiry.intro)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-3 inline-flex w-full items-center justify-center gap-2 text-sm text-brown-soft transition hover:text-brown"
-      >
-        <WhatsAppIcon className="size-4 text-whatsapp" />
-        {f.orWhatsapp}
-      </a>
     </form>
   );
 }
 
 export function ContactForms({ locale }: { locale: Locale }) {
-  const m = getDictionary(locale).maintWhatsapp;
   return (
-    <div className="space-y-4">
-      <div id="visit" className="rounded-lg bg-cream p-6 text-brown shadow-xl shadow-black/10 sm:p-8">
-        <InquiryForm locale={locale} />
-      </div>
-      {/* Residents report maintenance through the WhatsApp assistant. */}
-      <div id="maintenance" className="flex flex-col gap-4 rounded-lg bg-cream p-6 text-brown ring-1 ring-sand sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="font-display text-2xl">{m.title}</p>
-          <p className="mt-1 text-sm text-brown-soft">{m.text}</p>
-        </div>
-        <a
-          href={whatsappLink(m.message)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-sm bg-whatsapp px-5 py-3 text-sm font-medium text-white transition hover:brightness-95"
-        >
-          <WhatsAppIcon className="size-4" />
-          {m.cta}
-        </a>
-      </div>
+    <div id="visit" className="rounded-lg bg-cream p-6 text-brown shadow-xl shadow-black/10 sm:p-8">
+      <InquiryForm locale={locale} />
     </div>
   );
 }
