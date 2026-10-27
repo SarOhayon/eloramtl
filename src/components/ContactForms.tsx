@@ -6,11 +6,11 @@ import { UNIT_TYPES, whatsappLink } from "@/data/building";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 import { WhatsAppIcon } from "./icons";
 
-const field =
+export const field =
   "w-full rounded-sm border-0 bg-white px-4 py-3 text-brown ring-1 ring-brown/15 placeholder:text-brown-soft/60 focus:outline-none focus:ring-2 focus:ring-action";
 
 
-function Field({ label, required, children, wide }: { label: string; required?: boolean; children: React.ReactNode; wide?: boolean }) {
+export function Field({ label, required, children, wide }: { label: string; required?: boolean; children: React.ReactNode; wide?: boolean }) {
   return (
     <label className={`block ${wide ? "sm:col-span-2" : ""}`}>
       <span className="mb-1.5 block text-sm font-medium">
@@ -39,6 +39,7 @@ export function InquiryForm({ locale, initialType }: { locale: Locale; initialTy
 
   return (
     <form action={formAction}>
+      <input type="hidden" name="lang" value={locale} />
       <h3 className="font-display text-3xl">{f.inquiry.title}</h3>
       <p className="mt-1 text-sm text-brown-soft">{f.lead}</p>
 

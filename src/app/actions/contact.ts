@@ -1,6 +1,8 @@
 "use server";
 
+import { addLead } from "@/lib/leads";
 import { sendMail } from "@/lib/mail";
+import { countEvent } from "@/lib/stats";
 
 export type ContactState = { status: "idle" | "sent" | "invalid" | "error"; values?: Record<string, string> };
 
@@ -19,6 +21,12 @@ export async function submitContact(_prev: ContactState, formData: FormData): Pr
     `Move-in date: ${v.moveIn}`,
     ...(v.comments ? ["", v.comments] : []),
   ];
-  const sent = await sendMail({ subject: `Elora inquiry: ${v.name}`, text: lines.join("\n"), replyTo: v.email });
-  return sent ? { status: "sent" } : { status: "error", values: v };
+  // Saved for the admin inbox and emailed; either one is enough to count as received.
+  const [saved, sent] = await Promise.all([
+    addLead({ kind: "inquiry", name: v.name, email: v.email, phone: v.phone, type: v.type || undefined, moveIn: v.moveIn, comments: v.comments || undefined, lang: get("lang") === "fr" ? "fr" : "en" }),
+    sendMail({ subject: `Elora inquiry: ${v.name}`, text: lines.join("\n"), replyTo: v.email }),
+  ]);
+  if (!saved && !sent) return { status: "error", values: v };
+  await countEvent("inquiry");
+  return { status: "sent" };
 }

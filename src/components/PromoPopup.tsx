@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { openInquiry } from "./inquiry";
 import { burstLogos } from "./logoBurst";
+import { track } from "./track";
 import { PromoCard, type PromoCardText } from "./PromoCard";
 
 // Shows the promotion once per visitor (remembered in the browser), and a side tab to reopen it.
@@ -16,7 +17,10 @@ export function PromoPopup({ id, text, tab, photo, showTab, closeLabel }: { id: 
       seen = localStorage.getItem(key) === "1";
     } catch {}
     if (seen) return;
-    const t = window.setTimeout(() => setOpen(true), 2500);
+    const t = window.setTimeout(() => {
+      setOpen(true);
+      track("promo");
+    }, 2500);
     return () => window.clearTimeout(t);
   }, [key]);
 
@@ -61,6 +65,7 @@ export function PromoPopup({ id, text, tab, photo, showTab, closeLabel }: { id: 
               onClose={close}
               onCta={() => {
                 close();
+                track("claim");
                 burstLogos();
                 openInquiry();
               }}

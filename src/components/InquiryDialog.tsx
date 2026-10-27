@@ -1,19 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getShowingSlots } from "@/app/actions/showings";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
+import type { DaySlots } from "@/lib/showingSlots";
 import { InquiryForm } from "./ContactForms";
+import { ShowingBooking } from "./ShowingBooking";
 import { CloseIcon } from "./icons";
 import { INQUIRY_EVENT } from "./inquiry";
 
 // The building inquiry form in a pop-up. Opens from openInquiry() and from any link to #visit
-// (a data-suite-type attribute on the link pre-selects the suite type).
+// (a data-suite-type attribute on the link pre-selects the suite type). When showings can be
+// booked online (turned on in the admin), it opens on the booking calendar instead.
 export function InquiryDialog({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
   const [open, setOpen] = useState<null | { type?: string; n: number }>(null);
+  const [slots, setSlots] = useState<DaySlots[] | null>(null);
+  const [tab, setTab] = useState<"book" | "ask">("book");
 
   useEffect(() => {
-    const show = (type?: string) => setOpen((o) => ({ type, n: (o?.n ?? 0) + 1 }));
+    const show = (type?: string) => {
+      setOpen((o) => ({ type, n: (o?.n ?? 0) + 1 }));
+      setSlots(null);
+      setTab("book");
+      getShowingSlots()
+        .then(setSlots)
+        .catch(() => setSlots([]));
+    };
     const onEvent = (e: Event) => show((e as CustomEvent<{ type?: string }>).detail?.type);
     const onClick = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
@@ -53,7 +66,33 @@ export function InquiryDialog({ locale }: { locale: Locale }) {
         >
           <CloseIcon className="size-4" />
         </button>
-        <InquiryForm key={open.n} locale={locale} initialType={open.type} />
+        {slots === null ? (
+          <p className="py-10 text-center text-brown-soft">{t.showing.loading}</p>
+        ) : slots.length ? (
+          <>
+            <div className="mb-6 mr-12 flex rounded-sm ring-1 ring-brown/15" role="tablist">
+              {(["book", "ask"] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === k}
+                  onClick={() => setTab(k)}
+                  className={`flex-1 px-3 py-2.5 text-sm transition ${tab === k ? "bg-action text-white" : "text-brown hover:bg-cream-deep"}`}
+                >
+                  {k === "book" ? t.showing.tabBook : t.showing.tabAsk}
+                </button>
+              ))}
+            </div>
+            {tab === "book" ? (
+              <ShowingBooking key={`b${open.n}`} locale={locale} slots={slots} initialType={open.type} />
+            ) : (
+              <InquiryForm key={`a${open.n}`} locale={locale} initialType={open.type} />
+            )}
+          </>
+        ) : (
+          <InquiryForm key={open.n} locale={locale} initialType={open.type} />
+        )}
       </div>
     </div>
   );

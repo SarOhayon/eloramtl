@@ -2,40 +2,46 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { logout, saveSiteContent, uploadFile } from "@/app/actions/admin";
+import { listLeads } from "@/app/actions/leads";
 import { FLOORS, UNITS, UNIT_TYPES, formatPrice, type UnitType } from "@/data/building";
-import { AMENITY_SLOTS, EDITABLE_TEXT, promoState, readPath, type Bilingual, type Promo, type SiteContent, type SuiteStatus } from "@/data/content";
+import { AMENITY_SLOTS, EDITABLE_TEXT, scheduleState, readPath, type Bilingual, type Promo, type SiteContent, type SuiteStatus } from "@/data/content";
 import { GALLERY, PHOTOS, type Photo, type PhotoCategory } from "@/data/photos";
 import { dictionaries } from "@/i18n/dictionaries";
 import { PromoCard } from "../PromoCard";
 import {
   AlertIcon,
   ArrowLeftIcon,
-  ArrowRightIcon,
   BuildingIcon,
+  CalendarIcon,
+  ChartIcon,
   CheckIcon,
   CloseIcon,
   ExternalIcon,
   IconBadge,
   ImageIcon,
+  InboxIcon,
+  MegaphoneIcon,
   PlusIcon,
   PriceIcon,
+  TableIcon,
   TagIcon,
+  TrashIcon,
   TextIcon,
   UploadIcon,
 } from "./AdminIcons";
+import { InboxScreen } from "./InboxScreen";
+import { NoticeScreen } from "./NoticeScreen";
+import { ShowingsScreen } from "./ShowingsScreen";
+import { StatsScreen } from "./StatsScreen";
+import { BilingualFields, ScheduleStatus, ScreenTitle, Step, Switch, bigBtn, field, softBtn, type Update, type Upload } from "./ui";
 import { Wordmark } from "../Wordmark";
 
 // A deliberately simple admin: a home screen with big buttons, one task per screen,
 // plain-English help and automatic saving.
 
-type Screen = "home" | "promo" | "apartments" | "photos" | "prices" | "text";
-type Update = (fn: (c: SiteContent) => SiteContent) => void;
-type Upload = (file: File) => Promise<string | null>;
+type Screen = "home" | "inbox" | "promo" | "notice" | "apartments" | "showings" | "photos" | "prices" | "text" | "stats";
 
 const TYPE_LABELS = dictionaries.en.types;
-const field = "w-full rounded-md bg-white px-4 py-3 text-base ring-1 ring-brown/20 focus:outline-none focus:ring-2 focus:ring-gold";
-const bigBtn = "inline-flex items-center justify-center gap-2 rounded-md bg-action px-5 py-3 text-base font-medium text-white transition hover:bg-action-deep disabled:opacity-40";
-const softBtn = "inline-flex items-center justify-center gap-2 rounded-md bg-white px-4 py-2.5 text-base ring-1 ring-brown/20 transition hover:bg-cream-deep disabled:opacity-40";
 const isPdf = (src: string) => src.endsWith(".pdf");
 const move = <T,>(list: T[], from: number, to: number) => {
   const next = list.slice();
@@ -150,6 +156,10 @@ export function AdminApp({ initial }: { initial: SiteContent }) {
               <ArrowLeftIcon className="size-4" /> Back to home
             </button>
             {screen === "promo" && <PromoScreen content={content} update={update} upload={upload} />}
+            {screen === "notice" && <NoticeScreen content={content} update={update} />}
+            {screen === "inbox" && <InboxScreen />}
+            {screen === "showings" && <ShowingsScreen content={content} update={update} />}
+            {screen === "stats" && <StatsScreen />}
             {screen === "apartments" && <ApartmentsScreen content={content} update={update} upload={upload} />}
             {screen === "photos" && <PhotosScreen content={content} update={update} upload={upload} />}
             {screen === "prices" && <PricesScreen content={content} update={update} />}
@@ -180,31 +190,34 @@ function SaveBadge({ state }: { state: "saved" | "pending" | "saving" | "error" 
 
 // ---------------- Home ----------------
 
-const PROMO_STATUS = {
-  live: ["bg-[#3b6b45]", "Showing on the website now"],
-  scheduled: ["bg-gold", "Scheduled: will start by itself"],
-  ended: ["bg-sand", "Ended: its end date has passed"],
-  off: ["bg-sand", "Turned off"],
-} as const;
-
-function PromoStatus({ state }: { state: keyof typeof PROMO_STATUS }) {
-  const [dot, label] = PROMO_STATUS[state];
-  return (
-    <span className="inline-flex items-center gap-2">
-      <span className={`size-2.5 rounded-full ${dot}`} aria-hidden="true" />
-      {label}
-    </span>
-  );
-}
-
 function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }) {
   const available = Object.values(content.suites).filter((s) => s.status === "available").length;
+  const [newLeads, setNewLeads] = useState<number | null>(null);
+  useEffect(() => {
+    listLeads().then((l) => l && setNewLeads(l.filter((x) => x.status === "new").length));
+  }, []);
   const tiles: { screen: Screen; icon: React.ReactNode; title: string; text: string; note?: React.ReactNode }[] = [
-    { screen: "promo", icon: <TagIcon className="size-6" />, title: "Promotion", text: "Create or change your special offer.", note: <PromoStatus state={promoState(content.promo)} /> },
+    {
+      screen: "inbox",
+      icon: <InboxIcon className="size-6" />,
+      title: "Inquiries",
+      text: "Everyone who sent a form on the website, with their details.",
+      note: newLeads === null ? undefined : newLeads ? <span className="text-gold">{newLeads} new</span> : "Nothing new",
+    },
+    {
+      screen: "showings",
+      icon: <CalendarIcon className="size-6" />,
+      title: "Showings",
+      text: "Let visitors book a showing time online, and see who's coming.",
+      note: <ScheduleStatus state={content.showings.enabled ? "live" : "off"} label={content.showings.enabled ? "Online booking is on" : "Turned off"} />,
+    },
     { screen: "apartments", icon: <BuildingIcon className="size-6" />, title: "Apartments", text: "Mark apartments available or rented, set prices, dates and plans.", note: `${available} marked available` },
+    { screen: "promo", icon: <TagIcon className="size-6" />, title: "Promotion", text: "Create or change your special offer.", note: <ScheduleStatus state={scheduleState(content.promo)} /> },
+    { screen: "notice", icon: <MegaphoneIcon className="size-6" />, title: "Special-day banner", text: "A message across the top of the website for holidays or closures.", note: <ScheduleStatus state={scheduleState(content.notice)} /> },
     { screen: "photos", icon: <ImageIcon className="size-6" />, title: "Photos", text: "Add, remove or reorder the photos on the website." },
     { screen: "prices", icon: <PriceIcon className="size-6" />, title: "Starting prices", text: "The “From $…” price for each type of apartment." },
     { screen: "text", icon: <TextIcon className="size-6" />, title: "Website text", text: "Change the titles and paragraphs, in French and English." },
+    { screen: "stats", icon: <ChartIcon className="size-6" />, title: "Visitors", text: "How many people visit the website and reach out." },
   ];
   return (
     <>
@@ -232,42 +245,6 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
 
 // ---------------- Shared pieces ----------------
 
-function ScreenTitle({ title, help, icon }: { title: string; help: string; icon?: React.ReactNode }) {
-  return (
-    <div className="mb-6">
-      <h1 className="flex items-center gap-4 font-display text-4xl text-ink">
-        {icon && <IconBadge className="size-12">{icon}</IconBadge>}
-        {title}
-      </h1>
-      <p className="mt-2 max-w-3xl text-lg text-brown-soft">{help}</p>
-    </div>
-  );
-}
-
-function Step({ n, title, help, children }: { n?: number; title: string; help?: string; children: React.ReactNode }) {
-  return (
-    <section className="rounded-lg bg-cream p-6 shadow-sm ring-1 ring-sand">
-      <h2 className="flex items-center gap-3 font-display text-2xl text-ink">
-        {n !== undefined && <span className="inline-flex size-9 items-center justify-center rounded-full bg-action font-sans text-base text-white">{n}</span>}
-        {title}
-      </h2>
-      {help && <p className="mt-1 text-brown-soft">{help}</p>}
-      <div className="mt-5">{children}</div>
-    </section>
-  );
-}
-
-function Switch({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
-  return (
-    <button role="switch" aria-checked={on} onClick={() => onChange(!on)} className="flex items-center gap-4 text-left">
-      <span className={`relative h-9 w-16 shrink-0 rounded-full transition ${on ? "bg-[#3b6b45]" : "bg-sand"}`}>
-        <span className={`absolute top-1 size-7 rounded-full bg-white shadow transition ${on ? "left-8" : "left-1"}`} />
-      </span>
-      <span className="text-lg">{label}</span>
-    </button>
-  );
-}
-
 function UploadButton({ label, accept, onFile, className = bigBtn }: { label: string; accept: string; onFile: (f: File) => void; className?: string }) {
   return (
     <label className={`${className} cursor-pointer`}>
@@ -284,29 +261,6 @@ function UploadButton({ label, accept, onFile, className = bigBtn }: { label: st
         }}
       />
     </label>
-  );
-}
-
-function BilingualFields({ label, value, onChange, long = false, placeholder }: { label: string; value: Bilingual; onChange: (v: Bilingual) => void; long?: boolean; placeholder?: Bilingual }) {
-  return (
-    <div>
-      <p className="mb-2 font-medium">{label}</p>
-      <div className="grid gap-3 md:grid-cols-2">
-        {(["fr", "en"] as const).map((lang) => {
-          const props = { className: field, value: value[lang], placeholder: placeholder?.[lang], "aria-label": `${label} (${lang === "fr" ? "French" : "English"})` };
-          return (
-            <label key={lang} className="block">
-              <span className="mb-1 block text-sm text-brown-soft">{lang === "fr" ? "French" : "English"}</span>
-              {long ? (
-                <textarea {...props} rows={3} onChange={(e) => onChange({ ...value, [lang]: e.target.value })} />
-              ) : (
-                <input {...props} onChange={(e) => onChange({ ...value, [lang]: e.target.value })} />
-              )}
-            </label>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
@@ -370,7 +324,7 @@ function PromoScreen({ content, update, upload }: { content: SiteContent; update
   const [previewLang, setPreviewLang] = useState<"fr" | "en">("en");
   const [picking, setPicking] = useState(false);
   const set = (patch: Partial<Promo>) => update((c) => ({ ...c, promo: { ...c.promo, ...patch } }));
-  const state = promoState(p);
+  const state = scheduleState(p);
   const t = dictionaries[previewLang];
   const dateFmt = new Intl.DateTimeFormat(previewLang === "fr" ? "fr-CA" : "en-CA", { dateStyle: "long", timeZone: "UTC" });
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
@@ -384,7 +338,7 @@ function PromoScreen({ content, update, upload }: { content: SiteContent; update
           <Step n={1} title="Turn it on or off">
             <Switch on={p.enabled} onChange={(v) => set({ enabled: v })} label={p.enabled ? "The promotion is ON" : "The promotion is OFF"} />
             <p className="mt-3 font-medium">
-              <PromoStatus state={state} />
+              <ScheduleStatus state={state} />
             </p>
           </Step>
 
@@ -513,7 +467,7 @@ const STATUS: { key: SuiteStatus; label: string; on: string }[] = [
 ];
 
 function ApartmentsScreen({ content, update, upload }: { content: SiteContent; update: Update; upload: Upload }) {
-  const [floor, setFloor] = useState(1);
+  const [floor, setFloor] = useState<number | "all">(1);
   const setSuite = (id: string, patch: Record<string, unknown>) =>
     update((c) => {
       const next = { ...c.suites[id], ...patch } as Record<string, unknown>;
@@ -527,6 +481,12 @@ function ApartmentsScreen({ content, update, upload }: { content: SiteContent; u
       <ScreenTitle icon={<BuildingIcon className="size-5" />} title="Apartments" help="Choose a floor, then update each apartment. Only apartments marked Available or Coming soon can be opened on the website; the others appear greyed out. Leave the price empty to use the starting price." />
       <p className="mb-2 font-medium">Choose a floor:</p>
       <div className="mb-6 flex flex-wrap gap-2">
+        <button
+          onClick={() => setFloor("all")}
+          className={`inline-flex items-center gap-2 rounded-md px-5 py-3 text-base ring-1 ${floor === "all" ? "bg-action text-white ring-action" : "bg-white ring-brown/20 hover:ring-brown/40"}`}
+        >
+          <TableIcon className="size-5" /> All apartments
+        </button>
         {FLOORS.slice().reverse().map((f) => (
           <button key={f} onClick={() => setFloor(f)} className={`rounded-md px-5 py-3 text-base ring-1 ${f === floor ? "bg-action text-white ring-action" : "bg-white ring-brown/20 hover:ring-brown/40"}`}>
             Floor {f}
@@ -534,124 +494,194 @@ function ApartmentsScreen({ content, update, upload }: { content: SiteContent; u
         ))}
       </div>
 
-      <div className="space-y-4">
-        {UNITS.filter((u) => u.floor === floor).map((u) => {
-          const s = content.suites[u.id] ?? {};
-          return (
-            <section key={u.id} className="rounded-lg bg-cream p-5 shadow-sm ring-1 ring-sand">
-              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <h2 className="font-display text-3xl text-ink">Apartment {u.id}</h2>
-                <p className="text-brown-soft">
-                  {TYPE_LABELS[u.type]} · {u.sqft} sq ft
-                </p>
-              </div>
-              <div className="mt-4 grid gap-5 md:grid-cols-[1.3fr_1fr_1fr]">
-                <div>
-                  <p className="mb-2 text-sm font-medium">Status</p>
-                  <div className="flex flex-wrap gap-2">
-                    {STATUS.map((st) => (
-                      <button
-                        key={st.key}
-                        onClick={() => setSuite(u.id, { status: s.status === st.key ? undefined : st.key })}
-                        className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2.5 ring-1 ${s.status === st.key ? st.on : "bg-white ring-brown/20 hover:ring-brown/40"}`}
-                      >
-                        {s.status === st.key && <CheckIcon className="size-4" />}
-                        {st.label}
-                      </button>
-                    ))}
+      {floor === "all" ? (
+        <AllApartments content={content} setSuite={setSuite} />
+      ) : (
+        <>
+          <div className="space-y-4">
+            {UNITS.filter((u) => u.floor === floor).map((u) => {
+              const s = content.suites[u.id] ?? {};
+              return (
+                <section key={u.id} className="rounded-lg bg-cream p-5 shadow-sm ring-1 ring-sand">
+                  <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                    <h2 className="font-display text-3xl text-ink">Apartment {u.id}</h2>
+                    <p className="text-brown-soft">
+                      {TYPE_LABELS[u.type]} · {u.sqft} sq ft
+                    </p>
                   </div>
-                </div>
-                <label className="block">
-                  <span className="mb-2 block text-sm font-medium">Price per month</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg text-brown-soft">$</span>
-                    <input
-                      className={field}
-                      type="number"
-                      min={0}
-                      placeholder={`${content.prices[u.type]} (starting price)`}
-                      value={s.price ?? ""}
-                      onChange={(e) => setSuite(u.id, { price: e.target.value ? Number(e.target.value) : undefined })}
+                  <div className="mt-4 grid gap-5 md:grid-cols-[1.3fr_1fr_1fr]">
+                    <div>
+                      <p className="mb-2 text-sm font-medium">Status</p>
+                      <div className="flex flex-wrap gap-2">
+                        {STATUS.map((st) => (
+                          <button
+                            key={st.key}
+                            onClick={() => setSuite(u.id, { status: s.status === st.key ? undefined : st.key })}
+                            className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2.5 ring-1 ${s.status === st.key ? st.on : "bg-white ring-brown/20 hover:ring-brown/40"}`}
+                          >
+                            {s.status === st.key && <CheckIcon className="size-4" />}
+                            {st.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-medium">Price per month</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg text-brown-soft">$</span>
+                        <input
+                          className={field}
+                          type="number"
+                          min={0}
+                          placeholder={`${content.prices[u.type]} (starting price)`}
+                          value={s.price ?? ""}
+                          onChange={(e) => setSuite(u.id, { price: e.target.value ? Number(e.target.value) : undefined })}
+                        />
+                      </div>
+                    </label>
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-medium">Available from (move-in date)</span>
+                      <input className={field} type="date" value={s.availableOn ?? ""} onChange={(e) => setSuite(u.id, { availableOn: e.target.value || undefined })} />
+                      <span className="mt-1.5 block text-sm text-brown-soft">
+                        {!s.availableOn
+                          ? "Leave empty if it's free now."
+                          : s.status === "available" || s.status === "soon"
+                            ? "The website shows “Available on …” until that day."
+                            : "Choose Available or Coming soon so visitors can see this date."}
+                      </span>
+                    </label>
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <span className="text-sm font-medium">Apartment plan:</span>
+                    {s.plan ? (
+                      <>
+                        <a href={s.plan} target="_blank" rel="noopener noreferrer" className="underline">
+                          See the plan
+                        </a>
+                        <button className={softBtn} onClick={() => setSuite(u.id, { plan: undefined })}>
+                          Remove
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-brown-soft">none yet</span>
+                    )}
+                    <UploadButton
+                      className={softBtn}
+                      label={s.plan ? "Replace the plan" : "Add a plan (photo or PDF)"}
+                      accept="image/jpeg,image/png,image/webp,application/pdf"
+                      onFile={async (f) => {
+                        const src = await upload(f);
+                        if (src) setSuite(u.id, { plan: src });
+                      }}
                     />
                   </div>
-                </label>
-                <label className="block">
-                  <span className="mb-2 block text-sm font-medium">Available from (move-in date)</span>
-                  <input className={field} type="date" value={s.availableOn ?? ""} onChange={(e) => setSuite(u.id, { availableOn: e.target.value || undefined })} />
-                  <span className="mt-1.5 block text-sm text-brown-soft">
-                    {!s.availableOn
-                      ? "Leave empty if it's free now."
-                      : s.status === "available" || s.status === "soon"
-                        ? "The website shows “Available on …” until that day."
-                        : "Choose Available or Coming soon so visitors can see this date."}
-                  </span>
-                </label>
-              </div>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <span className="text-sm font-medium">Apartment plan:</span>
-                {s.plan ? (
-                  <>
-                    <a href={s.plan} target="_blank" rel="noopener noreferrer" className="underline">
-                      See the plan
-                    </a>
-                    <button className={softBtn} onClick={() => setSuite(u.id, { plan: undefined })}>
-                      Remove
-                    </button>
-                  </>
+                </section>
+              );
+            })}
+          </div>
+
+          <div className="mt-6">
+            <Step title={`Plan of the whole floor ${floor}`} help="Optional. Visitors see a “View the floor plan” link.">
+              <div className="flex flex-wrap items-center gap-3">
+                {floorPlan ? (
+                  <a href={floorPlan} target="_blank" rel="noopener noreferrer" className="underline">
+                    See the current floor plan
+                  </a>
                 ) : (
-                  <span className="text-brown-soft">none yet</span>
+                  <span className="text-brown-soft">No floor plan yet.</span>
                 )}
                 <UploadButton
-                  className={softBtn}
-                  label={s.plan ? "Replace the plan" : "Add a plan (photo or PDF)"}
+                  label={floorPlan ? "Replace the floor plan" : "Add the floor plan (photo or PDF)"}
                   accept="image/jpeg,image/png,image/webp,application/pdf"
                   onFile={async (f) => {
                     const src = await upload(f);
-                    if (src) setSuite(u.id, { plan: src });
+                    if (src) update((c) => ({ ...c, floorPlans: { ...c.floorPlans, [String(floor)]: src } }));
                   }}
                 />
+                {floorPlan && (
+                  <button
+                    className={softBtn}
+                    onClick={() =>
+                      update((c) => {
+                        const fp = { ...c.floorPlans };
+                        delete fp[String(floor)];
+                        return { ...c, floorPlans: fp };
+                      })
+                    }
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
-            </section>
-          );
-        })}
-      </div>
-
-      <div className="mt-6">
-        <Step title={`Plan of the whole floor ${floor}`} help="Optional. Visitors see a “View the floor plan” link.">
-          <div className="flex flex-wrap items-center gap-3">
-            {floorPlan ? (
-              <a href={floorPlan} target="_blank" rel="noopener noreferrer" className="underline">
-                See the current floor plan
-              </a>
-            ) : (
-              <span className="text-brown-soft">No floor plan yet.</span>
-            )}
-            <UploadButton
-              label={floorPlan ? "Replace the floor plan" : "Add the floor plan (photo or PDF)"}
-              accept="image/jpeg,image/png,image/webp,application/pdf"
-              onFile={async (f) => {
-                const src = await upload(f);
-                if (src) update((c) => ({ ...c, floorPlans: { ...c.floorPlans, [String(floor)]: src } }));
-              }}
-            />
-            {floorPlan && (
-              <button
-                className={softBtn}
-                onClick={() =>
-                  update((c) => {
-                    const fp = { ...c.floorPlans };
-                    delete fp[String(floor)];
-                    return { ...c, floorPlans: fp };
-                  })
-                }
-              >
-                Remove
-              </button>
-            )}
+            </Step>
           </div>
-        </Step>
-      </div>
+        </>
+      )}
     </>
+  );
+}
+
+// Every apartment in one table, to update the whole price list quickly.
+function AllApartments({ content, setSuite }: { content: SiteContent; setSuite: (id: string, patch: Record<string, unknown>) => void }) {
+  const [onlyOpen, setOnlyOpen] = useState(false);
+  const rows = UNITS.filter((u) => !onlyOpen || ["available", "soon"].includes(content.suites[u.id]?.status ?? ""));
+  const cell = "rounded-md bg-white px-3 py-2 text-base ring-1 ring-brown/20 focus:outline-none focus:ring-2 focus:ring-gold";
+  return (
+    <section className="rounded-lg bg-cream p-4 shadow-sm ring-1 ring-sand sm:p-5">
+      <label className="mb-4 flex items-center gap-3">
+        <input type="checkbox" className="size-5 accent-[#503d32]" checked={onlyOpen} onChange={(e) => setOnlyOpen(e.target.checked)} />
+        Show only Available and Coming soon
+      </label>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[720px] text-left">
+          <thead className="text-sm text-brown-soft">
+            <tr className="border-b border-sand">
+              <th className="py-2 pr-3 font-medium">Apartment</th>
+              <th className="py-2 pr-3 font-medium">Type</th>
+              <th className="py-2 pr-3 font-medium">Status</th>
+              <th className="py-2 pr-3 font-medium">Price / month</th>
+              <th className="py-2 font-medium">Available from</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((u) => {
+              const s = content.suites[u.id] ?? {};
+              const tone = s.status === "available" ? "text-[#2f5a38]" : s.status === "soon" ? "text-gold" : s.status === "leased" ? "text-brown" : "text-brown-soft";
+              return (
+                <tr key={u.id} className="border-b border-sand/70 last:border-0">
+                  <td className="py-2 pr-3 font-display text-2xl text-ink">{u.id}</td>
+                  <td className="py-2 pr-3 text-brown-soft">{TYPE_LABELS[u.type]}</td>
+                  <td className="py-2 pr-3">
+                    <select className={`${cell} ${tone}`} value={s.status ?? ""} onChange={(e) => setSuite(u.id, { status: e.target.value || undefined })} aria-label={`Status of ${u.id}`}>
+                      <option value="">Not set</option>
+                      {STATUS.map((st) => (
+                        <option key={st.key} value={st.key}>
+                          {st.label}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="py-2 pr-3">
+                    <input
+                      className={`${cell} w-32`}
+                      type="number"
+                      min={0}
+                      placeholder={String(content.prices[u.type])}
+                      value={s.price ?? ""}
+                      onChange={(e) => setSuite(u.id, { price: e.target.value ? Number(e.target.value) : undefined })}
+                      aria-label={`Price of ${u.id}`}
+                    />
+                  </td>
+                  <td className="py-2">
+                    <input className={cell} type="date" value={s.availableOn ?? ""} onChange={(e) => setSuite(u.id, { availableOn: e.target.value || undefined })} aria-label={`Available from, ${u.id}`} />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
@@ -666,7 +696,7 @@ function PhotosScreen({ content, update, upload }: { content: SiteContent; updat
 
   return (
     <>
-      <ScreenTitle icon={<ImageIcon className="size-5" />} title="Photos" help="Use the buttons under each photo to move it or remove it. To add one, click “Add a photo”: you can upload a new one or pick an existing one." />
+      <ScreenTitle icon={<ImageIcon className="size-5" />} title="Photos" help="Drag a photo with your mouse to change the order, and click the little trash can to remove it. To add one, click “Add a photo”: you can upload a new one or pick an existing one." />
       <div className="space-y-6">
         <PhotoRow
           title="Big photos at the top of the page"
@@ -776,6 +806,8 @@ function PhotoRow({
   categories?: boolean;
 }) {
   const edit = (i: number, patch: Partial<Photo>) => onChange((l) => l.map((p, j) => (j === i ? { ...p, ...patch } : p)));
+  // Drag a photo onto another one to put it in that place.
+  const [drag, setDrag] = useState<{ from: number; over: number } | null>(null);
   return (
     <Step title={title} help={help}>
       <button className={bigBtn} onClick={onAdd}>
@@ -783,24 +815,45 @@ function PhotoRow({
       </button>
       <ol className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {photos.map((p, i) => (
-          <li key={`${p.src}-${i}`} className="overflow-hidden rounded-md bg-white ring-1 ring-sand">
-            <div className="relative">
+          <li
+            key={`${p.src}-${i}`}
+            onDragOver={(e) => {
+              if (!drag) return;
+              e.preventDefault();
+              if (drag.over !== i) setDrag({ ...drag, over: i });
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (drag && drag.from !== i) onChange((l) => move(l, drag.from, i));
+              setDrag(null);
+            }}
+            className={`overflow-hidden rounded-md bg-white ring-1 transition ${drag?.over === i && drag.from !== i ? "ring-4 ring-gold" : "ring-sand"} ${drag?.from === i ? "opacity-40" : ""}`}
+          >
+            <div
+              className="relative cursor-grab active:cursor-grabbing"
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = "move";
+                setDrag({ from: i, over: i });
+              }}
+              onDragEnd={() => setDrag(null)}
+              title="Drag to move"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.src} alt="" className="aspect-[4/3] w-full object-cover" />
+              <img src={p.src} alt="" className="pointer-events-none aspect-[4/3] w-full object-cover" />
               <span className="absolute left-2 top-2 rounded-full bg-black/60 px-3 py-1 text-sm text-white">#{i + 1}</span>
+              {photos.length > min && (
+                <button
+                  aria-label="Remove this photo"
+                  title="Remove this photo"
+                  onClick={() => confirm("Remove this photo from here?") && onChange((l) => l.filter((_, j) => j !== i))}
+                  className="absolute right-2 top-2 inline-flex size-9 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/60"
+                >
+                  <TrashIcon className="size-[18px]" />
+                </button>
+              )}
             </div>
             <div className="space-y-2 p-3">
-              <div className="grid grid-cols-3 gap-2">
-                <button className={softBtn} disabled={i === 0} onClick={() => onChange((l) => move(l, i, i - 1))}>
-                  <ArrowLeftIcon className="size-4" /> Move
-                </button>
-                <button className={softBtn} disabled={i === photos.length - 1} onClick={() => onChange((l) => move(l, i, i + 1))}>
-                  Move <ArrowRightIcon className="size-4" />
-                </button>
-                <button className={`${softBtn} text-red-800`} disabled={photos.length <= min} onClick={() => confirm("Remove this photo from here?") && onChange((l) => l.filter((_, j) => j !== i))}>
-                  Remove
-                </button>
-              </div>
               <input className={field} placeholder="Description in French" value={p.alt.fr} onChange={(e) => edit(i, { alt: { ...p.alt, fr: e.target.value } })} />
               <input className={field} placeholder="Description in English" value={p.alt.en} onChange={(e) => edit(i, { alt: { ...p.alt, en: e.target.value } })} />
               {categories && (

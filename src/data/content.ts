@@ -30,6 +30,21 @@ export type Promo = {
   showBand: boolean; // the large brown section
 };
 
+// A thin message bar at the top of the website, for holidays and special days.
+export type Notice = { enabled: boolean; start?: string; end?: string; text: Bilingual };
+
+// Showing times visitors can book from the inquiry pop-up.
+export type Weekday = "0" | "1" | "2" | "3" | "4" | "5" | "6"; // Sunday = "0"
+export type ShowingHours = { from: string; to: string }; // "HH:MM", Montréal time
+export type Showings = {
+  enabled: boolean;
+  slotMinutes: number;
+  hours: Partial<Record<Weekday, ShowingHours>>; // a missing day = no showings
+  blocked: string[]; // YYYY-MM-DD days with no showings (holidays, days off)
+  minNoticeHours: number; // how soon a visitor can book
+  daysAhead: number; // how far ahead
+};
+
 export type SiteContent = {
   photos: { hero: Photo[]; gallery: Photo[]; about: Photo; amenities: Record<AmenitySlot, Photo> };
   prices: Record<UnitType, number>;
@@ -37,6 +52,8 @@ export type SiteContent = {
   floorPlans: Record<string, string>; // floor number -> file
   text: Record<string, Bilingual>; // dictionary path -> text, e.g. "hero.title"
   promo: Promo;
+  notice: Notice;
+  showings: Showings;
   library: LibraryItem[]; // files uploaded through the admin
 };
 
@@ -80,6 +97,18 @@ export const DEFAULT_CONTENT: SiteContent = {
     suites: [],
     showTab: true,
     showBand: false,
+  },
+  notice: {
+    enabled: false,
+    text: { fr: "Notre bureau sera fermé le 25 décembre. Joyeuses fêtes!", en: "Our office will be closed on December 25. Happy holidays!" },
+  },
+  showings: {
+    enabled: false,
+    slotMinutes: 30,
+    hours: { "1": { from: "10:00", to: "17:00" }, "2": { from: "10:00", to: "17:00" }, "3": { from: "10:00", to: "17:00" }, "4": { from: "10:00", to: "17:00" }, "5": { from: "10:00", to: "17:00" } },
+    blocked: [],
+    minNoticeHours: 12,
+    daysAhead: 21,
   },
   library: [],
 };
@@ -197,8 +226,9 @@ export const isUploaded = (src: string) => src.startsWith("/api/media/");
 // Today's date in Montréal as YYYY-MM-DD.
 export const todayInMontreal = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Montreal" }).format(new Date());
 
-export type PromoState = "off" | "live" | "scheduled" | "ended";
-export function promoState(p: Promo, today = todayInMontreal()): PromoState {
+// Whether something with an on/off switch and optional dates (the promotion, the banner) is showing.
+export type ScheduleState = "off" | "live" | "scheduled" | "ended";
+export function scheduleState(p: { enabled: boolean; start?: string; end?: string }, today = todayInMontreal()): ScheduleState {
   if (!p.enabled) return "off";
   if (p.start && today < p.start) return "scheduled";
   if (p.end && today > p.end) return "ended";

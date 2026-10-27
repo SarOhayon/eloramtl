@@ -72,9 +72,18 @@ WhatsApp only lets a business message someone freely within 24 hours of their la
 ## Admin
 
 `/admin` (reached from the small "·" after the copyright in the footer) lets you manage, without a redeploy:
-a home screen with big buttons leads to: the promotion (wording FR/EN, photo, start/end dates, apartments it applies to, side tab and brown section switches, live preview; shown to visitors as a once-per-visitor pop-up), apartments (status, price, available date, plan per suite and per floor), photos (top slider, gallery, amenity photos, library), starting prices and section text. Changes save automatically.
+a home screen with big buttons leads to:
 
-Content is saved to `content/site.json` in the S3 bucket and uploads under `media/`; the site reads it on every visit. Sign-in uses `ADMIN_PASSWORD` (temporary single password; "admin" when testing locally). Code: `src/app/admin`, `src/components/admin`, `src/app/actions/admin.ts`, `src/data/content.ts`.
+- **Inquiries**: every inquiry, application and booked showing, with a follow-up status and a note.
+- **Showings**: online booking on/off, weekly showing hours, slot length, days off, upcoming showings (cancel frees the time). Visitors book from the inquiry pop-up and get a confirmation email with a calendar invite that reminds them 30 minutes before.
+- **Apartments**: status, price, available date and plan per suite, plan per floor, and an "All apartments" table for quick edits.
+- **Promotion**: wording FR/EN, photo, start/end dates, apartments it applies to, side tab and brown section switches, live preview; shown to visitors as a once-per-visitor pop-up.
+- **Special-day banner**: a thin message at the top of the site, on/off with first and last day.
+- **Photos** (drag to reorder), **Starting prices**, **Website text**, and **Visitors** (daily counts of visits, promotion views, WhatsApp/call clicks, forms and bookings).
+
+Changes save automatically.
+
+Content is saved to `content/site.json` in the S3 bucket, uploads under `media/`, inquiries in `leads/index.json` and visitor counts in `stats/<month>.json`; the site reads them on every visit. Sign-in uses `ADMIN_PASSWORD` (temporary single password; "admin" when testing locally). Code: `src/app/admin`, `src/components/admin`, `src/app/actions/admin.ts`, `src/data/content.ts`.
 
 ## Still placeholder
 

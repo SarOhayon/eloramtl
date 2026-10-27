@@ -69,14 +69,44 @@ export const ArrowLeftIcon = (p: P) => (
     <path d="M19 12H5M11 6l-6 6 6 6" />
   </Icon>
 );
-export const ArrowRightIcon = (p: P) => (
-  <Icon {...p}>
-    <path d="M5 12h14M13 6l6 6-6 6" />
-  </Icon>
-);
 export const ExternalIcon = (p: P) => (
   <Icon {...p}>
     <path d="M13.5 4.5h6v6M19.5 4.5l-8 8M17.5 13.5v5a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1h5" />
+  </Icon>
+);
+
+export const MegaphoneIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M4.5 10v4a1 1 0 0 0 1 1h2l7.5 4V5L7.5 9h-2a1 1 0 0 0-1 1ZM7.5 15l1.2 4.2a1 1 0 0 0 1 .8h.9M18 9.5a3.5 3.5 0 0 1 0 5" />
+  </Icon>
+);
+export const InboxIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M3.5 13.5 6 5.2a1 1 0 0 1 1-.7h10a1 1 0 0 1 1 .7l2.5 8.3v5a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1v-5Z" />
+    <path d="M3.5 13.5h4.5l1.5 2.5h5l1.5-2.5h4.5" />
+  </Icon>
+);
+export const CalendarIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="3.5" y="5" width="17" height="15" rx="1.5" />
+    <path d="M3.5 9.5h17M8 3v4M16 3v4M8 13h2M14 13h2M8 16.5h2" />
+  </Icon>
+);
+export const ChartIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M4 20h16M7 16.5v-5M12 16.5v-9M17 16.5v-6.5" />
+  </Icon>
+);
+export const TableIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="3.5" y="4.5" width="17" height="15" rx="1.5" />
+    <path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5v10" />
+  </Icon>
+);
+
+export const TrashIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M4.5 6.5h15M9.5 6.5V4.8a.8.8 0 0 1 .8-.8h3.4a.8.8 0 0 1 .8.8v1.7M6.5 6.5l.8 12.1a1 1 0 0 0 1 .9h7.4a1 1 0 0 0 1-.9l.8-12.1M10 10.5v5.5M14 10.5v5.5" />
   </Icon>
 );
 

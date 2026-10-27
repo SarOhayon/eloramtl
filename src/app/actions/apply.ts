@@ -1,6 +1,8 @@
 "use server";
 
+import { addLead } from "@/lib/leads";
 import { sendMail } from "@/lib/mail";
+import { countEvent } from "@/lib/stats";
 
 export type ApplyField = "name" | "phone" | "email" | "moveIn";
 // `values` echoes what was typed, so the form can refill itself after a failed check.
@@ -26,8 +28,14 @@ export async function submitApplication(_prev: ApplyState, formData: FormData): 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(app.moveIn)) invalid.push("moveIn");
   if (invalid.length) return { status: "invalid", invalid, values: app };
 
-  const sent = await sendMail(compose(app));
-  return sent ? { status: "sent" } : { status: "error", values: app };
+  // Saved for the admin inbox and emailed; either one is enough to count as received.
+  const [saved, sent] = await Promise.all([
+    addLead({ kind: "application", name: app.name, email: app.email, phone: app.phone, moveIn: app.moveIn, comments: app.comments || undefined, lang: app.lang === "fr" ? "fr" : "en" }),
+    sendMail(compose(app)),
+  ]);
+  if (!saved && !sent) return { status: "error", values: app };
+  await countEvent("application");
+  return { status: "sent" };
 }
 
 function compose(app: Application) {

@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { UNITS, UNIT_TYPES } from "@/data/building";
-import { DEFAULT_CONTENT, EDITABLE_PATHS, type AmenitySlot, type Bilingual, type Promo, type SiteContent, type SuiteStatus } from "@/data/content";
+import { DEFAULT_CONTENT, EDITABLE_PATHS, type AmenitySlot, type Bilingual, type Notice, type Promo, type Showings, type SiteContent, type SuiteStatus, type Weekday } from "@/data/content";
 import type { Photo, PhotoCategory } from "@/data/photos";
 import { checkPassword, endSession, isAdmin, startSession } from "@/lib/adminAuth";
 import { getContent, saveContent } from "@/lib/content";
@@ -85,11 +85,49 @@ function clean(input: SiteContent): SiteContent {
     floorPlans,
     text,
     promo: cleanPromo(input.promo, ids),
+    notice: cleanNotice(input.notice),
+    showings: cleanShowings(input.showings),
     library,
   };
 }
 
 const date = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);
+
+function cleanNotice(n: Partial<Notice> | undefined): Notice {
+  const start = date(n?.start);
+  const end = date(n?.end);
+  return {
+    enabled: n?.enabled === true,
+    ...(start ? { start } : {}),
+    ...(end ? { end } : {}),
+    text: { fr: str(n?.text?.fr, 300), en: str(n?.text?.en, 300) },
+  };
+}
+
+const time = (v: unknown) => (typeof v === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? v : undefined);
+const between = (v: unknown, min: number, max: number, fallback: number) => {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) && n >= min && n <= max ? n : fallback;
+};
+
+function cleanShowings(s: Partial<Showings> | undefined): Showings {
+  const d = DEFAULT_CONTENT.showings;
+  const hours: Showings["hours"] = {};
+  for (const day of ["0", "1", "2", "3", "4", "5", "6"] as Weekday[]) {
+    const h = s?.hours?.[day];
+    const from = time(h?.from);
+    const to = time(h?.to);
+    if (from && to && from < to) hours[day] = { from, to };
+  }
+  return {
+    enabled: s?.enabled === true,
+    slotMinutes: [15, 30, 45, 60].includes(Number(s?.slotMinutes)) ? Number(s?.slotMinutes) : d.slotMinutes,
+    hours,
+    blocked: [...new Set((s?.blocked ?? []).map(date).filter((x): x is string => Boolean(x)))].sort().slice(-200),
+    minNoticeHours: between(s?.minNoticeHours, 0, 168, d.minNoticeHours),
+    daysAhead: between(s?.daysAhead, 1, 90, d.daysAhead),
+  };
+}
 
 function cleanPromo(p: Partial<Promo> | undefined, suiteIds: Set<string>): Promo {
   const d = DEFAULT_CONTENT.promo;

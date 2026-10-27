@@ -23,6 +23,8 @@ function merge(saved: Partial<SiteContent> & { offer?: { enabled?: boolean } }):
     floorPlans: saved.floorPlans ?? d.floorPlans,
     text: saved.text ?? d.text,
     promo: mergePromo(saved),
+    notice: { ...d.notice, ...saved.notice },
+    showings: { ...d.showings, ...saved.showings },
     library: saved.library ?? d.library,
   };
 }
