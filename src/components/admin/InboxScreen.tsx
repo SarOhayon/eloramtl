@@ -7,7 +7,8 @@ import { UNITS, formatPrice } from "@/data/building";
 import type { SiteContent } from "@/data/content";
 import { dictionaries } from "@/i18n/dictionaries";
 import type { Lead, LeadKind, LeadStatus } from "@/lib/leads";
-import { InboxIcon, SparkleIcon } from "./AdminIcons";
+import { InboxIcon, SparkleIcon, TableIcon } from "./AdminIcons";
+import { Attendance } from "./Attendance";
 import { ScreenTitle, field } from "./ui";
 
 const STATUS: { key: LeadStatus; label: string; on: string }[] = [
@@ -55,6 +56,9 @@ export function InboxScreen({ content }: { content: SiteContent }) {
         title="Inquiries"
         help="Every form sent from the website, newest first: inquiries, applications and booked showings. Change the status as you follow up, and add a note for yourself."
       />
+      <a href="/admin/inquiries.xlsx" download className="mb-6 inline-flex items-center gap-2 rounded-md bg-white px-4 py-2.5 ring-1 ring-brown/20 transition hover:bg-cream-deep">
+        <TableIcon className="size-5" /> Download all to Excel
+      </a>
       {error && <p className="mb-4 rounded-md bg-red-50 px-4 py-3 text-red-900">Couldn’t load or save. Check your internet and refresh the page.</p>}
 
       <div className="mb-6 flex flex-wrap gap-2">
@@ -83,9 +87,12 @@ export function InboxScreen({ content }: { content: SiteContent }) {
             </div>
 
             {l.showing && (
-              <p className="mt-3 rounded-md bg-gold-light/60 px-4 py-2.5 font-medium text-brown">
-                Showing: {dayOf(l.showing.date)} at {l.showing.time}
-              </p>
+              <div className="mt-3 space-y-3 rounded-md bg-gold-light/60 px-4 py-3">
+                <p className="font-medium text-brown">
+                  Showing: {dayOf(l.showing.date)} at {l.showing.time}
+                </p>
+                <Attendance lead={l} onLeads={setLeads} />
+              </div>
             )}
 
             <dl className="mt-3 grid gap-x-6 gap-y-1 text-brown sm:grid-cols-2">

@@ -19,6 +19,7 @@ import {
   ExternalIcon,
   IconBadge,
   ImageIcon,
+  MailIcon,
   InboxIcon,
   MegaphoneIcon,
   PlusIcon,
@@ -29,6 +30,7 @@ import {
   TextIcon,
   UploadIcon,
 } from "./AdminIcons";
+import { EmailsScreen } from "./EmailsScreen";
 import { InboxScreen } from "./InboxScreen";
 import { NoticeScreen } from "./NoticeScreen";
 import { ShowingsScreen } from "./ShowingsScreen";
@@ -39,7 +41,7 @@ import { Wordmark } from "../Wordmark";
 // A deliberately simple admin: a home screen with big buttons, one task per screen,
 // plain-English help and automatic saving.
 
-type Screen = "home" | "inbox" | "promo" | "notice" | "apartments" | "showings" | "photos" | "prices" | "text" | "stats";
+type Screen = "home" | "inbox" | "promo" | "notice" | "apartments" | "showings" | "emails" | "photos" | "prices" | "text" | "stats";
 
 const TYPE_LABELS = dictionaries.en.types;
 const isPdf = (src: string) => src.endsWith(".pdf");
@@ -159,6 +161,7 @@ export function AdminApp({ initial }: { initial: SiteContent }) {
             {screen === "notice" && <NoticeScreen content={content} update={update} />}
             {screen === "inbox" && <InboxScreen content={content} />}
             {screen === "showings" && <ShowingsScreen content={content} update={update} />}
+            {screen === "emails" && <EmailsScreen content={content} update={update} />}
             {screen === "stats" && <StatsScreen />}
             {screen === "apartments" && <ApartmentsScreen content={content} update={update} upload={upload} />}
             {screen === "photos" && <PhotosScreen content={content} update={update} upload={upload} />}
@@ -218,6 +221,16 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
       title: "Showings",
       text: "Let visitors book a showing time online, and see who's coming.",
       note: <ScheduleStatus state={content.showings.enabled ? "live" : "off"} label={content.showings.enabled ? "Online booking is on" : "Turned off"} />,
+    },
+    {
+      screen: "emails",
+      icon: <MailIcon className="size-6" />,
+      title: "Automatic emails",
+      text: "Replies, booking confirmations, follow-ups and your weekly summary.",
+      note: (() => {
+        const on = [content.emails.autoReply.enabled && "Auto-reply", content.emails.followUp.enabled && "Follow-up", content.emails.weekly.enabled && "Weekly summary"].filter(Boolean);
+        return on.length ? `${on.join(" · ")} on` : "All off";
+      })(),
     },
     { screen: "apartments", icon: <BuildingIcon className="size-6" />, title: "Apartments", text: "Mark apartments available or rented, set prices, dates and plans.", note: `${available} marked available` },
     { screen: "promo", icon: <TagIcon className="size-6" />, title: "Promotion", text: "Create or change your special offer.", note: <ScheduleStatus state={scheduleState(content.promo)} /> },

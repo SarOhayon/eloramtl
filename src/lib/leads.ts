@@ -21,6 +21,8 @@ export type Lead = {
   status: LeadStatus;
   note?: string; // the team's own note
   suggestion?: Suggestion; // AI suggestion of suites, kept until asked again
+  attendance?: "came" | "no-show"; // for showings, marked by the team
+  followUp?: { due: string; sentAt?: string }; // ISO times of the follow-up email after a showing
 };
 export type Suggestion = { at: string; summary: string; picks: { unit: string; reason: string }[]; ask: string };
 
@@ -51,11 +53,26 @@ export async function addLead(lead: Omit<Lead, "id" | "createdAt" | "status">): 
   }
 }
 
-export async function changeLead(id: string, patch: Partial<Pick<Lead, "status" | "note" | "suggestion">>): Promise<Lead[] | null> {
+type Patch = Partial<Pick<Lead, "status" | "note" | "suggestion" | "attendance" | "followUp">>;
+
+// Changes one lead; a field set to undefined is removed.
+export async function changeLead(id: string, patch: Patch): Promise<Lead[] | null> {
+  return changeLeads((l) => (l.id === id ? patch : null));
+}
+
+// Changes every lead the function returns a patch for (one read and one write).
+export async function changeLeads(fn: (l: Lead) => Patch | null): Promise<Lead[] | null> {
   const leads = await readLeads();
-  const i = leads.findIndex((l) => l.id === id);
-  if (i < 0) return null;
-  leads[i] = { ...leads[i], ...patch };
+  let changed = false;
+  for (let i = 0; i < leads.length; i++) {
+    const patch = fn(leads[i]);
+    if (!patch) continue;
+    const next: Lead = { ...leads[i], ...patch };
+    for (const k of Object.keys(patch) as (keyof Patch)[]) if (patch[k] === undefined) delete next[k];
+    leads[i] = next;
+    changed = true;
+  }
+  if (!changed) return null;
   await write(leads);
   return leads;
 }

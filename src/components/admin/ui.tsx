@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { IconBadge } from "./AdminIcons";
 import type { Bilingual, SiteContent } from "@/data/content";
 
@@ -88,4 +89,14 @@ export function ScheduleStatus({ state, label: custom }: { state: keyof typeof S
       {label}
     </span>
   );
+}
+
+// The current time, refreshed every minute (so buttons that depend on the clock appear by themselves).
+export function useNow() {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(Date.now()), 60e3);
+    return () => window.clearInterval(t);
+  }, []);
+  return now;
 }

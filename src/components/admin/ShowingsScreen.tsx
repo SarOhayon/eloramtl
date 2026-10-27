@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { listLeads, updateLead } from "@/app/actions/leads";
-import { ADDRESS, PHONE_MAIN_DISPLAY } from "@/data/building";
-import { DEFAULT_CONTENT, fillHtmlTemplate, fillTemplate, todayInMontreal, type ShowingHours, type Showings, type SiteContent, type Weekday } from "@/data/content";
+import { todayInMontreal, type ShowingHours, type Showings, type SiteContent, type Weekday } from "@/data/content";
 import type { Lead } from "@/lib/leads";
 import { CalendarIcon, CloseIcon, PlusIcon } from "./AdminIcons";
-import { ScreenTitle, Step, Switch, field, softBtn, type Update } from "./ui";
+import { Attendance } from "./Attendance";
+import { ScreenTitle, Step, Switch, field, softBtn, useNow, type Update } from "./ui";
 
 const DAYS: { key: Weekday; label: string }[] = [
   { key: "1", label: "Monday" },
@@ -37,7 +37,7 @@ export function ShowingsScreen({ content, update }: { content: SiteContent; upda
       <ScreenTitle
         icon={<CalendarIcon className="size-5" />}
         title="Showings"
-        help="Let visitors book a showing time on the website. They pick a day and time from your hours, get a confirmation email with a calendar reminder 30 minutes before, and the booking appears here and in Inquiries."
+        help="Let visitors book a showing time on the website. They pick a day and time from your hours, get a confirmation email with a calendar reminder 30 minutes before, and the booking appears here and in Inquiries. The emails are in Automatic emails."
       />
       <div className="space-y-6">
         <Step n={1} title="Turn online booking on or off" help="When it's off, the “Book a showing” buttons open the regular inquiry form.">
@@ -132,131 +132,26 @@ export function ShowingsScreen({ content, update }: { content: SiteContent; upda
           )}
         </Step>
 
-        <EmailTemplate showings={s} set={set} />
-
         <Upcoming />
       </div>
     </>
   );
 }
 
-const BLANKS = [
-  { key: "{name}", what: "the visitor's name" },
-  { key: "{date}", what: "the day of the showing" },
-  { key: "{time}", what: "the time" },
-  { key: "{address}", what: "the building's address" },
-  { key: "{phone}", what: "your phone number" },
-];
-
-// The confirmation email visitors get after booking, in French and English, with a preview.
-function EmailTemplate({ showings, set }: { showings: Showings; set: (patch: Partial<Showings>) => void }) {
-  const [lang, setLang] = useState<"fr" | "en">("en");
-  const [version, setVersion] = useState<"html" | "body">("html");
-  const email = showings.email;
-  const edit = (part: "subject" | "body" | "html", value: string) => set({ email: { ...email, [part]: { ...email[part], [lang]: value } } });
-  // A sample booking for the preview: next Thursday at 10:30.
-  const sample = new Date(`${todayInMontreal()}T12:00:00Z`);
-  sample.setUTCDate(sample.getUTCDate() + ((4 - sample.getUTCDay() + 7) % 7 || 7));
-  const intl = lang === "fr" ? "fr-CA" : "en-CA";
-  const blanks = {
-    name: "Maya Tremblay",
-    date: new Intl.DateTimeFormat(intl, { dateStyle: "full", timeZone: "UTC" }).format(sample),
-    time: new Intl.DateTimeFormat(intl, { timeStyle: "short", timeZone: "UTC" }).format(new Date("2000-01-01T10:30:00Z")),
-    address: ADDRESS,
-    phone: PHONE_MAIN_DISPLAY,
-  };
-
-  return (
-    <Step n={4} title="Confirmation email" help="What visitors receive after booking (in the language they used on the website). The calendar invite with the 30-minute reminder is always attached.">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-3">
-          <div className="flex overflow-hidden rounded-md ring-1 ring-brown/20">
-            {(["fr", "en"] as const).map((l) => (
-              <button key={l} onClick={() => setLang(l)} className={`px-4 py-2 text-sm ${lang === l ? "bg-action text-white" : "bg-white"}`}>
-                {l === "fr" ? "French" : "English"}
-              </button>
-            ))}
-          </div>
-          <div className="flex overflow-hidden rounded-md ring-1 ring-brown/20">
-            {(["html", "body"] as const).map((v) => (
-              <button key={v} onClick={() => setVersion(v)} className={`px-4 py-2 text-sm ${version === v ? "bg-action text-white" : "bg-white"}`}>
-                {v === "html" ? "Designed email" : "Plain text"}
-              </button>
-            ))}
-          </div>
-        </div>
-        <button
-          className={softBtn}
-          onClick={() => confirm("Go back to the original wording, in French and English?") && set({ email: DEFAULT_CONTENT.showings.email })}
-        >
-          Restore the original
-        </button>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-4">
-          <label className="block">
-            <span className="mb-1 block font-medium">Subject</span>
-            <input className={field} value={email.subject[lang]} onChange={(e) => edit("subject", e.target.value)} />
-          </label>
-          {version === "html" ? (
-            <label className="block">
-              <span className="mb-1 block font-medium">Designed email (HTML)</span>
-              <span className="mb-2 block text-sm text-brown-soft">Paste your own email design here, or edit this one. Leave it empty to send only the plain text.</span>
-              <textarea className={`${field} font-mono text-xs`} rows={16} spellCheck={false} value={email.html[lang]} onChange={(e) => edit("html", e.target.value)} />
-            </label>
-          ) : (
-            <label className="block">
-              <span className="mb-1 block font-medium">Plain-text message</span>
-              <span className="mb-2 block text-sm text-brown-soft">Shown by email apps that don’t display designed emails{email.html[lang].trim() ? "" : " (and sent to everyone while the designed email is empty)"}.</span>
-              <textarea className={field} rows={12} value={email.body[lang]} onChange={(e) => edit("body", e.target.value)} />
-            </label>
-          )}
-          <div className="rounded-md bg-cream-deep p-4 text-sm">
-            <p className="font-medium text-brown">These words are filled in automatically:</p>
-            <ul className="mt-2 space-y-1 text-brown-soft">
-              {BLANKS.map((b) => (
-                <li key={b.key}>
-                  <code className="rounded bg-white px-1.5 py-0.5 text-brown ring-1 ring-sand">{b.key}</code> {b.what}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div>
-          <p className="mb-1 font-medium">Preview</p>
-          <div className="overflow-hidden rounded-md bg-white ring-1 ring-sand">
-            <div className="border-b border-sand px-5 py-3 text-sm">
-              <p className="text-brown-soft">From: Elora MTL</p>
-              <p className="mt-0.5 font-medium text-ink">{fillTemplate(email.subject[lang], blanks)}</p>
-            </div>
-            {version === "html" && email.html[lang].trim() ? (
-              // Sandboxed: the preview can't run anything or reach the admin page.
-              <iframe title="Email preview" sandbox="" srcDoc={fillHtmlTemplate(email.html[lang], blanks)} className="block h-[560px] w-full border-0" />
-            ) : (
-              <p className="whitespace-pre-line px-5 py-4 text-brown">{fillTemplate(email.body[lang], blanks)}</p>
-            )}
-            <p className="mx-5 mb-4 mt-4 inline-flex items-center gap-2 rounded-md bg-cream-deep px-3 py-2 text-sm text-brown">
-              <CalendarIcon className="size-4" /> elora-showing.ics
-            </p>
-          </div>
-        </div>
-      </div>
-    </Step>
-  );
-}
-
-// Booked showings from today on, soonest first. Cancelling frees the time for someone else.
+// Booked showings: today and coming up (soonest first), and the last two weeks to mark who came.
+// Cancelling frees the time for someone else.
 function Upcoming() {
   const [leads, setLeads] = useState<Lead[] | null>(null);
   useEffect(() => {
     listLeads().then(setLeads);
   }, []);
+  const now = useNow();
   const today = todayInMontreal();
-  const upcoming = (leads ?? [])
-    .filter((l) => l.showing && l.status !== "closed" && l.showing.date >= today)
-    .sort((a, b) => `${a.showing!.date} ${a.showing!.time}`.localeCompare(`${b.showing!.date} ${b.showing!.time}`));
+  const twoWeeksAgo = new Date(now - 14 * 864e5).toISOString().slice(0, 10);
+  const key = (l: Lead) => `${l.showing!.date} ${l.showing!.time}`;
+  const booked = (leads ?? []).filter((l) => l.showing && l.status !== "closed");
+  const upcoming = booked.filter((l) => l.showing!.date >= today).sort((a, b) => key(a).localeCompare(key(b)));
+  const past = booked.filter((l) => l.showing!.date < today && l.showing!.date >= twoWeeksAgo).sort((a, b) => key(b).localeCompare(key(a)));
 
   const cancel = async (l: Lead) => {
     if (!confirm(`Cancel ${l.name}'s showing? The time becomes free again. (They aren't emailed automatically; let them know.)`)) return;
@@ -264,32 +159,38 @@ function Upcoming() {
     if (next) setLeads(next);
   };
 
+  const row = (l: Lead, canCancel: boolean) => (
+    <li key={l.id} className="space-y-3 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-medium text-ink">
+            {dayOf(l.showing!.date)} at {l.showing!.time}
+          </p>
+          <p className="text-brown-soft">
+            {l.name} · <a href={`tel:${l.phone}`} className="underline">{l.phone}</a>
+            {l.type ? ` · ${l.type}` : ""}
+          </p>
+        </div>
+        {canCancel && !l.attendance && (
+          <button className={`${softBtn} text-red-800`} onClick={() => cancel(l)}>
+            Cancel
+          </button>
+        )}
+      </div>
+      <Attendance lead={l} onLeads={setLeads} />
+    </li>
+  );
+
   return (
-    <Step title="Upcoming showings" help="Everyone who booked a time. Their details are also in Inquiries.">
-      {!leads ? (
-        <p className="text-brown-soft">Loading…</p>
-      ) : upcoming.length === 0 ? (
-        <p className="text-brown-soft">No showings booked yet.</p>
-      ) : (
-        <ul className="divide-y divide-sand">
-          {upcoming.map((l) => (
-            <li key={l.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-              <div>
-                <p className="font-medium text-ink">
-                  {dayOf(l.showing!.date)} at {l.showing!.time}
-                </p>
-                <p className="text-brown-soft">
-                  {l.name} · <a href={`tel:${l.phone}`} className="underline">{l.phone}</a>
-                  {l.type ? ` · ${l.type}` : ""}
-                </p>
-              </div>
-              <button className={`${softBtn} text-red-800`} onClick={() => cancel(l)}>
-                Cancel
-              </button>
-            </li>
-          ))}
-        </ul>
+    <>
+      <Step title="Today and coming up" help="Everyone who booked a time. From 15 minutes before a showing, mark whether they came: people who came get the follow-up email.">
+        {!leads ? <p className="text-brown-soft">Loading…</p> : upcoming.length === 0 ? <p className="text-brown-soft">No showings booked yet.</p> : <ul className="divide-y divide-sand">{upcoming.map((l) => row(l, true))}</ul>}
+      </Step>
+      {past.length > 0 && (
+        <Step title="Last two weeks">
+          <ul className="divide-y divide-sand">{past.map((l) => row(l, false))}</ul>
+        </Step>
       )}
-    </Step>
+    </>
   );
 }

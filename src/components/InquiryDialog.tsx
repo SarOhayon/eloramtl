@@ -37,6 +37,8 @@ export function InquiryDialog({ locale }: { locale: Locale }) {
     };
     window.addEventListener(INQUIRY_EVENT, onEvent);
     document.addEventListener("click", onClick);
+    // Links ending in #visit (e.g. the auto-reply's button) open the booking pop-up right away.
+    if (window.location.hash === "#visit") show();
     return () => {
       window.removeEventListener(INQUIRY_EVENT, onEvent);
       document.removeEventListener("click", onClick);

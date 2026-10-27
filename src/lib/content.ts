@@ -28,6 +28,11 @@ function merge(saved: Saved): SiteContent {
     // Earlier saves had a single banner.
     notices: saved.notices ?? (saved.notice ? [{ ...saved.notice, id: "banner-1" }] : d.notices),
     showings: { ...d.showings, ...saved.showings, email: { ...d.showings.email, ...saved.showings?.email } },
+    emails: {
+      autoReply: { ...d.emails.autoReply, ...saved.emails?.autoReply },
+      followUp: { ...d.emails.followUp, ...saved.emails?.followUp },
+      weekly: { ...d.emails.weekly, ...saved.emails?.weekly },
+    },
     library: saved.library ?? d.library,
   };
 }

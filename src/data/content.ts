@@ -5,7 +5,7 @@
 import { PRICE_FROM, type UnitType } from "./building";
 import { dictionaries } from "@/i18n/dictionaries";
 import { GALLERY, PHOTOS, type Photo } from "./photos";
-import { SHOWING_EMAIL_HTML } from "./showingEmail";
+import { AUTO_REPLY_HTML, CONFIRMATION_HTML, FOLLOW_UP_HTML } from "./emailDesigns";
 
 export type SuiteStatus = "available" | "leased" | "soon";
 export type SuiteInfo = { status?: SuiteStatus; price?: number; availableOn?: string; plan?: string };
@@ -45,9 +45,16 @@ export type Showings = {
   blocked: string[]; // YYYY-MM-DD days with no showings (holidays, days off)
   minNoticeHours: number; // how soon a visitor can book
   daysAhead: number; // how far ahead
-  // The confirmation email visitors get. {name}, {date}, {time}, {address} and {phone} are filled in.
-  // `html` is the designed version (empty = plain text only); `body` is the plain-text version.
-  email: { subject: Bilingual; body: Bilingual; html: Bilingual };
+  email: EmailTemplate; // the confirmation visitors get after booking
+};
+
+// An email the site sends by itself. `html` is the designed version (empty = plain text only);
+// `body` is the plain-text version. Words in braces are filled in (see EMAIL_BLANKS).
+export type EmailTemplate = { subject: Bilingual; body: Bilingual; html: Bilingual };
+export type AutoEmails = {
+  autoReply: EmailTemplate & { enabled: boolean }; // to people who send an inquiry or apply
+  followUp: EmailTemplate & { enabled: boolean; days: number }; // a few days after they came to a showing
+  weekly: { enabled: boolean }; // Monday 8 a.m. summary to the leasing inbox
 };
 
 export type SiteContent = {
@@ -59,6 +66,7 @@ export type SiteContent = {
   promo: Promo;
   notices: Notice[];
   showings: Showings;
+  emails: AutoEmails;
   library: LibraryItem[]; // files uploaded through the admin
 };
 
@@ -117,8 +125,30 @@ export const DEFAULT_CONTENT: SiteContent = {
         fr: "Bonjour {name},\n\nVotre visite est confirmée pour le {date} à {time}, au {address}.\n\nL'invitation jointe l'ajoute à votre calendrier, avec un rappel 30 minutes avant.\nPour changer l'heure, répondez à ce courriel ou appelez-nous au {phone}.\n\nÀ bientôt!\nL'équipe Elora",
         en: "Hi {name},\n\nYour showing is confirmed for {date} at {time}, at {address}.\n\nThe attached invite adds it to your calendar, with a reminder 30 minutes before.\nTo change the time, reply to this email or call us at {phone}.\n\nSee you soon!\nThe Elora team",
       },
-      html: SHOWING_EMAIL_HTML,
+      html: CONFIRMATION_HTML,
     },
+  },
+  emails: {
+    autoReply: {
+      enabled: true,
+      subject: { fr: "Merci de votre intérêt pour Elora MTL", en: "Thank you for your interest in Elora MTL" },
+      body: {
+        fr: "Bonjour {name},\n\nMerci de votre intérêt pour Elora MTL! Nous avons bien reçu votre message et un membre de notre équipe de location vous répondra d'ici 24 heures.\n{#promotion}\nOffre en cours : {promotion}\n{/promotion}\nD'ici là, vous pouvez réserver une visite privée en ligne ({website}#visit) ou nous écrire sur WhatsApp au {phone}.\n\nAu plaisir,\nL'équipe Elora",
+        en: "Hi {name},\n\nThank you for your interest in Elora MTL! We received your message and a member of our leasing team will get back to you within 24 hours.\n{#promotion}\nCurrent offer: {promotion}\n{/promotion}\nIn the meantime, you can book a private showing online ({website}#visit) or message us on WhatsApp at {phone}.\n\nTalk soon,\nThe Elora team",
+      },
+      html: AUTO_REPLY_HTML,
+    },
+    followUp: {
+      enabled: true,
+      days: 2,
+      subject: { fr: "Merci de votre visite à Elora MTL", en: "Thank you for visiting Elora MTL" },
+      body: {
+        fr: "Bonjour {name},\n\nMerci d'être venu visiter Elora le {date}. Nous espérons que les lieux vous ont plu!\n\nAvez-vous trouvé le logement qui vous convient? Si vous êtes prêt, vous pouvez déposer votre demande en ligne : {website}#apply\n{#promotion}\nOffre en cours : {promotion}\n{/promotion}\nDes questions, ou envie de revoir un logement? Répondez à ce courriel ou appelez-nous au {phone}.\n\nAu plaisir,\nL'équipe Elora",
+        en: "Hi {name},\n\nThank you for coming to see Elora on {date}. We hope you enjoyed the visit!\n\nDid you find the right home for you? When you're ready, you can apply online: {website}#apply\n{#promotion}\nCurrent offer: {promotion}\n{/promotion}\nAny questions, or want to see a suite again? Just reply to this email or call us at {phone}.\n\nTalk soon,\nThe Elora team",
+      },
+      html: FOLLOW_UP_HTML,
+    },
+    weekly: { enabled: true },
   },
   library: [],
 };
@@ -237,7 +267,23 @@ export const isUploaded = (src: string) => src.startsWith("/api/media/");
 export const todayInMontreal = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Montreal" }).format(new Date());
 
 // Fills {name}-style blanks in an email template; unknown ones are left as they are.
-export const fillTemplate = (text: string, values: Record<string, string>) => text.replace(/\{(\w+)\}/g, (all, key: string) => values[key] ?? all);
+// {#key}…{/key} parts are kept only when that value isn't empty (e.g. no promotion running).
+export const fillTemplate = (text: string, values: Record<string, string>) =>
+  text
+    .replace(/\{#(\w+)\}([\s\S]*?)\{\/\1\}/g, (_all, key: string, inner: string) => (values[key]?.trim() ? inner : ""))
+    .replace(/\{(\w+)\}/g, (all, key: string) => values[key] ?? all);
+
+// Words that can be used in the automatic emails, for the admin's help list and previews.
+export const EMAIL_BLANKS: Record<string, string> = {
+  "{name}": "the person's name",
+  "{date}": "the day of the showing",
+  "{time}": "the time of the showing",
+  "{promotion}": "the current promotion (empty when none is running)",
+  "{address}": "the building's address",
+  "{phone}": "your phone number",
+  "{website}": "the website's address",
+};
+export const siteUrl = (lang: "fr" | "en") => `${(process.env.SITE_URL || "https://www.eloramtl.com").replace(/\/$/, "")}/${lang}`;
 // The same, for HTML: the filled-in values are escaped so a name can't change the email's design.
 const escapeHtml = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 export const fillHtmlTemplate = (html: string, values: Record<string, string>) =>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { submitApplication, type ApplyField, type ApplyState } from "@/app/actions/apply";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 
@@ -41,6 +41,10 @@ export function ApplyDialog({ locale, className }: { locale: Locale; className?:
   const a = t.apply;
   const ref = useRef<HTMLDialogElement>(null);
   const [state, formAction, pending] = useActionState<ApplyState, FormData>(submitApplication, { status: "idle" });
+  // Links ending in #apply (e.g. the follow-up email's button) open the application right away.
+  useEffect(() => {
+    if (window.location.hash === "#apply") ref.current?.showModal();
+  }, []);
 
   return (
     <>

@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { UNITS, UNIT_TYPES } from "@/data/building";
-import { DEFAULT_CONTENT, EDITABLE_PATHS, type AmenitySlot, type Bilingual, type Notice, type Promo, type Showings, type SiteContent, type SuiteStatus, type Weekday } from "@/data/content";
+import { DEFAULT_CONTENT, EDITABLE_PATHS, type AmenitySlot, type AutoEmails, type Bilingual, type EmailTemplate, type Notice, type Promo, type Showings, type SiteContent, type SuiteStatus, type Weekday } from "@/data/content";
 import type { Photo, PhotoCategory } from "@/data/photos";
 import { checkPassword, endSession, isAdmin, startSession } from "@/lib/adminAuth";
 import { getContent, saveContent } from "@/lib/content";
@@ -88,6 +88,7 @@ function clean(input: SiteContent): SiteContent {
     promo: cleanPromo(input.promo, ids),
     notices: cleanNotices(input.notices),
     showings: cleanShowings(input.showings),
+    emails: cleanEmails(input.emails),
     library,
   };
 }
@@ -136,13 +137,27 @@ function cleanShowings(s: Partial<Showings> | undefined): Showings {
     blocked: [...new Set((s?.blocked ?? []).map(date).filter((x): x is string => Boolean(x)))].sort().slice(-200),
     minNoticeHours: between(s?.minNoticeHours, 0, 168, d.minNoticeHours),
     daysAhead: between(s?.daysAhead, 1, 90, d.daysAhead),
-    email: {
-      // An emptied box goes back to the original wording.
-      subject: { fr: orDefault(s?.email?.subject?.fr, 200, d.email.subject.fr), en: orDefault(s?.email?.subject?.en, 200, d.email.subject.en) },
-      body: { fr: orDefault(s?.email?.body?.fr, 4000, d.email.body.fr), en: orDefault(s?.email?.body?.en, 4000, d.email.body.en) },
-      // Unlike the plain text, an emptied designed version stays empty (plain text only).
-      html: { fr: str(s?.email?.html?.fr ?? d.email.html.fr, 60000), en: str(s?.email?.html?.en ?? d.email.html.en, 60000) },
-    },
+    email: cleanTemplate(s?.email, d.email),
+  };
+}
+
+// An emptied subject or plain text goes back to the original wording; an emptied designed (HTML)
+// version stays empty, which means plain text only.
+function cleanTemplate(t: Partial<EmailTemplate> | undefined, d: EmailTemplate): EmailTemplate {
+  const both = (pick: (l: "fr" | "en") => string) => ({ fr: pick("fr"), en: pick("en") });
+  return {
+    subject: both((l) => orDefault(t?.subject?.[l], 200, d.subject[l])),
+    body: both((l) => orDefault(t?.body?.[l], 4000, d.body[l])),
+    html: both((l) => str(t?.html?.[l] ?? d.html[l], 60000)),
+  };
+}
+
+function cleanEmails(e: Partial<AutoEmails> | undefined): AutoEmails {
+  const d = DEFAULT_CONTENT.emails;
+  return {
+    autoReply: { enabled: e?.autoReply?.enabled !== false, ...cleanTemplate(e?.autoReply, d.autoReply) },
+    followUp: { enabled: e?.followUp?.enabled !== false, days: between(e?.followUp?.days, 1, 14, d.followUp.days), ...cleanTemplate(e?.followUp, d.followUp) },
+    weekly: { enabled: e?.weekly?.enabled !== false },
   };
 }
 

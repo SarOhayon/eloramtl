@@ -1,7 +1,7 @@
 "use server";
 
+import { autoReply, sendTeamNotice } from "@/lib/autoEmail";
 import { addLead } from "@/lib/leads";
-import { sendMail } from "@/lib/mail";
 import { countEvent } from "@/lib/stats";
 
 export type ApplyField = "name" | "phone" | "email" | "moveIn";
@@ -31,23 +31,21 @@ export async function submitApplication(_prev: ApplyState, formData: FormData): 
   // Saved for the admin inbox and emailed; either one is enough to count as received.
   const [saved, sent] = await Promise.all([
     addLead({ kind: "application", name: app.name, email: app.email, phone: app.phone, moveIn: app.moveIn, comments: app.comments || undefined, lang: app.lang === "fr" ? "fr" : "en" }),
-    sendMail(compose(app)),
+    sendTeamNotice({
+      subject: `Elora application: ${app.name} (move-in ${app.moveIn})`,
+      heading: `New application from ${app.name}`,
+      rows: [
+        ["Phone", app.phone],
+        ["Email", app.email],
+        ["Move-in date", app.moveIn],
+        ["Language", app.lang === "fr" ? "French" : "English"],
+      ],
+      note: app.comments || undefined,
+      replyTo: app.email,
+    }),
   ]);
   if (!saved && !sent) return { status: "error", values: app };
-  await countEvent("application");
+  await Promise.all([countEvent("application"), autoReply(app.name, app.email, app.lang === "fr" ? "fr" : "en")]);
   return { status: "sent" };
 }
 
-function compose(app: Application) {
-  const subject = `Elora application: ${app.name} (move-in ${app.moveIn})`;
-  const text = [
-    `Name: ${app.name}`,
-    `Phone: ${app.phone}`,
-    `Email: ${app.email}`,
-    `Move-in date: ${app.moveIn}`,
-    `Language: ${app.lang.toUpperCase()}`,
-    "",
-    app.comments || "(no comments)",
-  ].join("\n");
-  return { subject, text, replyTo: app.email };
-}

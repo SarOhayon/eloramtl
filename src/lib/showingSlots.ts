@@ -12,7 +12,7 @@ const toMinutes = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.
 const toHhmm = (m: number) => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
 
 // Montréal wall-clock time of an instant, as if it were UTC (handy for date arithmetic).
-function wallClock(at: Date): number {
+export function wallClock(at: Date): number {
   const p = Object.fromEntries(
     new Intl.DateTimeFormat("en-CA", { timeZone: TZ, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
       .formatToParts(at)
@@ -48,4 +48,14 @@ export function freeSlots(s: Showings, booked: Booked[], now = new Date()): DayS
     if (times.length) days.push({ date, times });
   }
   return days;
+}
+
+// A showing's day and time as words, e.g. "Thursday, October 29, 2026" and "10:30 a.m.".
+export function showingWords(date: string, time: string, lang: "fr" | "en") {
+  const at = montrealToUtc(date, time);
+  const intl = lang === "fr" ? "fr-CA" : "en-CA";
+  return {
+    date: new Intl.DateTimeFormat(intl, { dateStyle: "full", timeZone: TZ }).format(at),
+    time: new Intl.DateTimeFormat(intl, { timeStyle: "short", timeZone: TZ }).format(at),
+  };
 }

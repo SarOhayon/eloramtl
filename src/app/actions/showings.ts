@@ -1,11 +1,10 @@
 "use server";
 
-import { ADDRESS, INBOX_EMAIL, PHONE_MAIN_DISPLAY } from "@/data/building";
-import { fillHtmlTemplate, fillTemplate } from "@/data/content";
+import { ADDRESS, PHONE_MAIN_DISPLAY } from "@/data/building";
+import { emailBlanks, sendTeamNotice, sendTemplate } from "@/lib/autoEmail";
 import { getContent } from "@/lib/content";
 import { addLead, readLeads } from "@/lib/leads";
-import { sendMail } from "@/lib/mail";
-import { freeSlots, montrealToUtc, type DaySlots } from "@/lib/showingSlots";
+import { freeSlots, montrealToUtc, showingWords, type DaySlots } from "@/lib/showingSlots";
 import { countEvent } from "@/lib/stats";
 
 // Showing times visitors can book from the inquiry pop-up (empty when booking is turned off).
@@ -51,33 +50,31 @@ export async function bookShowing(_prev: BookState, formData: FormData): Promise
 
   const start = montrealToUtc(v.date, v.time);
   const end = new Date(start.getTime() + showings.slotMinutes * 60e3);
-  const ics = invite(start, end, lead.id, lang);
-  const intl = lang === "fr" ? "fr-CA" : "en-CA";
-  const dateText = new Intl.DateTimeFormat(intl, { dateStyle: "full", timeZone: "America/Montreal" }).format(start);
-  const timeText = new Intl.DateTimeFormat(intl, { timeStyle: "short", timeZone: "America/Montreal" }).format(start);
-  const whenText = `${dateText}, ${timeText}`;
-  const blanks = { name: v.name, date: dateText, time: timeText, address: ADDRESS, phone: PHONE_MAIN_DISPLAY };
-  const attachments = [{ filename: "elora-showing.ics", content: Buffer.from(ics), contentType: "text/calendar; charset=utf-8; method=PUBLISH" }];
+  const attachments = [{ filename: "elora-showing.ics", content: Buffer.from(invite(start, end, lead.id, lang)), contentType: "text/calendar; charset=utf-8; method=PUBLISH" }];
+  const { date, time } = showingWords(v.date, v.time, lang);
+  const en = showingWords(v.date, v.time, "en");
+  const content = await getContent();
 
   await Promise.all([
-    // To the leasing team.
-    sendMail({
-      subject: `Elora showing booked: ${v.name}, ${v.date} ${v.time}`,
-      text: [`Showing: ${whenText}`, `Name: ${v.name}`, `Email: ${v.email}`, `Phone: ${v.phone}`, `Suite type: ${v.type || "Not sure yet"}`, `Move-in date: ${v.moveIn}`, ...(v.comments ? ["", v.comments] : [])].join("\n"),
+    // To the leasing team (sarah@eloramtl.com, or MAIL_TO).
+    sendTeamNotice({
+      subject: `New showing booked: ${v.name}, ${en.date} at ${en.time}`,
+      heading: `${v.name} booked a showing`,
+      rows: [
+        ["When", `${en.date} at ${en.time}`],
+        ["Phone", v.phone],
+        ["Email", v.email],
+        ["Suite type", v.type || "Not sure yet"],
+        ["Move-in date", v.moveIn],
+        ["Language", lang === "fr" ? "French" : "English"],
+      ],
+      note: v.comments || undefined,
       replyTo: v.email,
       attachments,
     }),
     // Confirmation to the visitor, with the calendar invite (it reminds them 30 minutes before).
-    sendMail({
-      to: v.email,
-      fromName: "Elora MTL",
-      replyTo: process.env.MAIL_TO || INBOX_EMAIL,
-      // Wording set in the admin (Showings → Confirmation email).
-      subject: fillTemplate(showings.email.subject[lang], blanks),
-      text: fillTemplate(showings.email.body[lang], blanks),
-      ...(showings.email.html[lang].trim() ? { html: fillHtmlTemplate(showings.email.html[lang], blanks) } : {}),
-      attachments,
-    }),
+    // Wording set in the admin (Automatic emails → Showing confirmation).
+    sendTemplate(showings.email, lang, v.email, emailBlanks(content, lang, { name: v.name, date, time }), attachments),
   ]);
   return { status: "booked", when: { date: v.date, time: v.time } };
 }

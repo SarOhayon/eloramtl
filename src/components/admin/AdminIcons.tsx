@@ -116,6 +116,13 @@ export const SparkleIcon = (p: P) => (
   </Icon>
 );
 
+export const MailIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="3.5" y="5.5" width="17" height="13" rx="1.5" />
+    <path d="m4 7 8 6 8-6" />
+  </Icon>
+);
+
 // A round, gold-ringed badge for an icon (home tiles and screen titles).
 export function IconBadge({ children, className = "size-14" }: { children: React.ReactNode; className?: string }) {
   return <span className={`inline-flex shrink-0 items-center justify-center rounded-full bg-cream-deep text-brown ring-1 ring-gold/50 ${className}`}>{children}</span>;
