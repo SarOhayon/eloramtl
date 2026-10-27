@@ -1,5 +1,6 @@
 import { connection } from "next/server";
-import { DEFAULT_CONTENT, type SiteContent } from "@/data/content";
+import { DEFAULT_CONTENT, type EmailTemplate, type SiteContent } from "@/data/content";
+import { withLogo } from "@/data/emailDesigns";
 import { getFile, putFile } from "./storage";
 
 const KEY = "content/site.json";
@@ -7,6 +8,9 @@ const KEY = "content/site.json";
 // Short in-memory copy so a busy page doesn't read storage on every request.
 let memo: { at: number; value: SiteContent } | null = null;
 const MEMO_MS = 3000;
+
+// Puts the logo image into designed emails saved before it existed.
+const logoUp = <T extends EmailTemplate>(t: T): T => ({ ...t, html: { fr: withLogo(t.html.fr), en: withLogo(t.html.en) } });
 
 type Saved = Partial<SiteContent> & { offer?: { enabled?: boolean }; notice?: Omit<SiteContent["notices"][number], "id"> };
 
@@ -27,10 +31,10 @@ function merge(saved: Saved): SiteContent {
     promo: mergePromo(saved),
     // Earlier saves had a single banner.
     notices: saved.notices ?? (saved.notice ? [{ ...saved.notice, id: "banner-1" }] : d.notices),
-    showings: { ...d.showings, ...saved.showings, email: { ...d.showings.email, ...saved.showings?.email } },
+    showings: { ...d.showings, ...saved.showings, email: logoUp({ ...d.showings.email, ...saved.showings?.email }) },
     emails: {
-      autoReply: { ...d.emails.autoReply, ...saved.emails?.autoReply },
-      followUp: { ...d.emails.followUp, ...saved.emails?.followUp },
+      autoReply: logoUp({ ...d.emails.autoReply, ...saved.emails?.autoReply }),
+      followUp: logoUp({ ...d.emails.followUp, ...saved.emails?.followUp }),
       weekly: { ...d.emails.weekly, ...saved.emails?.weekly },
     },
     library: saved.library ?? d.library,

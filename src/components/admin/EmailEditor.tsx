@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ADDRESS, PHONE_MAIN_DISPLAY } from "@/data/building";
 import { EMAIL_BLANKS, fillHtmlTemplate, fillTemplate, todayInMontreal, type EmailTemplate } from "@/data/content";
+import { EMAIL_LOGO_PNG_BASE64 } from "@/data/emailLogo";
 import { CalendarIcon } from "./AdminIcons";
 import { field, softBtn } from "./ui";
 
@@ -37,6 +38,7 @@ export function EmailEditor({
     address: ADDRESS,
     phone: PHONE_MAIN_DISPLAY,
     website: `https://www.eloramtl.com/${lang}`,
+    logo: `data:image/png;base64,${EMAIL_LOGO_PNG_BASE64}`,
   };
   const toggle = (on: boolean) => `px-4 py-2 text-sm ${on ? "bg-action text-white" : "bg-white"}`;
 

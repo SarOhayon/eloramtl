@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { INBOX_EMAIL } from "@/data/building";
 
-export type Attachment = { filename: string; content: Buffer; contentType: string };
+export type Attachment = { filename: string; content: Buffer; contentType: string; cid?: string }; // cid: shown inside the email
 export type Mail = { subject: string; text: string; html?: string; replyTo?: string; to?: string; fromName?: string; attachments?: Attachment[] };
 
 // Sends a website form to `to` (or MAIL_TO, or INBOX_EMAIL) through the company mailbox (GreenGeeks SMTP).

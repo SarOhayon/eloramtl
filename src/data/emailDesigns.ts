@@ -7,6 +7,8 @@ import type { Bilingual } from "./content";
 
 const MAP = "https://www.google.com/maps/search/?api=1&query=2855+chemin+Bates%2C+Montr%C3%A9al%2C+QC+H3S+0A6";
 const font = "font-family:Georgia,'Times New Roman',serif";
+// The ELORA MTL logo; {logo} is the embedded image when sent (see autoEmail.ts).
+const LOGO = `<img src="{logo}" width="168" height="60" alt="ELORA MTL" style="display:block;border:0;width:168px;height:60px;">`;
 const p = (text: string, extra = "") => `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#503d32;${extra}">${text}</p>`;
 export const button = (href: string, label: string) =>
   `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:8px 0 24px;"><tr><td style="background-color:#503d32;"><a href="${href}" style="display:inline-block;color:#ffffff;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;padding:14px 28px;">${label}</a></td></tr></table>`;
@@ -28,8 +30,7 @@ export function layout({ lang, title, preheader, body }: { lang: string; title: 
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;background-color:#ffffff;border-top:3px solid #a8875a;">
           <tr>
             <td align="center" style="padding:36px 32px 8px;">
-              <div style="${font};font-size:28px;letter-spacing:10px;color:#503d32;">ELORA</div>
-              <div style="font-size:10px;letter-spacing:4px;color:#7d6b5d;padding-top:4px;">MTL</div>
+              ${LOGO}
             </td>
           </tr>
           <tr>
@@ -73,6 +74,10 @@ const promo = (label: string) => `{#promotion}<table role="presentation" width="
 </table>{/promotion}`;
 
 const both = (fr: string, en: string): Bilingual => ({ fr, en });
+
+// Emails saved before the logo image had the name typed in letters; swap that for the logo.
+const OLD_HEADER = /<div style="font-family:Georgia,'Times New Roman',serif;font-size:28px;letter-spacing:10px;color:#503d32;">ELORA<\/div>\s*<div style="font-size:10px;letter-spacing:4px;color:#7d6b5d;padding-top:4px;">MTL<\/div>/g;
+export const withLogo = (html: string) => html.replace(OLD_HEADER, LOGO);
 
 // Showing confirmation, sent right after booking.
 export const CONFIRMATION_HTML = both(

@@ -1,5 +1,6 @@
 import { ADDRESS, INBOX_EMAIL, PHONE_MAIN_DISPLAY } from "@/data/building";
 import { button, layout } from "@/data/emailDesigns";
+import { EMAIL_LOGO_CID, EMAIL_LOGO_PNG_BASE64 } from "@/data/emailLogo";
 import { fillHtmlTemplate, fillTemplate, scheduleState, siteUrl, type EmailTemplate, type SiteContent } from "@/data/content";
 import { getContent } from "./content";
 import type { Lead } from "./leads";
@@ -16,19 +17,20 @@ export function emailBlanks(content: SiteContent, lang: Lang, person: { name: st
   // The promotion as one line, e.g. "One month FREE on select units".
   const sub = p.sub[lang].trim();
   const promotion = scheduleState(p) === "live" ? [p.kicker[lang].trim(), p.big[lang].trim().toUpperCase(), sub.charAt(0).toLowerCase() + sub.slice(1)].filter(Boolean).join(" ") : "";
-  return { name: person.name, date: person.date ?? "", time: person.time ?? "", promotion, address: ADDRESS, phone: PHONE_MAIN_DISPLAY, website: siteUrl(lang) };
+  return { name: person.name, date: person.date ?? "", time: person.time ?? "", promotion, address: ADDRESS, phone: PHONE_MAIN_DISPLAY, website: siteUrl(lang), logo: `cid:${EMAIL_LOGO_CID}` };
 }
 
 // Sends one of the admin-editable emails to a visitor, in their language.
-export function sendTemplate(t: EmailTemplate, lang: Lang, to: string, blanks: Record<string, string>, attachments?: Attachment[]) {
+export function sendTemplate(t: EmailTemplate, lang: Lang, to: string, blanks: Record<string, string>, attachments: Attachment[] = []) {
+  const html = t.html[lang].trim() ? fillHtmlTemplate(t.html[lang], blanks) : "";
   return sendMail({
     to,
     fromName: "Elora MTL",
     replyTo: process.env.MAIL_TO || INBOX_EMAIL,
     subject: fillTemplate(t.subject[lang], blanks),
     text: fillTemplate(t.body[lang], blanks),
-    ...(t.html[lang].trim() ? { html: fillHtmlTemplate(t.html[lang], blanks) } : {}),
-    attachments,
+    ...(html ? { html } : {}),
+    attachments: withLogoImage(html, attachments),
   });
 }
 
@@ -37,6 +39,10 @@ export async function autoReply(name: string, email: string, lang: Lang) {
   const content = await getContent();
   if (content.emails.autoReply.enabled) await sendTemplate(content.emails.autoReply, lang, email, emailBlanks(content, lang, { name }));
 }
+
+// The logo travels inside the email (not as a link), so it shows even before the site's domain is live.
+const logoImage: Attachment = { filename: "elora-mtl.png", content: Buffer.from(EMAIL_LOGO_PNG_BASE64, "base64"), contentType: "image/png", cid: EMAIL_LOGO_CID };
+const withLogoImage = (html: string, attachments: Attachment[]) => (html.includes(`cid:${EMAIL_LOGO_CID}`) ? [logoImage, ...attachments] : attachments);
 
 const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -72,10 +78,10 @@ export function sendTeamNotice({ subject, heading, rows, note, sections = [], re
         note ? `<p style="margin:0 0 20px;padding:14px 16px;background-color:#f7f5f2;font-size:14px;line-height:1.6;color:#503d32;white-space:pre-line;">${esc(note)}</p>` : ""
       }${blocks}${button(admin, "Open the admin")}`,
     }),
-    { address: ADDRESS, phone: PHONE_MAIN_DISPLAY },
+    { address: ADDRESS, phone: PHONE_MAIN_DISPLAY, logo: `cid:${EMAIL_LOGO_CID}` },
   );
   const text = [heading, "", ...rows.map(([k, v]) => `${k}: ${v}`), ...(note ? ["", note] : []), ...sections.flatMap((s) => ["", s.title.toUpperCase(), ...(s.lines.length ? s.lines : ["—"])]), "", `Admin: ${admin}`].join("\n");
-  return sendMail({ subject, text, html, replyTo, attachments });
+  return sendMail({ subject, text, html, replyTo, attachments: withLogoImage(html, attachments ?? []) });
 }
 
 // After a showing is booked: the confirmation (with calendar invite) to the visitor and, for bookings

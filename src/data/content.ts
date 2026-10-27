@@ -282,6 +282,7 @@ export const EMAIL_BLANKS: Record<string, string> = {
   "{address}": "the building's address",
   "{phone}": "your phone number",
   "{website}": "the website's address",
+  "{logo}": "the ELORA MTL logo image (use it as <img src=\"{logo}\">)",
 };
 export const siteUrl = (lang: "fr" | "en") => `${(process.env.SITE_URL || "https://www.eloramtl.com").replace(/\/$/, "")}/${lang}`;
 // The same, for HTML: the filled-in values are escaped so a name can't change the email's design.
