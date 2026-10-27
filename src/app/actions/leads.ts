@@ -16,11 +16,13 @@ export async function listLeads(): Promise<Lead[] | null> {
   return readLeads();
 }
 
-export async function updateLead(id: string, patch: { status?: LeadStatus; note?: string }): Promise<Lead[] | null> {
+// `snooze` restarts the 4-day follow-up reminder without changing the status.
+export async function updateLead(id: string, patch: { status?: LeadStatus; note?: string; snooze?: boolean }): Promise<Lead[] | null> {
   if (!(await isAdmin())) return null;
-  const clean: { status?: LeadStatus; note?: string } = {};
+  const clean: { status?: LeadStatus; note?: string; statusAt?: string } = {};
   if (patch.status && STATUSES.includes(patch.status)) clean.status = patch.status;
   if (typeof patch.note === "string") clean.note = patch.note.slice(0, 2000);
+  if (patch.snooze) clean.statusAt = new Date().toISOString();
   try {
     return await changeLead(String(id), clean);
   } catch (err) {
@@ -96,4 +98,26 @@ export async function sendFollowUpNow(id: string): Promise<Lead[] | null> {
   const lead = (await readLeads()).find((l) => l.id === String(id));
   if (!lead || lead.attendance !== "came" || !(await sendFollowUp(lead))) return null;
   return changeLead(lead.id, { followUp: { due: lead.followUp?.due ?? new Date().toISOString(), sentAt: new Date().toISOString() } });
+}
+
+// Books (or moves) a showing for someone already in Inquiries, e.g. after talking with them.
+// No time limits; it then works like a website booking (check-in, follow-up). Moving it clears
+// any check-in and follow-up not sent yet.
+export async function scheduleShowing(id: string, date: string, time: string, confirm: boolean): Promise<{ ok: true; leads: Lead[] } | { ok: false; error: string }> {
+  if (!(await isAdmin())) return { ok: false, error: "Please sign in again." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return { ok: false, error: "Pick a day and a time." };
+  const leads = await changeLeads((l) =>
+    l.id === String(id)
+      ? {
+          showing: { date, time },
+          attendance: undefined,
+          followUp: l.followUp?.sentAt ? l.followUp : undefined,
+          ...(l.status === "closed" ? { status: "contacted" as const } : {}),
+        }
+      : null,
+  );
+  const lead = leads?.find((l) => l.id === String(id));
+  if (!leads || !lead) return { ok: false, error: "This inquiry no longer exists." };
+  if (confirm) await sendShowingEmails(lead, { team: false });
+  return { ok: true, leads };
 }

@@ -123,6 +123,12 @@ export const MailIcon = (p: P) => (
   </Icon>
 );
 
+export const BellIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15l1.5-2ZM10 20.5a2 2 0 0 0 4 0" />
+  </Icon>
+);
+
 // A round, gold-ringed badge for an icon (home tiles and screen titles).
 export function IconBadge({ children, className = "size-14" }: { children: React.ReactNode; className?: string }) {
   return <span className={`inline-flex shrink-0 items-center justify-center rounded-full bg-cream-deep text-brown ring-1 ring-gold/50 ${className}`}>{children}</span>;

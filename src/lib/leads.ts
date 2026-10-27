@@ -19,6 +19,7 @@ export type Lead = {
   lang: "fr" | "en";
   showing?: { date: string; time: string }; // YYYY-MM-DD, HH:MM (Montréal)
   status: LeadStatus;
+  statusAt?: string; // ISO: when the status last changed (or a reminder was snoozed)
   note?: string; // the team's own note
   suggestion?: Suggestion; // AI suggestion of suites, kept until asked again
   attendance?: "came" | "no-show"; // for showings, marked by the team
@@ -53,7 +54,7 @@ export async function addLead(lead: Omit<Lead, "id" | "createdAt" | "status">): 
   }
 }
 
-type Patch = Partial<Pick<Lead, "status" | "note" | "suggestion" | "attendance" | "followUp">>;
+type Patch = Partial<Pick<Lead, "status" | "statusAt" | "note" | "suggestion" | "attendance" | "followUp" | "showing">>;
 
 // Changes one lead; a field set to undefined is removed.
 export async function changeLead(id: string, patch: Patch): Promise<Lead[] | null> {
@@ -68,6 +69,7 @@ export async function changeLeads(fn: (l: Lead) => Patch | null): Promise<Lead[]
     const patch = fn(leads[i]);
     if (!patch) continue;
     const next: Lead = { ...leads[i], ...patch };
+    if (patch.status && patch.status !== leads[i].status) next.statusAt = new Date().toISOString();
     for (const k of Object.keys(patch) as (keyof Patch)[]) if (patch[k] === undefined) delete next[k];
     leads[i] = next;
     changed = true;
@@ -76,3 +78,4 @@ export async function changeLeads(fn: (l: Lead) => Patch | null): Promise<Lead[]
   await write(leads);
   return leads;
 }
+

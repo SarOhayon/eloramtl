@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { logout, saveSiteContent, uploadFile } from "@/app/actions/admin";
 import { listLeads } from "@/app/actions/leads";
+import { needsFollowUp } from "@/lib/followUp";
 import { FLOORS, UNITS, UNIT_TYPES, formatPrice, type UnitType } from "@/data/building";
 import { AMENITY_SLOTS, EDITABLE_TEXT, scheduleState, readPath, type Bilingual, type Promo, type SiteContent, type SuiteStatus } from "@/data/content";
 import { GALLERY, PHOTOS, type Photo, type PhotoCategory } from "@/data/photos";
@@ -203,9 +204,9 @@ function BannerSummary({ notices }: { notices: SiteContent["notices"] }) {
 
 function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }) {
   const available = Object.values(content.suites).filter((s) => s.status === "available").length;
-  const [newLeads, setNewLeads] = useState<number | null>(null);
+  const [leadCounts, setLeadCounts] = useState<{ fresh: number; follow: number } | null>(null);
   useEffect(() => {
-    listLeads().then((l) => l && setNewLeads(l.filter((x) => x.status === "new").length));
+    listLeads().then((l) => l && setLeadCounts({ fresh: l.filter((x) => x.status === "new").length, follow: l.filter((x) => needsFollowUp(x, Date.now())).length }));
   }, []);
   const tiles: { screen: Screen; icon: React.ReactNode; title: string; text: string; note?: React.ReactNode }[] = [
     {
@@ -213,7 +214,12 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
       icon: <InboxIcon className="size-6" />,
       title: "Inquiries",
       text: "Everyone who sent a form on the website, with their details.",
-      note: newLeads === null ? undefined : newLeads ? <span className="text-gold">{newLeads} new</span> : "Nothing new",
+      note:
+        leadCounts === null ? undefined : leadCounts.fresh || leadCounts.follow ? (
+          <span className="text-gold">{[leadCounts.fresh && `${leadCounts.fresh} new`, leadCounts.follow && `${leadCounts.follow} to follow up`].filter(Boolean).join(" · ")}</span>
+        ) : (
+          "Nothing new"
+        ),
     },
     {
       screen: "showings",
