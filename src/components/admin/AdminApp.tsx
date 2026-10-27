@@ -15,6 +15,7 @@ import {
   BuildingIcon,
   CalendarIcon,
   ChartIcon,
+  ChatIcon,
   CheckIcon,
   CloseIcon,
   ExternalIcon,
@@ -31,6 +32,7 @@ import {
   TextIcon,
   UploadIcon,
 } from "./AdminIcons";
+import { ChatScreen } from "./ChatScreen";
 import { EmailsScreen } from "./EmailsScreen";
 import { InboxScreen } from "./InboxScreen";
 import { NoticeScreen } from "./NoticeScreen";
@@ -42,7 +44,7 @@ import { Wordmark } from "../Wordmark";
 // A deliberately simple admin: a home screen with big buttons, one task per screen,
 // plain-English help and automatic saving.
 
-type Screen = "home" | "inbox" | "promo" | "notice" | "apartments" | "showings" | "emails" | "photos" | "prices" | "text" | "stats";
+type Screen = "home" | "inbox" | "promo" | "notice" | "apartments" | "showings" | "emails" | "chat" | "photos" | "prices" | "text" | "stats";
 
 const TYPE_LABELS = dictionaries.en.types;
 const isPdf = (src: string) => src.endsWith(".pdf");
@@ -163,6 +165,7 @@ export function AdminApp({ initial }: { initial: SiteContent }) {
             {screen === "inbox" && <InboxScreen content={content} />}
             {screen === "showings" && <ShowingsScreen content={content} update={update} />}
             {screen === "emails" && <EmailsScreen content={content} update={update} />}
+            {screen === "chat" && <ChatScreen content={content} update={update} />}
             {screen === "stats" && <StatsScreen />}
             {screen === "apartments" && <ApartmentsScreen content={content} update={update} upload={upload} />}
             {screen === "photos" && <PhotosScreen content={content} update={update} upload={upload} />}
@@ -237,6 +240,13 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
         const on = [content.emails.autoReply.enabled && "Auto-reply", content.emails.followUp.enabled && "Follow-up", content.emails.weekly.enabled && "Weekly summary"].filter(Boolean);
         return on.length ? `${on.join(" · ")} on` : "All off";
       })(),
+    },
+    {
+      screen: "chat",
+      icon: <ChatIcon className="size-6" />,
+      title: "Chat assistant",
+      text: "An AI chat on the website that answers visitors from your FAQ.",
+      note: <ScheduleStatus state={content.faq.enabled ? "live" : "off"} label={content.faq.enabled ? "On" : "Turned off"} />,
     },
     { screen: "apartments", icon: <BuildingIcon className="size-6" />, title: "Apartments", text: "Mark apartments available or rented, set prices, dates and plans.", note: `${available} marked available` },
     { screen: "promo", icon: <TagIcon className="size-6" />, title: "Promotion", text: "Create or change your special offer.", note: <ScheduleStatus state={scheduleState(content.promo)} /> },

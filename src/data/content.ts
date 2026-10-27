@@ -6,6 +6,7 @@ import { PRICE_FROM, type UnitType } from "./building";
 import { dictionaries } from "@/i18n/dictionaries";
 import { GALLERY, PHOTOS, type Photo } from "./photos";
 import { AUTO_REPLY_HTML, CONFIRMATION_HTML, FOLLOW_UP_HTML } from "./emailDesigns";
+import { DEFAULT_FAQ } from "./faqDefaults";
 
 export type SuiteStatus = "available" | "leased" | "soon";
 export type SuiteInfo = { status?: SuiteStatus; price?: number; availableOn?: string; plan?: string };
@@ -57,6 +58,10 @@ export type AutoEmails = {
   weekly: { enabled: boolean }; // Monday 8 a.m. summary to the leasing inbox
 };
 
+// The chat assistant on the website: questions and answers it uses (plus live facts).
+export type FaqItem = { id: string; q: Bilingual; a: Bilingual };
+export type Faq = { enabled: boolean; items: FaqItem[] };
+
 export type SiteContent = {
   photos: { hero: Photo[]; gallery: Photo[]; about: Photo; amenities: Record<AmenitySlot, Photo> };
   prices: Record<UnitType, number>;
@@ -67,6 +72,7 @@ export type SiteContent = {
   notices: Notice[];
   showings: Showings;
   emails: AutoEmails;
+  faq: Faq;
   library: LibraryItem[]; // files uploaded through the admin
 };
 
@@ -150,6 +156,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     },
     weekly: { enabled: true },
   },
+  faq: { enabled: false, items: DEFAULT_FAQ },
   library: [],
 };
 

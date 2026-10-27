@@ -8,6 +8,7 @@ import { Header } from "@/components/Header";
 import { HeroSlider } from "@/components/HeroSlider";
 import { BackToTop } from "@/components/BackToTop";
 import { InquiryDialog } from "@/components/InquiryDialog";
+import { ChatWidget } from "@/components/ChatWidget";
 import { Tracker } from "@/components/Tracker";
 import { NeighbourhoodMap } from "@/components/NeighbourhoodMap";
 import { OfficeHoursCard } from "@/components/OfficeHoursCard";
@@ -330,6 +331,10 @@ async function Body({ locale }: { locale: Locale }) {
       <BackToTop label={t.backToTop} />
       <InquiryDialog locale={locale} />
       <Tracker />
+      {/* The chat assistant, when it's turned on in the admin and the AI key is set. */}
+      {content.faq.enabled && process.env.ANTHROPIC_API_KEY && (
+        <ChatWidget locale={locale} suggestions={content.faq.items.slice(0, 3).map((f) => f.q[locale]).filter(Boolean)} />
+      )}
 
       {/* Floating WhatsApp on small screens */}
       <a

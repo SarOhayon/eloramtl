@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { submitApplication, type ApplyField, type ApplyState } from "@/app/actions/apply";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
+import { APPLY_EVENT } from "./inquiry";
 
 const field =
   "w-full rounded-sm border-0 bg-white px-4 py-3 text-brown ring-1 ring-brown/15 placeholder:text-brown-soft/60 focus:outline-none focus:ring-2 focus:ring-gold aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-red-700/70";
@@ -44,6 +45,10 @@ export function ApplyDialog({ locale, className }: { locale: Locale; className?:
   // Links ending in #apply (e.g. the follow-up email's button) open the application right away.
   useEffect(() => {
     if (window.location.hash === "#apply") ref.current?.showModal();
+    // Other parts of the page (e.g. the chat) can open it too.
+    const open = () => ref.current?.showModal();
+    window.addEventListener(APPLY_EVENT, open);
+    return () => window.removeEventListener(APPLY_EVENT, open);
   }, []);
 
   return (

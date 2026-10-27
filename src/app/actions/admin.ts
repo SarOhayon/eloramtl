@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { UNITS, UNIT_TYPES } from "@/data/building";
-import { DEFAULT_CONTENT, EDITABLE_PATHS, type AmenitySlot, type AutoEmails, type Bilingual, type EmailTemplate, type Notice, type Promo, type Showings, type SiteContent, type SuiteStatus, type Weekday } from "@/data/content";
+import { DEFAULT_CONTENT, EDITABLE_PATHS, type AmenitySlot, type AutoEmails, type Bilingual, type EmailTemplate, type Faq, type Notice, type Promo, type Showings, type SiteContent, type SuiteStatus, type Weekday } from "@/data/content";
 import type { Photo, PhotoCategory } from "@/data/photos";
 import { checkPassword, endSession, isAdmin, startSession } from "@/lib/adminAuth";
 import { getContent, saveContent } from "@/lib/content";
@@ -89,6 +89,7 @@ function clean(input: SiteContent): SiteContent {
     notices: cleanNotices(input.notices),
     showings: cleanShowings(input.showings),
     emails: cleanEmails(input.emails),
+    faq: cleanFaq(input.faq),
     library,
   };
 }
@@ -150,6 +151,17 @@ function cleanTemplate(t: Partial<EmailTemplate> | undefined, d: EmailTemplate):
     body: both((l) => orDefault(t?.body?.[l], 4000, d.body[l])),
     html: both((l) => str(t?.html?.[l] ?? d.html[l], 60000)),
   };
+}
+
+function cleanFaq(f: Partial<Faq> | undefined): Faq {
+  const items = (Array.isArray(f?.items) ? f.items : DEFAULT_CONTENT.faq.items)
+    .map((it, i) => ({
+      id: str(it?.id, 60) || `faq-${Date.now()}-${i}`,
+      q: { fr: str(it?.q?.fr, 300), en: str(it?.q?.en, 300) },
+      a: { fr: str(it?.a?.fr, 2000), en: str(it?.a?.en, 2000) },
+    }))
+    .slice(0, 80);
+  return { enabled: f?.enabled === true, items };
 }
 
 function cleanEmails(e: Partial<AutoEmails> | undefined): AutoEmails {

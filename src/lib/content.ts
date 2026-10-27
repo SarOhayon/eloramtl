@@ -37,6 +37,7 @@ function merge(saved: Saved): SiteContent {
       followUp: logoUp({ ...d.emails.followUp, ...saved.emails?.followUp }),
       weekly: { ...d.emails.weekly, ...saved.emails?.weekly },
     },
+    faq: { ...d.faq, ...saved.faq },
     library: saved.library ?? d.library,
   };
 }

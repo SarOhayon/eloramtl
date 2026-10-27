@@ -4,7 +4,7 @@ import { getFile, putFile } from "./storage";
 // Simple visitor numbers: a count per day for each event, one file per month (stats/2026-10.json).
 // Counts can miss the odd event when two arrive at the same instant; they're a trend, not an audit.
 
-export const EVENTS = ["visit", "promo", "claim", "whatsapp", "call", "inquiry", "application", "showing"] as const;
+export const EVENTS = ["visit", "promo", "claim", "whatsapp", "call", "inquiry", "application", "showing", "chat"] as const;
 export type StatEvent = (typeof EVENTS)[number];
 export type DayCounts = Partial<Record<StatEvent, number>>;
 type Month = Record<string, DayCounts>; // "2026-10-27" -> counts

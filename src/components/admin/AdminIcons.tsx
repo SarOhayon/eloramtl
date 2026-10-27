@@ -129,6 +129,13 @@ export const BellIcon = (p: P) => (
   </Icon>
 );
 
+export const ChatIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M4.5 6.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H10l-4 3.5v-3.5a2 2 0 0 1-1.5-2v-8Z" />
+    <path d="M8.5 9.5h7M8.5 12.5h4.5" />
+  </Icon>
+);
+
 // A round, gold-ringed badge for an icon (home tiles and screen titles).
 export function IconBadge({ children, className = "size-14" }: { children: React.ReactNode; className?: string }) {
   return <span className={`inline-flex shrink-0 items-center justify-center rounded-full bg-cream-deep text-brown ring-1 ring-gold/50 ${className}`}>{children}</span>;
