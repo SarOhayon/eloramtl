@@ -7,6 +7,22 @@ import { AMENITY_SLOTS, EDITABLE_TEXT, promoState, readPath, type Bilingual, typ
 import { GALLERY, PHOTOS, type Photo, type PhotoCategory } from "@/data/photos";
 import { dictionaries } from "@/i18n/dictionaries";
 import { PromoCard } from "../PromoCard";
+import {
+  AlertIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  BuildingIcon,
+  CheckIcon,
+  CloseIcon,
+  ExternalIcon,
+  IconBadge,
+  ImageIcon,
+  PlusIcon,
+  PriceIcon,
+  TagIcon,
+  TextIcon,
+  UploadIcon,
+} from "./AdminIcons";
 import { Wordmark } from "../Wordmark";
 
 // A deliberately simple admin: a home screen with big buttons, one task per screen,
@@ -107,7 +123,7 @@ export function AdminApp({ initial }: { initial: SiteContent }) {
           <div className="flex flex-wrap items-center gap-2">
             <SaveBadge state={saveState} />
             <a href="/en" target="_blank" className={softBtn}>
-              View my website ↗
+              View my website <ExternalIcon className="size-4" />
             </a>
             <button onClick={() => logout()} className={softBtn}>
               Sign out
@@ -131,7 +147,7 @@ export function AdminApp({ initial }: { initial: SiteContent }) {
         ) : (
           <>
             <button onClick={() => setScreen("home")} className={`${softBtn} mb-6`}>
-              ← Back to home
+              <ArrowLeftIcon className="size-4" /> Back to home
             </button>
             {screen === "promo" && <PromoScreen content={content} update={update} upload={upload} />}
             {screen === "apartments" && <ApartmentsScreen content={content} update={update} upload={upload} />}
@@ -147,36 +163,52 @@ export function AdminApp({ initial }: { initial: SiteContent }) {
 
 function SaveBadge({ state }: { state: "saved" | "pending" | "saving" | "error" }) {
   const map = {
-    saved: ["bg-[#eaf3ec] text-[#2f5a38]", "✓ All changes saved"],
+    saved: ["bg-[#eaf3ec] text-[#2f5a38]", "All changes saved"],
     pending: ["bg-cream-deep text-brown-soft", "Saving soon…"],
     saving: ["bg-cream-deep text-brown-soft", "Saving…"],
-    error: ["bg-red-50 text-red-900", "⚠ Not saved. Check your internet."],
+    error: ["bg-red-50 text-red-900", "Not saved. Check your internet."],
   } as const;
   const [cls, label] = map[state];
-  return <span className={`rounded-full px-4 py-2 text-sm font-medium ${cls}`}>{label}</span>;
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium ${cls}`}>
+      {state === "saved" && <CheckIcon className="size-4" />}
+      {state === "error" && <AlertIcon className="size-4" />}
+      {label}
+    </span>
+  );
 }
 
 // ---------------- Home ----------------
 
 const PROMO_STATUS = {
-  live: "🟢 Showing on the website now",
-  scheduled: "🕒 Scheduled: will start by itself",
-  ended: "⚪ Ended: its end date has passed",
-  off: "⚪ Turned off",
-};
+  live: ["bg-[#3b6b45]", "Showing on the website now"],
+  scheduled: ["bg-gold", "Scheduled: will start by itself"],
+  ended: ["bg-sand", "Ended: its end date has passed"],
+  off: ["bg-sand", "Turned off"],
+} as const;
+
+function PromoStatus({ state }: { state: keyof typeof PROMO_STATUS }) {
+  const [dot, label] = PROMO_STATUS[state];
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span className={`size-2.5 rounded-full ${dot}`} aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
 
 function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }) {
   const available = Object.values(content.suites).filter((s) => s.status === "available").length;
-  const tiles: { screen: Screen; icon: string; title: string; text: string; note?: string }[] = [
-    { screen: "promo", icon: "🎁", title: "Promotion", text: "Create or change your special offer.", note: PROMO_STATUS[promoState(content.promo)] },
-    { screen: "apartments", icon: "🏠", title: "Apartments", text: "Mark apartments available or rented, set prices, dates and plans.", note: `${available} marked available` },
-    { screen: "photos", icon: "🖼️", title: "Photos", text: "Add, remove or reorder the photos on the website." },
-    { screen: "prices", icon: "💲", title: "Starting prices", text: "The “From $…” price for each type of apartment." },
-    { screen: "text", icon: "✏️", title: "Website text", text: "Change the titles and paragraphs, in French and English." },
+  const tiles: { screen: Screen; icon: React.ReactNode; title: string; text: string; note?: React.ReactNode }[] = [
+    { screen: "promo", icon: <TagIcon className="size-6" />, title: "Promotion", text: "Create or change your special offer.", note: <PromoStatus state={promoState(content.promo)} /> },
+    { screen: "apartments", icon: <BuildingIcon className="size-6" />, title: "Apartments", text: "Mark apartments available or rented, set prices, dates and plans.", note: `${available} marked available` },
+    { screen: "photos", icon: <ImageIcon className="size-6" />, title: "Photos", text: "Add, remove or reorder the photos on the website." },
+    { screen: "prices", icon: <PriceIcon className="size-6" />, title: "Starting prices", text: "The “From $…” price for each type of apartment." },
+    { screen: "text", icon: <TextIcon className="size-6" />, title: "Website text", text: "Change the titles and paragraphs, in French and English." },
   ];
   return (
     <>
-      <h1 className="font-display text-4xl text-ink">Welcome 👋</h1>
+      <h1 className="font-display text-4xl text-ink">Welcome</h1>
       <p className="mt-2 text-lg text-brown-soft">What would you like to do? Click a box to start. Everything saves by itself.</p>
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {tiles.map((t) => (
@@ -185,9 +217,7 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
             onClick={() => go(t.screen)}
             className="flex items-start gap-4 rounded-lg bg-cream p-6 text-left shadow-sm ring-1 ring-sand transition hover:-translate-y-0.5 hover:shadow-md hover:ring-gold"
           >
-            <span className="text-4xl" aria-hidden="true">
-              {t.icon}
-            </span>
+            <IconBadge>{t.icon}</IconBadge>
             <span>
               <span className="block font-display text-3xl text-ink">{t.title}</span>
               <span className="mt-1 block text-brown-soft">{t.text}</span>
@@ -202,10 +232,13 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
 
 // ---------------- Shared pieces ----------------
 
-function ScreenTitle({ title, help }: { title: string; help: string }) {
+function ScreenTitle({ title, help, icon }: { title: string; help: string; icon?: React.ReactNode }) {
   return (
     <div className="mb-6">
-      <h1 className="font-display text-4xl text-ink">{title}</h1>
+      <h1 className="flex items-center gap-4 font-display text-4xl text-ink">
+        {icon && <IconBadge className="size-12">{icon}</IconBadge>}
+        {title}
+      </h1>
       <p className="mt-2 max-w-3xl text-lg text-brown-soft">{help}</p>
     </div>
   );
@@ -238,6 +271,7 @@ function Switch({ on, onChange, label }: { on: boolean; onChange: (v: boolean) =
 function UploadButton({ label, accept, onFile, className = bigBtn }: { label: string; accept: string; onFile: (f: File) => void; className?: string }) {
   return (
     <label className={`${className} cursor-pointer`}>
+      <UploadIcon className="size-5" />
       {label}
       <input
         type="file"
@@ -262,7 +296,7 @@ function BilingualFields({ label, value, onChange, long = false, placeholder }: 
           const props = { className: field, value: value[lang], placeholder: placeholder?.[lang], "aria-label": `${label} (${lang === "fr" ? "French" : "English"})` };
           return (
             <label key={lang} className="block">
-              <span className="mb-1 block text-sm text-brown-soft">{lang === "fr" ? "🇫🇷 French" : "🇬🇧 English"}</span>
+              <span className="mb-1 block text-sm text-brown-soft">{lang === "fr" ? "French" : "English"}</span>
               {long ? (
                 <textarea {...props} rows={3} onChange={(e) => onChange({ ...value, [lang]: e.target.value })} />
               ) : (
@@ -294,11 +328,11 @@ function PhotoPicker({ title, content, upload, onPick, onClose }: { title: strin
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <h3 className="font-display text-3xl text-ink">{title}</h3>
           <button className={softBtn} onClick={onClose}>
-            ✕ Close
+            <CloseIcon className="size-4" /> Close
           </button>
         </div>
         <UploadButton
-          label="⬆ Upload a new photo from my computer"
+          label="Upload a new photo from my computer"
           accept="image/jpeg,image/png,image/webp"
           onFile={async (f) => {
             const src = await upload(f);
@@ -343,13 +377,15 @@ function PromoScreen({ content, update, upload }: { content: SiteContent; update
 
   return (
     <>
-      <ScreenTitle title="🎁 Promotion" help="Your special offer appears as a pop-up the first time someone visits, and as a tab on the left side of the website. Fill in the steps below; the preview shows exactly what visitors will see." />
+      <ScreenTitle icon={<TagIcon className="size-5" />} title="Promotion" help="Your special offer appears as a pop-up the first time someone visits, and as a tab on the left side of the website. Fill in the steps below; the preview shows exactly what visitors will see." />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-6">
           <Step n={1} title="Turn it on or off">
             <Switch on={p.enabled} onChange={(v) => set({ enabled: v })} label={p.enabled ? "The promotion is ON" : "The promotion is OFF"} />
-            <p className="mt-3 font-medium">{PROMO_STATUS[state]}</p>
+            <p className="mt-3 font-medium">
+              <PromoStatus state={state} />
+            </p>
           </Step>
 
           <Step n={2} title="When does it run?" help="Leave a date empty if it has no start or no end. It turns on and off by itself on these dates.">
@@ -488,7 +524,7 @@ function ApartmentsScreen({ content, update, upload }: { content: SiteContent; u
 
   return (
     <>
-      <ScreenTitle title="🏠 Apartments" help="Choose a floor, then update each apartment. Rented apartments appear greyed out on the website. Leave the price empty to use the starting price." />
+      <ScreenTitle icon={<BuildingIcon className="size-5" />} title="Apartments" help="Choose a floor, then update each apartment. Only apartments marked Available or Coming soon can be opened on the website; the others appear greyed out. Leave the price empty to use the starting price." />
       <p className="mb-2 font-medium">Choose a floor:</p>
       <div className="mb-6 flex flex-wrap gap-2">
         {FLOORS.slice().reverse().map((f) => (
@@ -517,9 +553,9 @@ function ApartmentsScreen({ content, update, upload }: { content: SiteContent; u
                       <button
                         key={st.key}
                         onClick={() => setSuite(u.id, { status: s.status === st.key ? undefined : st.key })}
-                        className={`rounded-md px-4 py-2.5 ring-1 ${s.status === st.key ? st.on : "bg-white ring-brown/20 hover:ring-brown/40"}`}
+                        className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2.5 ring-1 ${s.status === st.key ? st.on : "bg-white ring-brown/20 hover:ring-brown/40"}`}
                       >
-                        {s.status === st.key ? "✓ " : ""}
+                        {s.status === st.key && <CheckIcon className="size-4" />}
                         {st.label}
                       </button>
                     ))}
@@ -567,7 +603,7 @@ function ApartmentsScreen({ content, update, upload }: { content: SiteContent; u
                 )}
                 <UploadButton
                   className={softBtn}
-                  label={s.plan ? "Replace the plan" : "⬆ Add a plan (photo or PDF)"}
+                  label={s.plan ? "Replace the plan" : "Add a plan (photo or PDF)"}
                   accept="image/jpeg,image/png,image/webp,application/pdf"
                   onFile={async (f) => {
                     const src = await upload(f);
@@ -591,7 +627,7 @@ function ApartmentsScreen({ content, update, upload }: { content: SiteContent; u
               <span className="text-brown-soft">No floor plan yet.</span>
             )}
             <UploadButton
-              label={floorPlan ? "Replace the floor plan" : "⬆ Add the floor plan (photo or PDF)"}
+              label={floorPlan ? "Replace the floor plan" : "Add the floor plan (photo or PDF)"}
               accept="image/jpeg,image/png,image/webp,application/pdf"
               onFile={async (f) => {
                 const src = await upload(f);
@@ -630,7 +666,7 @@ function PhotosScreen({ content, update, upload }: { content: SiteContent; updat
 
   return (
     <>
-      <ScreenTitle title="🖼️ Photos" help="Use the buttons under each photo to move it or remove it. To add one, click “Add a photo”: you can upload a new one or pick an existing one." />
+      <ScreenTitle icon={<ImageIcon className="size-5" />} title="Photos" help="Use the buttons under each photo to move it or remove it. To add one, click “Add a photo”: you can upload a new one or pick an existing one." />
       <div className="space-y-6">
         <PhotoRow
           title="Big photos at the top of the page"
@@ -689,7 +725,7 @@ function PhotosScreen({ content, update, upload }: { content: SiteContent; updat
           </div>
         </Step>
         <Step title="All my photos" help="Every photo you can use. Photos you uploaded can be deleted here.">
-          <UploadButton label="⬆ Upload a new photo" accept="image/jpeg,image/png,image/webp" onFile={(f) => void upload(f)} />
+          <UploadButton label="Upload a new photo" accept="image/jpeg,image/png,image/webp" onFile={(f) => void upload(f)} />
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {library.map((img) => (
               <figure key={img.src} className="overflow-hidden rounded-md bg-white ring-1 ring-sand">
@@ -743,7 +779,7 @@ function PhotoRow({
   return (
     <Step title={title} help={help}>
       <button className={bigBtn} onClick={onAdd}>
-        ＋ Add a photo
+        <PlusIcon className="size-5" /> Add a photo
       </button>
       <ol className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {photos.map((p, i) => (
@@ -756,10 +792,10 @@ function PhotoRow({
             <div className="space-y-2 p-3">
               <div className="grid grid-cols-3 gap-2">
                 <button className={softBtn} disabled={i === 0} onClick={() => onChange((l) => move(l, i, i - 1))}>
-                  ← Move
+                  <ArrowLeftIcon className="size-4" /> Move
                 </button>
                 <button className={softBtn} disabled={i === photos.length - 1} onClick={() => onChange((l) => move(l, i, i + 1))}>
-                  Move →
+                  Move <ArrowRightIcon className="size-4" />
                 </button>
                 <button className={`${softBtn} text-red-800`} disabled={photos.length <= min} onClick={() => confirm("Remove this photo from here?") && onChange((l) => l.filter((_, j) => j !== i))}>
                   Remove
@@ -787,7 +823,7 @@ function PhotoRow({
 function PricesScreen({ content, update }: { content: SiteContent; update: Update }) {
   return (
     <>
-      <ScreenTitle title="💲 Starting prices" help="The lowest monthly price for each type of apartment. The website shows “From $…/month”." />
+      <ScreenTitle icon={<PriceIcon className="size-5" />} title="Starting prices" help="The lowest monthly price for each type of apartment. The website shows “From $…/month”." />
       <div className="grid gap-4 sm:grid-cols-2">
         {UNIT_TYPES.map((k: UnitType) => (
           <label key={k} className="block rounded-lg bg-cream p-5 shadow-sm ring-1 ring-sand">
@@ -812,7 +848,7 @@ function TextScreen({ content, update }: { content: SiteContent; update: Update 
   const set = (path: string, v: Bilingual) => update((c) => ({ ...c, text: { ...c.text, [path]: v } }));
   return (
     <>
-      <ScreenTitle title="✏️ Website text" help="Click a part of the website to open it. The grey text is what shows now; type in a box to replace it. Empty a box to go back to the original." />
+      <ScreenTitle icon={<TextIcon className="size-5" />} title="Website text" help="Click a part of the website to open it. The grey text is what shows now; type in a box to replace it. Empty a box to go back to the original." />
       <div className="space-y-3">
         {EDITABLE_TEXT.map((section) => {
           const isOpen = open === section.section;
