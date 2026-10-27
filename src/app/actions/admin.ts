@@ -28,6 +28,7 @@ async function requireAdmin() {
 
 // --- Validation: only accept what the site knows how to show. ---
 const str = (v: unknown, max = 2000) => (typeof v === "string" ? v.slice(0, max) : "");
+const orDefault = (v: unknown, max: number, fallback: string) => (str(v, max).trim() ? str(v, max) : fallback);
 const validSrc = (v: unknown) => typeof v === "string" && (/^\/photos\/[\w.-]+$/.test(v) || /^\/api\/media\/[\w.-]+$/.test(v));
 const CATEGORIES: PhotoCategory[] = ["building", "suites", "amenities"];
 
@@ -135,6 +136,11 @@ function cleanShowings(s: Partial<Showings> | undefined): Showings {
     blocked: [...new Set((s?.blocked ?? []).map(date).filter((x): x is string => Boolean(x)))].sort().slice(-200),
     minNoticeHours: between(s?.minNoticeHours, 0, 168, d.minNoticeHours),
     daysAhead: between(s?.daysAhead, 1, 90, d.daysAhead),
+    email: {
+      // An emptied box goes back to the original wording.
+      subject: { fr: orDefault(s?.email?.subject?.fr, 200, d.email.subject.fr), en: orDefault(s?.email?.subject?.en, 200, d.email.subject.en) },
+      body: { fr: orDefault(s?.email?.body?.fr, 4000, d.email.body.fr), en: orDefault(s?.email?.body?.en, 4000, d.email.body.en) },
+    },
   };
 }
 

@@ -27,7 +27,7 @@ function merge(saved: Saved): SiteContent {
     promo: mergePromo(saved),
     // Earlier saves had a single banner.
     notices: saved.notices ?? (saved.notice ? [{ ...saved.notice, id: "banner-1" }] : d.notices),
-    showings: { ...d.showings, ...saved.showings },
+    showings: { ...d.showings, ...saved.showings, email: { ...d.showings.email, ...saved.showings?.email } },
     library: saved.library ?? d.library,
   };
 }

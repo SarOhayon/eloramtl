@@ -1,6 +1,7 @@
 "use server";
 
 import { ADDRESS, INBOX_EMAIL, PHONE_MAIN_DISPLAY } from "@/data/building";
+import { fillTemplate } from "@/data/content";
 import { getContent } from "@/lib/content";
 import { addLead, readLeads } from "@/lib/leads";
 import { sendMail } from "@/lib/mail";
@@ -51,7 +52,11 @@ export async function bookShowing(_prev: BookState, formData: FormData): Promise
   const start = montrealToUtc(v.date, v.time);
   const end = new Date(start.getTime() + showings.slotMinutes * 60e3);
   const ics = invite(start, end, lead.id, lang);
-  const whenText = new Intl.DateTimeFormat(lang === "fr" ? "fr-CA" : "en-CA", { dateStyle: "full", timeStyle: "short", timeZone: "America/Montreal" }).format(start);
+  const intl = lang === "fr" ? "fr-CA" : "en-CA";
+  const dateText = new Intl.DateTimeFormat(intl, { dateStyle: "full", timeZone: "America/Montreal" }).format(start);
+  const timeText = new Intl.DateTimeFormat(intl, { timeStyle: "short", timeZone: "America/Montreal" }).format(start);
+  const whenText = `${dateText}, ${timeText}`;
+  const blanks = { name: v.name, date: dateText, time: timeText, address: ADDRESS, phone: PHONE_MAIN_DISPLAY };
   const attachments = [{ filename: "elora-showing.ics", content: Buffer.from(ics), contentType: "text/calendar; charset=utf-8; method=PUBLISH" }];
 
   await Promise.all([
@@ -67,11 +72,9 @@ export async function bookShowing(_prev: BookState, formData: FormData): Promise
       to: v.email,
       fromName: "Elora MTL",
       replyTo: process.env.MAIL_TO || INBOX_EMAIL,
-      subject: lang === "fr" ? `Votre visite à Elora : ${whenText}` : `Your Elora showing: ${whenText}`,
-      text:
-        lang === "fr"
-          ? `Bonjour ${v.name},\n\nVotre visite est confirmée pour le ${whenText}, au ${ADDRESS}.\n\nL'invitation jointe l'ajoute à votre calendrier, avec un rappel 30 minutes avant.\nPour changer l'heure, répondez à ce courriel ou appelez-nous au ${PHONE_MAIN_DISPLAY}.\n\nÀ bientôt!\nL'équipe Elora`
-          : `Hi ${v.name},\n\nYour showing is confirmed for ${whenText}, at ${ADDRESS}.\n\nThe attached invite adds it to your calendar, with a reminder 30 minutes before.\nTo change the time, reply to this email or call us at ${PHONE_MAIN_DISPLAY}.\n\nSee you soon!\nThe Elora team`,
+      // Wording set in the admin (Showings → Confirmation email).
+      subject: fillTemplate(showings.email.subject[lang], blanks),
+      text: fillTemplate(showings.email.body[lang], blanks),
       attachments,
     }),
   ]);

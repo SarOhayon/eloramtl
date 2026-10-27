@@ -44,6 +44,8 @@ export type Showings = {
   blocked: string[]; // YYYY-MM-DD days with no showings (holidays, days off)
   minNoticeHours: number; // how soon a visitor can book
   daysAhead: number; // how far ahead
+  // The confirmation email visitors get. {name}, {date}, {time}, {address} and {phone} are filled in.
+  email: { subject: Bilingual; body: Bilingual };
 };
 
 export type SiteContent = {
@@ -107,6 +109,13 @@ export const DEFAULT_CONTENT: SiteContent = {
     blocked: [],
     minNoticeHours: 12,
     daysAhead: 21,
+    email: {
+      subject: { fr: "Votre visite à Elora : {date} à {time}", en: "Your Elora showing: {date} at {time}" },
+      body: {
+        fr: "Bonjour {name},\n\nVotre visite est confirmée pour le {date} à {time}, au {address}.\n\nL'invitation jointe l'ajoute à votre calendrier, avec un rappel 30 minutes avant.\nPour changer l'heure, répondez à ce courriel ou appelez-nous au {phone}.\n\nÀ bientôt!\nL'équipe Elora",
+        en: "Hi {name},\n\nYour showing is confirmed for {date} at {time}, at {address}.\n\nThe attached invite adds it to your calendar, with a reminder 30 minutes before.\nTo change the time, reply to this email or call us at {phone}.\n\nSee you soon!\nThe Elora team",
+      },
+    },
   },
   library: [],
 };
@@ -223,6 +232,9 @@ export const isUploaded = (src: string) => src.startsWith("/api/media/");
 
 // Today's date in Montréal as YYYY-MM-DD.
 export const todayInMontreal = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Montreal" }).format(new Date());
+
+// Fills {name}-style blanks in an email template; unknown ones are left as they are.
+export const fillTemplate = (text: string, values: Record<string, string>) => text.replace(/\{(\w+)\}/g, (all, key: string) => values[key] ?? all);
 
 // Whether something with an on/off switch and optional dates (the promotion, the banner) is showing.
 export type ScheduleState = "off" | "live" | "scheduled" | "ended";

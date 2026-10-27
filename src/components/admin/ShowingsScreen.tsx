@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { listLeads, updateLead } from "@/app/actions/leads";
-import { todayInMontreal, type ShowingHours, type Showings, type SiteContent, type Weekday } from "@/data/content";
+import { ADDRESS, PHONE_MAIN_DISPLAY } from "@/data/building";
+import { DEFAULT_CONTENT, fillTemplate, todayInMontreal, type ShowingHours, type Showings, type SiteContent, type Weekday } from "@/data/content";
 import type { Lead } from "@/lib/leads";
 import { CalendarIcon, CloseIcon, PlusIcon } from "./AdminIcons";
 import { ScreenTitle, Step, Switch, field, softBtn, type Update } from "./ui";
@@ -131,9 +132,94 @@ export function ShowingsScreen({ content, update }: { content: SiteContent; upda
           )}
         </Step>
 
+        <EmailTemplate showings={s} set={set} />
+
         <Upcoming />
       </div>
     </>
+  );
+}
+
+const BLANKS = [
+  { key: "{name}", what: "the visitor's name" },
+  { key: "{date}", what: "the day of the showing" },
+  { key: "{time}", what: "the time" },
+  { key: "{address}", what: "the building's address" },
+  { key: "{phone}", what: "your phone number" },
+];
+
+// The confirmation email visitors get after booking, in French and English, with a preview.
+function EmailTemplate({ showings, set }: { showings: Showings; set: (patch: Partial<Showings>) => void }) {
+  const [lang, setLang] = useState<"fr" | "en">("en");
+  const email = showings.email;
+  const edit = (part: "subject" | "body", value: string) => set({ email: { ...email, [part]: { ...email[part], [lang]: value } } });
+  // A sample booking for the preview: next Thursday at 10:30.
+  const sample = new Date(`${todayInMontreal()}T12:00:00Z`);
+  sample.setUTCDate(sample.getUTCDate() + ((4 - sample.getUTCDay() + 7) % 7 || 7));
+  const intl = lang === "fr" ? "fr-CA" : "en-CA";
+  const blanks = {
+    name: "Maya Tremblay",
+    date: new Intl.DateTimeFormat(intl, { dateStyle: "full", timeZone: "UTC" }).format(sample),
+    time: new Intl.DateTimeFormat(intl, { timeStyle: "short", timeZone: "UTC" }).format(new Date("2000-01-01T10:30:00Z")),
+    address: ADDRESS,
+    phone: PHONE_MAIN_DISPLAY,
+  };
+
+  return (
+    <Step n={4} title="Confirmation email" help="What visitors receive after booking (in the language they used on the website). The calendar invite with the 30-minute reminder is always attached.">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex overflow-hidden rounded-md ring-1 ring-brown/20">
+          {(["fr", "en"] as const).map((l) => (
+            <button key={l} onClick={() => setLang(l)} className={`px-4 py-2 text-sm ${lang === l ? "bg-action text-white" : "bg-white"}`}>
+              {l === "fr" ? "French" : "English"}
+            </button>
+          ))}
+        </div>
+        <button
+          className={softBtn}
+          onClick={() => confirm("Go back to the original wording, in French and English?") && set({ email: DEFAULT_CONTENT.showings.email })}
+        >
+          Restore the original
+        </button>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-4">
+          <label className="block">
+            <span className="mb-1 block font-medium">Subject</span>
+            <input className={field} value={email.subject[lang]} onChange={(e) => edit("subject", e.target.value)} />
+          </label>
+          <label className="block">
+            <span className="mb-1 block font-medium">Message</span>
+            <textarea className={field} rows={12} value={email.body[lang]} onChange={(e) => edit("body", e.target.value)} />
+          </label>
+          <div className="rounded-md bg-cream-deep p-4 text-sm">
+            <p className="font-medium text-brown">These words are filled in automatically:</p>
+            <ul className="mt-2 space-y-1 text-brown-soft">
+              {BLANKS.map((b) => (
+                <li key={b.key}>
+                  <code className="rounded bg-white px-1.5 py-0.5 text-brown ring-1 ring-sand">{b.key}</code> {b.what}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-1 font-medium">Preview</p>
+          <div className="overflow-hidden rounded-md bg-white ring-1 ring-sand">
+            <div className="border-b border-sand px-5 py-3 text-sm">
+              <p className="text-brown-soft">From: Elora MTL</p>
+              <p className="mt-0.5 font-medium text-ink">{fillTemplate(email.subject[lang], blanks)}</p>
+            </div>
+            <p className="whitespace-pre-line px-5 py-4 text-brown">{fillTemplate(email.body[lang], blanks)}</p>
+            <p className="mx-5 mb-4 inline-flex items-center gap-2 rounded-md bg-cream-deep px-3 py-2 text-sm text-brown">
+              <CalendarIcon className="size-4" /> elora-showing.ics
+            </p>
+          </div>
+        </div>
+      </div>
+    </Step>
   );
 }
 
