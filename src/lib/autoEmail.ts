@@ -2,7 +2,9 @@ import { ADDRESS, INBOX_EMAIL, PHONE_MAIN_DISPLAY } from "@/data/building";
 import { button, layout } from "@/data/emailDesigns";
 import { fillHtmlTemplate, fillTemplate, scheduleState, siteUrl, type EmailTemplate, type SiteContent } from "@/data/content";
 import { getContent } from "./content";
+import type { Lead } from "./leads";
 import { sendMail, type Attachment } from "./mail";
+import { montrealToUtc, showingWords } from "./showingSlots";
 
 // Sending the automatic emails (confirmation, auto-reply, follow-up) and the team's notices.
 
@@ -74,4 +76,72 @@ export function sendTeamNotice({ subject, heading, rows, note, sections = [], re
   );
   const text = [heading, "", ...rows.map(([k, v]) => `${k}: ${v}`), ...(note ? ["", note] : []), ...sections.flatMap((s) => ["", s.title.toUpperCase(), ...(s.lines.length ? s.lines : ["—"])]), "", `Admin: ${admin}`].join("\n");
   return sendMail({ subject, text, html, replyTo, attachments });
+}
+
+// After a showing is booked: the confirmation (with calendar invite) to the visitor and, for bookings
+// made on the website, a notice to the leasing team.
+export async function sendShowingEmails(lead: Lead, { team, confirm = true }: { team: boolean; confirm?: boolean }) {
+  if (!lead.showing) return;
+  const content = await getContent();
+  const start = montrealToUtc(lead.showing.date, lead.showing.time);
+  const end = new Date(start.getTime() + content.showings.slotMinutes * 60e3);
+  const attachments = [{ filename: "elora-showing.ics", content: Buffer.from(invite(start, end, lead.id, lead.lang)), contentType: "text/calendar; charset=utf-8; method=PUBLISH" }];
+  const { date, time } = showingWords(lead.showing.date, lead.showing.time, lead.lang);
+  const en = showingWords(lead.showing.date, lead.showing.time, "en");
+
+  await Promise.all([
+    team &&
+      sendTeamNotice({
+        subject: `New showing booked: ${lead.name}, ${en.date} at ${en.time}`,
+        heading: `${lead.name} booked a showing`,
+        rows: [
+          ["When", `${en.date} at ${en.time}`],
+          ["Phone", lead.phone],
+          ["Email", lead.email],
+          ["Suite type", lead.type || "Not sure yet"],
+          ["Move-in date", lead.moveIn ?? ""],
+          ["Language", lead.lang === "fr" ? "French" : "English"],
+        ],
+        note: lead.comments,
+        replyTo: lead.email,
+        attachments,
+      }),
+    // Wording set in the admin (Automatic emails → Showing confirmation).
+    confirm && sendTemplate(content.showings.email, lead.lang, lead.email, emailBlanks(content, lead.lang, { name: lead.name, date, time }), attachments),
+  ]);
+}
+
+// The follow-up after a showing (Automatic emails → Follow-up), in the visitor's language.
+export async function sendFollowUp(lead: Lead) {
+  if (!lead.showing) return false;
+  const content = await getContent();
+  const { date, time } = showingWords(lead.showing.date, lead.showing.time, lead.lang);
+  return sendTemplate(content.emails.followUp, lead.lang, lead.email, emailBlanks(content, lead.lang, { name: lead.name, date, time }));
+}
+
+// A calendar invite for the showing, with a 30-minute reminder.
+function invite(start: Date, end: Date, id: string, lang: Lang) {
+  const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const title = lang === "fr" ? "Visite à Elora MTL" : "Showing at Elora MTL";
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Elora MTL//Showings//EN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:${id}@eloramtl.com`,
+    `DTSTAMP:${stamp(new Date())}`,
+    `DTSTART:${stamp(start)}`,
+    `DTEND:${stamp(end)}`,
+    `SUMMARY:${title}`,
+    `LOCATION:${ADDRESS.replace(/,/g, "\\,")}`,
+    `DESCRIPTION:${lang === "fr" ? "Des questions? " : "Questions? "}${PHONE_MAIN_DISPLAY}`,
+    "BEGIN:VALARM",
+    "ACTION:DISPLAY",
+    `DESCRIPTION:${title}`,
+    "TRIGGER:-PT30M",
+    "END:VALARM",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
 }

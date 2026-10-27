@@ -1,8 +1,8 @@
 import { UNITS } from "@/data/building";
-import { emailBlanks, sendTeamNotice, sendTemplate } from "./autoEmail";
+import { sendFollowUp, sendTeamNotice } from "./autoEmail";
 import { getContent } from "./content";
 import { changeLeads, readLeads, type Lead } from "./leads";
-import { showingWords, wallClock } from "./showingSlots";
+import { wallClock } from "./showingSlots";
 import { recentCounts } from "./stats";
 import { getFile, putFile } from "./storage";
 
@@ -43,14 +43,10 @@ export async function runDueJobs({ force = false } = {}) {
 
 // Follow-ups due now (and not more than a week late), to people marked as having come.
 async function sendFollowUps(leads: Lead[]) {
-  const content = await getContent();
   const now = Date.now();
   const due = leads.filter((l) => l.showing && l.attendance === "came" && l.status !== "closed" && l.followUp && !l.followUp.sentAt && Date.parse(l.followUp.due) <= now && now - Date.parse(l.followUp.due) < 7 * 864e5);
   const sent = new Set<string>();
-  for (const l of due) {
-    const { date, time } = showingWords(l.showing!.date, l.showing!.time, l.lang);
-    if (await sendTemplate(content.emails.followUp, l.lang, l.email, emailBlanks(content, l.lang, { name: l.name, date, time }))) sent.add(l.id);
-  }
+  for (const l of due) if (await sendFollowUp(l)) sent.add(l.id);
   if (sent.size) {
     const at = new Date().toISOString();
     await changeLeads((l) => (sent.has(l.id) && l.followUp ? { followUp: { ...l.followUp, sentAt: at } } : null));

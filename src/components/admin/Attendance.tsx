@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { markAttendance } from "@/app/actions/leads";
+import { markAttendance, sendFollowUpNow } from "@/app/actions/leads";
 import type { Lead } from "@/lib/leads";
 import { montrealToUtc } from "@/lib/showingSlots";
 import { useNow } from "./ui";
@@ -37,6 +37,22 @@ export function Attendance({ lead, onLeads }: { lead: Lead; onLeads: (l: Lead[])
       {lead.followUp && (
         <span className="text-sm text-brown-soft">
           {lead.followUp.sentAt ? `Follow-up sent ${when.format(new Date(lead.followUp.sentAt))}` : `Follow-up email on ${when.format(new Date(lead.followUp.due))}`}
+          {!lead.followUp.sentAt && (
+            <button
+              disabled={busy}
+              onClick={async () => {
+                if (!confirm(`Send the follow-up email to ${lead.email} now?`)) return;
+                setBusy(true);
+                const next = await sendFollowUpNow(lead.id);
+                if (next) onLeads(next);
+                else alert("The email couldn't be sent. Check the email settings and try again.");
+                setBusy(false);
+              }}
+              className="ml-2 font-medium text-brown underline underline-offset-4 disabled:opacity-50"
+            >
+              Send it now
+            </button>
+          )}
         </span>
       )}
     </div>

@@ -3,7 +3,8 @@
 import { isAdmin } from "@/lib/adminAuth";
 import { getContent } from "@/lib/content";
 import { runDueJobs } from "@/lib/jobs";
-import { changeLead, changeLeads, readLeads, type Lead, type LeadStatus } from "@/lib/leads";
+import { sendFollowUp, sendShowingEmails } from "@/lib/autoEmail";
+import { addLead, changeLead, changeLeads, readLeads, type Lead, type LeadStatus } from "@/lib/leads";
 import { montrealToUtc } from "@/lib/showingSlots";
 
 const STATUSES: LeadStatus[] = ["new", "contacted", "toured", "leased", "closed"];
@@ -54,4 +55,45 @@ function followUpDue(date: string, days: number) {
   const d = new Date(`${date}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
   return montrealToUtc(d.toISOString().slice(0, 10), "10:00").toISOString();
+}
+
+// A showing added by hand (booked by phone, or to test the emails). Any day and time, even right
+// now; it can send the usual confirmation email.
+export async function addShowingByHand(input: {
+  name: string;
+  email: string;
+  phone: string;
+  date: string;
+  time: string;
+  type?: string;
+  lang: "fr" | "en";
+  confirm: boolean;
+}): Promise<{ ok: true; leads: Lead[] } | { ok: false; error: string }> {
+  if (!(await isAdmin())) return { ok: false, error: "Please sign in again." };
+  const name = String(input.name ?? "").trim().slice(0, 200);
+  const email = String(input.email ?? "").trim().slice(0, 200);
+  const phone = String(input.phone ?? "").trim().slice(0, 60);
+  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Add a name and a valid email." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.time)) return { ok: false, error: "Pick a day and a time." };
+  const lead = await addLead({
+    kind: "showing",
+    name,
+    email,
+    phone,
+    type: String(input.type ?? "").slice(0, 60) || undefined,
+    lang: input.lang === "fr" ? "fr" : "en",
+    showing: { date: input.date, time: input.time },
+    comments: "Added by hand in the admin.",
+  });
+  if (!lead) return { ok: false, error: "Couldn't save it. Try again." };
+  if (input.confirm) await sendShowingEmails(lead, { team: false });
+  return { ok: true, leads: await readLeads() };
+}
+
+// Sends the follow-up right away instead of waiting for its day (for someone marked "Came").
+export async function sendFollowUpNow(id: string): Promise<Lead[] | null> {
+  if (!(await isAdmin())) return null;
+  const lead = (await readLeads()).find((l) => l.id === String(id));
+  if (!lead || lead.attendance !== "came" || !(await sendFollowUp(lead))) return null;
+  return changeLead(lead.id, { followUp: { due: lead.followUp?.due ?? new Date().toISOString(), sentAt: new Date().toISOString() } });
 }

@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { listLeads, updateLead } from "@/app/actions/leads";
+import { addShowingByHand, listLeads, updateLead } from "@/app/actions/leads";
 import { todayInMontreal, type ShowingHours, type Showings, type SiteContent, type Weekday } from "@/data/content";
 import type { Lead } from "@/lib/leads";
 import { CalendarIcon, CloseIcon, PlusIcon } from "./AdminIcons";
 import { Attendance } from "./Attendance";
-import { ScreenTitle, Step, Switch, field, softBtn, useNow, type Update } from "./ui";
+import { ScreenTitle, Step, Switch, bigBtn, field, softBtn, useNow, type Update } from "./ui";
 
 const DAYS: { key: Weekday; label: string }[] = [
   { key: "1", label: "Monday" },
@@ -183,6 +183,7 @@ function Upcoming() {
 
   return (
     <>
+      <AddByHand onLeads={setLeads} />
       <Step title="Today and coming up" help="Everyone who booked a time. From 15 minutes before a showing, mark whether they came: people who came get the follow-up email.">
         {!leads ? <p className="text-brown-soft">Loading…</p> : upcoming.length === 0 ? <p className="text-brown-soft">No showings booked yet.</p> : <ul className="divide-y divide-sand">{upcoming.map((l) => row(l, true))}</ul>}
       </Step>
@@ -192,5 +193,90 @@ function Upcoming() {
         </Step>
       )}
     </>
+  );
+}
+
+// Add a showing booked by phone (or a test): any day and time, even right now.
+function AddByHand({ onLeads }: { onLeads: (l: Lead[]) => void }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const now = new Date();
+  const [form, setForm] = useState(() => ({
+    name: "",
+    email: "",
+    phone: "",
+    date: todayInMontreal(),
+    time: new Intl.DateTimeFormat("en-CA", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "America/Montreal" }).format(now),
+    type: "",
+    lang: "en" as "fr" | "en",
+    confirm: true,
+  }));
+  const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
+
+  return (
+    <Step title="Add a showing by hand" help="For showings booked by phone, or to test the emails. Any day and time, even right now. From 15 minutes before it, you can mark whether they came.">
+      {!open ? (
+        <button className={softBtn} onClick={() => setOpen(true)}>
+          <PlusIcon className="size-4" /> Add a showing
+        </button>
+      ) : (
+        <form
+          className="grid gap-4 sm:grid-cols-2"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setBusy(true);
+            setMsg("");
+            const res = await addShowingByHand(form);
+            setBusy(false);
+            if (!res.ok) return setMsg(res.error);
+            onLeads(res.leads);
+            setMsg(`Added${form.confirm ? `, and the confirmation was sent to ${form.email}` : ""}.`);
+            set({ name: "", email: "", phone: "" });
+          }}
+        >
+          <label className="block">
+            <span className="mb-1 block font-medium">Name</span>
+            <input className={field} required value={form.name} onChange={(e) => set({ name: e.target.value })} />
+          </label>
+          <label className="block">
+            <span className="mb-1 block font-medium">Email</span>
+            <input className={field} type="email" required value={form.email} onChange={(e) => set({ email: e.target.value })} />
+          </label>
+          <label className="block">
+            <span className="mb-1 block font-medium">Phone</span>
+            <input className={field} type="tel" value={form.phone} onChange={(e) => set({ phone: e.target.value })} />
+          </label>
+          <label className="block">
+            <span className="mb-1 block font-medium">Language of the emails</span>
+            <select className={field} value={form.lang} onChange={(e) => set({ lang: e.target.value as "fr" | "en" })}>
+              <option value="en">English</option>
+              <option value="fr">French</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block font-medium">Day</span>
+            <input className={field} type="date" required value={form.date} onChange={(e) => set({ date: e.target.value })} />
+          </label>
+          <label className="block">
+            <span className="mb-1 block font-medium">Time</span>
+            <input className={field} type="time" required value={form.time} onChange={(e) => set({ time: e.target.value })} />
+          </label>
+          <label className="flex items-center gap-3 sm:col-span-2">
+            <input type="checkbox" className="size-5 accent-[#503d32]" checked={form.confirm} onChange={(e) => set({ confirm: e.target.checked })} />
+            Send them the confirmation email
+          </label>
+          <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
+            <button className={bigBtn} disabled={busy}>
+              {busy ? "Adding…" : "Add the showing"}
+            </button>
+            <button type="button" className={softBtn} onClick={() => setOpen(false)}>
+              Close
+            </button>
+            {msg && <span className="text-brown">{msg}</span>}
+          </div>
+        </form>
+      )}
+    </Step>
   );
 }
