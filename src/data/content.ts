@@ -30,8 +30,9 @@ export type Promo = {
   showBand: boolean; // the large brown section
 };
 
-// A thin message bar at the top of the website, for holidays and special days.
-export type Notice = { enabled: boolean; start?: string; end?: string; text: Bilingual };
+// Thin message bars at the top of the website, for holidays and special days. Each one has its
+// own dates, so they can be scheduled up to a year ahead.
+export type Notice = { id: string; enabled: boolean; start?: string; end?: string; text: Bilingual };
 
 // Showing times visitors can book from the inquiry pop-up.
 export type Weekday = "0" | "1" | "2" | "3" | "4" | "5" | "6"; // Sunday = "0"
@@ -52,7 +53,7 @@ export type SiteContent = {
   floorPlans: Record<string, string>; // floor number -> file
   text: Record<string, Bilingual>; // dictionary path -> text, e.g. "hero.title"
   promo: Promo;
-  notice: Notice;
+  notices: Notice[];
   showings: Showings;
   library: LibraryItem[]; // files uploaded through the admin
 };
@@ -98,10 +99,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     showTab: true,
     showBand: false,
   },
-  notice: {
-    enabled: false,
-    text: { fr: "Notre bureau sera fermé le 25 décembre. Joyeuses fêtes!", en: "Our office will be closed on December 25. Happy holidays!" },
-  },
+  notices: [],
   showings: {
     enabled: false,
     slotMinutes: 30,

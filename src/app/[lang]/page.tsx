@@ -98,8 +98,8 @@ async function Body({ locale }: { locale: Locale }) {
   // The promotion, if it's on and within its dates.
   const promo = content.promo;
   const promoLive = scheduleState(promo) === "live";
-  // The special-day banner, if it's on, within its dates and has a message.
-  const noticeText = scheduleState(content.notice) === "live" ? content.notice.text[locale].trim() : "";
+  // Special-day banners showing today (on, within their dates, with a message).
+  const noticeTexts = content.notices.filter((n) => scheduleState(n) === "live" && n.text[locale].trim()).map((n) => n.text[locale].trim());
   const dateFmt = new Intl.DateTimeFormat(locale === "fr" ? "fr-CA" : "en-CA", { dateStyle: "long", timeZone: "UTC" });
   const promoText = {
     kicker: promo.kicker[locale],
@@ -121,14 +121,14 @@ async function Body({ locale }: { locale: Locale }) {
       <main>
         {/* Hero: full-screen photo slider */}
         <div className="pt-16 lg:pt-20">
-          {noticeText && (
-            <p role="status" className="bg-brown px-4 py-2.5 text-center text-sm tracking-wide text-cream">
+          {noticeTexts.map((text) => (
+            <p key={text} role="status" className="border-b border-cream/10 bg-brown px-4 py-2.5 text-center text-sm tracking-wide text-cream last:border-0">
               <span className="mr-2 text-gold-light" aria-hidden="true">
                 ✦
               </span>
-              {noticeText}
+              {text}
             </p>
-          )}
+          ))}
           <HeroSlider locale={locale} slides={content.photos.hero} text={{ eyebrow: t.hero.eyebrow, title: t.hero.title, lead: t.hero.lead, primary: t.hero.primary, secondary: t.hero.secondary }} />
         </div>
         <section className="bg-cream py-8 lg:py-10">

@@ -8,7 +8,9 @@ const KEY = "content/site.json";
 let memo: { at: number; value: SiteContent } | null = null;
 const MEMO_MS = 3000;
 
-function merge(saved: Partial<SiteContent> & { offer?: { enabled?: boolean } }): SiteContent {
+type Saved = Partial<SiteContent> & { offer?: { enabled?: boolean }; notice?: Omit<SiteContent["notices"][number], "id"> };
+
+function merge(saved: Saved): SiteContent {
   const d = DEFAULT_CONTENT;
   return {
     photos: {
@@ -23,14 +25,15 @@ function merge(saved: Partial<SiteContent> & { offer?: { enabled?: boolean } }):
     floorPlans: saved.floorPlans ?? d.floorPlans,
     text: saved.text ?? d.text,
     promo: mergePromo(saved),
-    notice: { ...d.notice, ...saved.notice },
+    // Earlier saves had a single banner.
+    notices: saved.notices ?? (saved.notice ? [{ ...saved.notice, id: "banner-1" }] : d.notices),
     showings: { ...d.showings, ...saved.showings },
     library: saved.library ?? d.library,
   };
 }
 
 // Older saves had an on/off offer and its wording in the text overrides.
-function mergePromo(saved: Partial<SiteContent> & { offer?: { enabled?: boolean } }): SiteContent["promo"] {
+function mergePromo(saved: Saved): SiteContent["promo"] {
   const d = DEFAULT_CONTENT.promo;
   if (saved.promo) return { ...d, ...saved.promo };
   const t = saved.text ?? {};
@@ -55,7 +58,7 @@ export async function getContent(): Promise<SiteContent> {
   let value = DEFAULT_CONTENT;
   try {
     const raw = await getFile(KEY);
-    if (raw) value = merge(JSON.parse(raw.toString("utf8")) as Partial<SiteContent>);
+    if (raw) value = merge(JSON.parse(raw.toString("utf8")) as Saved);
   } catch (err) {
     console.error("[content] could not read, using defaults", err);
   }

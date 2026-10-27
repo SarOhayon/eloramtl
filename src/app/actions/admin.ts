@@ -85,7 +85,7 @@ function clean(input: SiteContent): SiteContent {
     floorPlans,
     text,
     promo: cleanPromo(input.promo, ids),
-    notice: cleanNotice(input.notice),
+    notices: cleanNotices(input.notices),
     showings: cleanShowings(input.showings),
     library,
   };
@@ -93,15 +93,24 @@ function clean(input: SiteContent): SiteContent {
 
 const date = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);
 
-function cleanNotice(n: Partial<Notice> | undefined): Notice {
-  const start = date(n?.start);
-  const end = date(n?.end);
-  return {
-    enabled: n?.enabled === true,
-    ...(start ? { start } : {}),
-    ...(end ? { end } : {}),
-    text: { fr: str(n?.text?.fr, 300), en: str(n?.text?.en, 300) },
-  };
+// Banners, soonest first. Ones that ended more than a month ago are dropped.
+function cleanNotices(list: Partial<Notice>[] | undefined): Notice[] {
+  const monthAgo = new Date(Date.now() - 31 * 864e5).toISOString().slice(0, 10);
+  return (Array.isArray(list) ? list : [])
+    .map((n, i) => {
+      const start = date(n?.start);
+      const end = date(n?.end);
+      return {
+        id: str(n?.id, 40) || `banner-${Date.now()}-${i}`,
+        enabled: n?.enabled === true,
+        ...(start ? { start } : {}),
+        ...(end ? { end } : {}),
+        text: { fr: str(n?.text?.fr, 300), en: str(n?.text?.en, 300) },
+      };
+    })
+    .filter((n) => !n.end || n.end >= monthAgo)
+    .sort((a, b) => (a.start ?? "").localeCompare(b.start ?? ""))
+    .slice(0, 60);
 }
 
 const time = (v: unknown) => (typeof v === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? v : undefined);

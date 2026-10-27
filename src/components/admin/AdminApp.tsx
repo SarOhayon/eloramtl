@@ -190,6 +190,14 @@ function SaveBadge({ state }: { state: "saved" | "pending" | "saving" | "error" 
 
 // ---------------- Home ----------------
 
+// "1 showing now · 8 scheduled" for the banners box.
+function BannerSummary({ notices }: { notices: SiteContent["notices"] }) {
+  const live = notices.filter((n) => scheduleState(n) === "live").length;
+  const later = notices.filter((n) => scheduleState(n) === "scheduled").length;
+  if (!live && !later) return <ScheduleStatus state="off" label="None scheduled" />;
+  return <ScheduleStatus state={live ? "live" : "scheduled"} label={[live && `${live} showing now`, later && `${later} scheduled`].filter(Boolean).join(" · ")} />;
+}
+
 function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }) {
   const available = Object.values(content.suites).filter((s) => s.status === "available").length;
   const [newLeads, setNewLeads] = useState<number | null>(null);
@@ -213,7 +221,13 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
     },
     { screen: "apartments", icon: <BuildingIcon className="size-6" />, title: "Apartments", text: "Mark apartments available or rented, set prices, dates and plans.", note: `${available} marked available` },
     { screen: "promo", icon: <TagIcon className="size-6" />, title: "Promotion", text: "Create or change your special offer.", note: <ScheduleStatus state={scheduleState(content.promo)} /> },
-    { screen: "notice", icon: <MegaphoneIcon className="size-6" />, title: "Special-day banner", text: "A message across the top of the website for holidays or closures.", note: <ScheduleStatus state={scheduleState(content.notice)} /> },
+    {
+      screen: "notice",
+      icon: <MegaphoneIcon className="size-6" />,
+      title: "Special-day banners",
+      text: "Messages across the top of the website for holidays or closures, scheduled ahead.",
+      note: <BannerSummary notices={content.notices} />,
+    },
     { screen: "photos", icon: <ImageIcon className="size-6" />, title: "Photos", text: "Add, remove or reorder the photos on the website." },
     { screen: "prices", icon: <PriceIcon className="size-6" />, title: "Starting prices", text: "The “From $…” price for each type of apartment." },
     { screen: "text", icon: <TextIcon className="size-6" />, title: "Website text", text: "Change the titles and paragraphs, in French and English." },

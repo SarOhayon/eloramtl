@@ -78,7 +78,7 @@ a home screen with big buttons leads to:
 - **Showings**: online booking on/off, weekly showing hours, slot length, days off, upcoming showings (cancel frees the time). Visitors book from the inquiry pop-up and get a confirmation email with a calendar invite that reminds them 30 minutes before.
 - **Apartments**: status, price, available date and plan per suite, plan per floor, and an "All apartments" table for quick edits.
 - **Promotion**: wording FR/EN, photo, start/end dates, apartments it applies to, side tab and brown section switches, live preview; shown to visitors as a once-per-visitor pop-up.
-- **Special-day banner**: a thin message at the top of the site, on/off with first and last day.
+- **Special-day banners**: thin messages at the top of the site, each with its own on/off and first/last day, scheduled up to a year ahead; one click adds closure banners for the Québec holidays of the next 12 months (`src/lib/holidays.ts`).
 - **Photos** (drag to reorder), **Starting prices**, **Website text**, and **Visitors** (daily counts of visits, promotion views, WhatsApp/call clicks, forms and bookings).
 
 Changes save automatically.
