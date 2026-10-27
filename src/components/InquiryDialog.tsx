@@ -57,7 +57,7 @@ export function InquiryDialog({ locale }: { locale: Locale }) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label={t.forms.inquiry.title} onClick={() => setOpen(null)}>
-      <div className="relative max-h-[94svh] w-full max-w-xl overflow-auto rounded-sm border-t-2 border-gold bg-cream p-6 text-brown shadow-2xl sm:p-8" onClick={(e) => e.stopPropagation()}>
+      <div className={`relative max-h-[94svh] w-full overflow-auto ${slots?.length && tab === "book" ? "max-w-2xl" : "max-w-xl"} rounded-sm border-t-2 border-gold bg-cream p-6 text-brown shadow-2xl sm:p-8`} onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           onClick={() => setOpen(null)}
@@ -70,7 +70,7 @@ export function InquiryDialog({ locale }: { locale: Locale }) {
           <p className="py-10 text-center text-brown-soft">{t.showing.loading}</p>
         ) : slots.length ? (
           <>
-            <div className="mb-6 mr-12 flex rounded-sm ring-1 ring-brown/15" role="tablist">
+            <div className="mb-6 mr-12 flex gap-6 border-b border-sand" role="tablist">
               {(["book", "ask"] as const).map((k) => (
                 <button
                   key={k}
@@ -78,7 +78,7 @@ export function InquiryDialog({ locale }: { locale: Locale }) {
                   role="tab"
                   aria-selected={tab === k}
                   onClick={() => setTab(k)}
-                  className={`flex-1 px-3 py-2.5 text-sm transition ${tab === k ? "bg-action text-white" : "text-brown hover:bg-cream-deep"}`}
+                  className={`-mb-px border-b-2 pb-2.5 text-sm tracking-wide transition ${tab === k ? "border-brown font-medium text-ink" : "border-transparent text-brown-soft hover:text-brown"}`}
                 >
                   {k === "book" ? t.showing.tabBook : t.showing.tabAsk}
                 </button>
