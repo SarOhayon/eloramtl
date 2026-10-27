@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { listLeads, updateLead } from "@/app/actions/leads";
+import { suggestUnits } from "@/app/actions/suggest";
+import { UNITS, formatPrice } from "@/data/building";
+import type { SiteContent } from "@/data/content";
+import { dictionaries } from "@/i18n/dictionaries";
 import type { Lead, LeadKind, LeadStatus } from "@/lib/leads";
-import { InboxIcon } from "./AdminIcons";
+import { InboxIcon, SparkleIcon } from "./AdminIcons";
 import { ScreenTitle, field } from "./ui";
 
 const STATUS: { key: LeadStatus; label: string; on: string }[] = [
@@ -25,7 +29,7 @@ const waLink = (phone: string) => {
 };
 
 // Everything sent from the website's forms, newest first, with a status for follow-up.
-export function InboxScreen() {
+export function InboxScreen({ content }: { content: SiteContent }) {
   const [leads, setLeads] = useState<Lead[] | null>(null);
   const [filter, setFilter] = useState<LeadStatus | "all">("all");
   const [error, setError] = useState(false);
@@ -128,6 +132,7 @@ export function InboxScreen() {
               ))}
             </div>
             <NoteField value={l.note ?? ""} onSave={(note) => change(l.id, { note })} />
+            <Suggestions lead={l} content={content} onLeads={setLeads} />
           </li>
         ))}
       </ul>
@@ -150,5 +155,75 @@ function NoteField({ value, onSave }: { value: string; onSave: (v: string) => vo
         onBlur={() => text !== value && onSave(text)}
       />
     </label>
+  );
+}
+
+const TYPES = dictionaries.en.types;
+const ago = new Intl.DateTimeFormat("en-CA", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Montreal" });
+
+// The AI's pick of available suites for this person, with a button to ask (again).
+function Suggestions({ lead, content, onLeads }: { lead: Lead; content: SiteContent; onLeads: (l: Lead[]) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const s = lead.suggestion;
+
+  const ask = async () => {
+    setBusy(true);
+    setError("");
+    const res = await suggestUnits(lead.id).catch(() => ({ ok: false as const, error: "The AI didn't answer. Try again in a moment." }));
+    if (res.ok) onLeads(res.leads);
+    else setError(res.error);
+    setBusy(false);
+  };
+
+  return (
+    <div className="mt-4 rounded-md bg-white p-4 ring-1 ring-gold/40">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="inline-flex items-center gap-2 font-medium text-brown">
+          <SparkleIcon className="size-5 text-gold" /> Suggested suites
+        </p>
+        <button onClick={ask} disabled={busy} className="inline-flex items-center gap-2 rounded-md bg-action px-4 py-2 text-sm font-medium text-white transition hover:bg-action-deep disabled:opacity-60">
+          {busy ? "Thinking…" : s ? "Suggest again" : "Suggest the best suites"}
+        </button>
+      </div>
+      {error && <p className="mt-3 text-sm text-red-800">{error}</p>}
+      {!s && !busy && !error && <p className="mt-2 text-sm text-brown-soft">The AI reads this person’s message, budget and dates and picks the best available suites for them.</p>}
+      {s && (
+        <div className={busy ? "opacity-50" : ""}>
+          <p className="mt-3 text-brown">{s.summary}</p>
+          {s.picks.length > 0 && (
+            <ol className="mt-3 space-y-2">
+              {s.picks.map((p, i) => {
+                const u = UNITS.find((x) => x.id === p.unit);
+                const info = content.suites[p.unit] ?? {};
+                return (
+                  <li key={p.unit} className="flex gap-3 rounded-md bg-cream-deep px-3 py-2.5">
+                    <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-gold text-sm font-medium text-white">{i + 1}</span>
+                    <div>
+                      <p className="font-medium text-ink">
+                        Suite {p.unit}
+                        {u && (
+                          <span className="font-normal text-brown-soft">
+                            {" "}
+                            · {TYPES[u.type]} · {formatPrice(info.price ?? content.prices[u.type], "en")}/mo
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-sm text-brown">{p.reason}</p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+          {s.ask && (
+            <p className="mt-3 text-sm text-brown">
+              <span className="font-medium">Good question to ask:</span> {s.ask}
+            </p>
+          )}
+          <p className="mt-2 text-xs text-brown-soft">Suggested {ago.format(new Date(s.at))} · Double-check before you send it to the client.</p>
+        </div>
+      )}
+    </div>
   );
 }

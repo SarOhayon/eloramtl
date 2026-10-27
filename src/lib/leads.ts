@@ -20,7 +20,9 @@ export type Lead = {
   showing?: { date: string; time: string }; // YYYY-MM-DD, HH:MM (Montréal)
   status: LeadStatus;
   note?: string; // the team's own note
+  suggestion?: Suggestion; // AI suggestion of suites, kept until asked again
 };
+export type Suggestion = { at: string; summary: string; picks: { unit: string; reason: string }[]; ask: string };
 
 const KEY = "leads/index.json";
 const MAX = 2000;
@@ -49,7 +51,7 @@ export async function addLead(lead: Omit<Lead, "id" | "createdAt" | "status">): 
   }
 }
 
-export async function changeLead(id: string, patch: Partial<Pick<Lead, "status" | "note">>): Promise<Lead[] | null> {
+export async function changeLead(id: string, patch: Partial<Pick<Lead, "status" | "note" | "suggestion">>): Promise<Lead[] | null> {
   const leads = await readLeads();
   const i = leads.findIndex((l) => l.id === id);
   if (i < 0) return null;

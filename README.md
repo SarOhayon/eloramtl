@@ -74,7 +74,7 @@ WhatsApp only lets a business message someone freely within 24 hours of their la
 `/admin` (reached from the small "·" after the copyright in the footer) lets you manage, without a redeploy:
 a home screen with big buttons leads to:
 
-- **Inquiries**: every inquiry, application and booked showing, with a follow-up status and a note.
+- **Inquiries**: every inquiry, application and booked showing, with a follow-up status and a note, and a "Suggest the best suites" button: Claude reads the person's message, budget and dates and picks up to 3 available suites with a reason each (`src/app/actions/suggest.ts`, needs `ANTHROPIC_API_KEY`).
 - **Showings**: online booking on/off, weekly showing hours, slot length, days off, upcoming showings (cancel frees the time). Visitors book from the inquiry pop-up and get a confirmation email with a calendar invite that reminds them 30 minutes before.
 - **Apartments**: status, price, available date and plan per suite, plan per floor, and an "All apartments" table for quick edits.
 - **Promotion**: wording FR/EN, photo, start/end dates, apartments it applies to, side tab and brown section switches, live preview; shown to visitors as a once-per-visitor pop-up.

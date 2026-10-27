@@ -157,7 +157,7 @@ export function AdminApp({ initial }: { initial: SiteContent }) {
             </button>
             {screen === "promo" && <PromoScreen content={content} update={update} upload={upload} />}
             {screen === "notice" && <NoticeScreen content={content} update={update} />}
-            {screen === "inbox" && <InboxScreen />}
+            {screen === "inbox" && <InboxScreen content={content} />}
             {screen === "showings" && <ShowingsScreen content={content} update={update} />}
             {screen === "stats" && <StatsScreen />}
             {screen === "apartments" && <ApartmentsScreen content={content} update={update} upload={upload} />}

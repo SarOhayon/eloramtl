@@ -110,6 +110,12 @@ export const TrashIcon = (p: P) => (
   </Icon>
 );
 
+export const SparkleIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 3.5 13.8 9a1 1 0 0 0 .7.7l5.5 1.8-5.5 1.8a1 1 0 0 0-.7.7L12 19.5 10.2 14a1 1 0 0 0-.7-.7L4 11.5l5.5-1.8a1 1 0 0 0 .7-.7L12 3.5ZM19 3v3M17.5 4.5h3" />
+  </Icon>
+);
+
 // A round, gold-ringed badge for an icon (home tiles and screen titles).
 export function IconBadge({ children, className = "size-14" }: { children: React.ReactNode; className?: string }) {
   return <span className={`inline-flex shrink-0 items-center justify-center rounded-full bg-cream-deep text-brown ring-1 ring-gold/50 ${className}`}>{children}</span>;
