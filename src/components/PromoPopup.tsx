@@ -67,7 +67,7 @@ export function PromoPopup({ id, text, tab, photo, showTab, closeLabel }: { id: 
                 close();
                 track("claim");
                 burstLogos();
-                openInquiry();
+                openInquiry({ askOnly: true });
               }}
             />
           </div>

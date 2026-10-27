@@ -59,3 +59,17 @@ export function InstagramIcon({ className }: P) {
     </svg>
   );
 }
+
+// Front of a REM train: rounded nose, wide panoramic windshield, headlights, on rails.
+export function RemTrainIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 18.5V8.5C6 5.5 8.5 3 12 3s6 2.5 6 5.5v10a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1Z" />
+      <path d="M7.6 11.2 8.2 7.4c.2-1.2 1.8-2.2 3.8-2.2s3.6 1 3.8 2.2l.6 3.8c.1.5-.3.9-.8.9H8.4c-.5 0-.9-.4-.8-.9Z" />
+      <path d="M9.5 15.5h5" />
+      <circle cx="8.6" cy="15.5" r=".7" fill="currentColor" stroke="none" />
+      <circle cx="15.4" cy="15.5" r=".7" fill="currentColor" stroke="none" />
+      <path d="M8.5 19.5 7 22M15.5 19.5 17 22M5.5 22h13" />
+    </svg>
+  );
+}

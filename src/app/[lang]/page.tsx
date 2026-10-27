@@ -17,7 +17,7 @@ import { PromoPopup } from "@/components/PromoPopup";
 import { ContactForms } from "@/components/ContactForms";
 import { PrivacyDialog } from "@/components/PrivacyDialog";
 import { Wordmark } from "@/components/Wordmark";
-import { CheckIcon, InstagramIcon, PhoneIcon, PinIcon, WhatsAppIcon } from "@/components/icons";
+import { CheckIcon, InstagramIcon, PhoneIcon, PinIcon, RemTrainIcon, WhatsAppIcon } from "@/components/icons";
 import {
   ADDRESS,
   INSTAGRAM_URL,
@@ -139,7 +139,11 @@ async function Body({ locale }: { locale: Locale }) {
                   {/* The last fact is "Yes to pets". */}
                   {i === facts.length - 1 && <PawTrail />}
                   <dt className="sr-only">{f.label}</dt>
-                  <dd className="relative font-display text-4xl text-gold">{f.value}</dd>
+                  <dd className="relative flex items-center gap-2 font-display text-4xl text-gold">
+                    {f.value}
+                    {/* The second fact is the walk to the REM station. */}
+                    {i === 1 && <RemTrainIcon className="size-8 opacity-80" />}
+                  </dd>
                   <dd className="relative text-sm text-brown/75">{f.label}</dd>
                 </div>
               ))}

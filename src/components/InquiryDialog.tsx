@@ -7,7 +7,7 @@ import type { DaySlots } from "@/lib/showingSlots";
 import { InquiryForm } from "./ContactForms";
 import { ShowingBooking } from "./ShowingBooking";
 import { CloseIcon } from "./icons";
-import { INQUIRY_EVENT } from "./inquiry";
+import { INQUIRY_EVENT, type InquiryOptions } from "./inquiry";
 
 // The building inquiry form in a pop-up. Opens from openInquiry() and from any link to #visit
 // (a data-suite-type attribute on the link pre-selects the suite type). When showings can be
@@ -19,15 +19,20 @@ export function InquiryDialog({ locale }: { locale: Locale }) {
   const [tab, setTab] = useState<"book" | "ask">("book");
 
   useEffect(() => {
-    const show = (type?: string) => {
+    const show = (type?: string, askOnly = false) => {
       setOpen((o) => ({ type, n: (o?.n ?? 0) + 1 }));
-      setSlots(null);
       setTab("book");
+      // No times to show = the plain inquiry form.
+      if (askOnly) return setSlots([]);
+      setSlots(null);
       getShowingSlots()
         .then(setSlots)
         .catch(() => setSlots([]));
     };
-    const onEvent = (e: Event) => show((e as CustomEvent<{ type?: string }>).detail?.type);
+    const onEvent = (e: Event) => {
+      const { type, askOnly } = (e as CustomEvent<InquiryOptions>).detail ?? {};
+      show(type, askOnly);
+    };
     const onClick = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
       const link = (e.target as Element | null)?.closest<HTMLAnchorElement>('a[href="#visit"]');
