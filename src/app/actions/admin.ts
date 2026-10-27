@@ -140,6 +140,8 @@ function cleanShowings(s: Partial<Showings> | undefined): Showings {
       // An emptied box goes back to the original wording.
       subject: { fr: orDefault(s?.email?.subject?.fr, 200, d.email.subject.fr), en: orDefault(s?.email?.subject?.en, 200, d.email.subject.en) },
       body: { fr: orDefault(s?.email?.body?.fr, 4000, d.email.body.fr), en: orDefault(s?.email?.body?.en, 4000, d.email.body.en) },
+      // Unlike the plain text, an emptied designed version stays empty (plain text only).
+      html: { fr: str(s?.email?.html?.fr ?? d.email.html.fr, 60000), en: str(s?.email?.html?.en ?? d.email.html.en, 60000) },
     },
   };
 }

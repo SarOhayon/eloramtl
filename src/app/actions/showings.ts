@@ -1,7 +1,7 @@
 "use server";
 
 import { ADDRESS, INBOX_EMAIL, PHONE_MAIN_DISPLAY } from "@/data/building";
-import { fillTemplate } from "@/data/content";
+import { fillHtmlTemplate, fillTemplate } from "@/data/content";
 import { getContent } from "@/lib/content";
 import { addLead, readLeads } from "@/lib/leads";
 import { sendMail } from "@/lib/mail";
@@ -75,6 +75,7 @@ export async function bookShowing(_prev: BookState, formData: FormData): Promise
       // Wording set in the admin (Showings → Confirmation email).
       subject: fillTemplate(showings.email.subject[lang], blanks),
       text: fillTemplate(showings.email.body[lang], blanks),
+      ...(showings.email.html[lang].trim() ? { html: fillHtmlTemplate(showings.email.html[lang], blanks) } : {}),
       attachments,
     }),
   ]);

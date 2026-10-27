@@ -5,6 +5,7 @@
 import { PRICE_FROM, type UnitType } from "./building";
 import { dictionaries } from "@/i18n/dictionaries";
 import { GALLERY, PHOTOS, type Photo } from "./photos";
+import { SHOWING_EMAIL_HTML } from "./showingEmail";
 
 export type SuiteStatus = "available" | "leased" | "soon";
 export type SuiteInfo = { status?: SuiteStatus; price?: number; availableOn?: string; plan?: string };
@@ -45,7 +46,8 @@ export type Showings = {
   minNoticeHours: number; // how soon a visitor can book
   daysAhead: number; // how far ahead
   // The confirmation email visitors get. {name}, {date}, {time}, {address} and {phone} are filled in.
-  email: { subject: Bilingual; body: Bilingual };
+  // `html` is the designed version (empty = plain text only); `body` is the plain-text version.
+  email: { subject: Bilingual; body: Bilingual; html: Bilingual };
 };
 
 export type SiteContent = {
@@ -115,6 +117,7 @@ export const DEFAULT_CONTENT: SiteContent = {
         fr: "Bonjour {name},\n\nVotre visite est confirmée pour le {date} à {time}, au {address}.\n\nL'invitation jointe l'ajoute à votre calendrier, avec un rappel 30 minutes avant.\nPour changer l'heure, répondez à ce courriel ou appelez-nous au {phone}.\n\nÀ bientôt!\nL'équipe Elora",
         en: "Hi {name},\n\nYour showing is confirmed for {date} at {time}, at {address}.\n\nThe attached invite adds it to your calendar, with a reminder 30 minutes before.\nTo change the time, reply to this email or call us at {phone}.\n\nSee you soon!\nThe Elora team",
       },
+      html: SHOWING_EMAIL_HTML,
     },
   },
   library: [],
@@ -235,6 +238,10 @@ export const todayInMontreal = () => new Intl.DateTimeFormat("en-CA", { timeZone
 
 // Fills {name}-style blanks in an email template; unknown ones are left as they are.
 export const fillTemplate = (text: string, values: Record<string, string>) => text.replace(/\{(\w+)\}/g, (all, key: string) => values[key] ?? all);
+// The same, for HTML: the filled-in values are escaped so a name can't change the email's design.
+const escapeHtml = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+export const fillHtmlTemplate = (html: string, values: Record<string, string>) =>
+  fillTemplate(html, Object.fromEntries(Object.entries(values).map(([k, v]) => [k, escapeHtml(v)])));
 
 // Whether something with an on/off switch and optional dates (the promotion, the banner) is showing.
 export type ScheduleState = "off" | "live" | "scheduled" | "ended";

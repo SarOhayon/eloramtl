@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { listLeads, updateLead } from "@/app/actions/leads";
 import { ADDRESS, PHONE_MAIN_DISPLAY } from "@/data/building";
-import { DEFAULT_CONTENT, fillTemplate, todayInMontreal, type ShowingHours, type Showings, type SiteContent, type Weekday } from "@/data/content";
+import { DEFAULT_CONTENT, fillHtmlTemplate, fillTemplate, todayInMontreal, type ShowingHours, type Showings, type SiteContent, type Weekday } from "@/data/content";
 import type { Lead } from "@/lib/leads";
 import { CalendarIcon, CloseIcon, PlusIcon } from "./AdminIcons";
 import { ScreenTitle, Step, Switch, field, softBtn, type Update } from "./ui";
@@ -151,8 +151,9 @@ const BLANKS = [
 // The confirmation email visitors get after booking, in French and English, with a preview.
 function EmailTemplate({ showings, set }: { showings: Showings; set: (patch: Partial<Showings>) => void }) {
   const [lang, setLang] = useState<"fr" | "en">("en");
+  const [version, setVersion] = useState<"html" | "body">("html");
   const email = showings.email;
-  const edit = (part: "subject" | "body", value: string) => set({ email: { ...email, [part]: { ...email[part], [lang]: value } } });
+  const edit = (part: "subject" | "body" | "html", value: string) => set({ email: { ...email, [part]: { ...email[part], [lang]: value } } });
   // A sample booking for the preview: next Thursday at 10:30.
   const sample = new Date(`${todayInMontreal()}T12:00:00Z`);
   sample.setUTCDate(sample.getUTCDate() + ((4 - sample.getUTCDay() + 7) % 7 || 7));
@@ -167,13 +168,22 @@ function EmailTemplate({ showings, set }: { showings: Showings; set: (patch: Par
 
   return (
     <Step n={4} title="Confirmation email" help="What visitors receive after booking (in the language they used on the website). The calendar invite with the 30-minute reminder is always attached.">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex overflow-hidden rounded-md ring-1 ring-brown/20">
-          {(["fr", "en"] as const).map((l) => (
-            <button key={l} onClick={() => setLang(l)} className={`px-4 py-2 text-sm ${lang === l ? "bg-action text-white" : "bg-white"}`}>
-              {l === "fr" ? "French" : "English"}
-            </button>
-          ))}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-3">
+          <div className="flex overflow-hidden rounded-md ring-1 ring-brown/20">
+            {(["fr", "en"] as const).map((l) => (
+              <button key={l} onClick={() => setLang(l)} className={`px-4 py-2 text-sm ${lang === l ? "bg-action text-white" : "bg-white"}`}>
+                {l === "fr" ? "French" : "English"}
+              </button>
+            ))}
+          </div>
+          <div className="flex overflow-hidden rounded-md ring-1 ring-brown/20">
+            {(["html", "body"] as const).map((v) => (
+              <button key={v} onClick={() => setVersion(v)} className={`px-4 py-2 text-sm ${version === v ? "bg-action text-white" : "bg-white"}`}>
+                {v === "html" ? "Designed email" : "Plain text"}
+              </button>
+            ))}
+          </div>
         </div>
         <button
           className={softBtn}
@@ -189,10 +199,19 @@ function EmailTemplate({ showings, set }: { showings: Showings; set: (patch: Par
             <span className="mb-1 block font-medium">Subject</span>
             <input className={field} value={email.subject[lang]} onChange={(e) => edit("subject", e.target.value)} />
           </label>
-          <label className="block">
-            <span className="mb-1 block font-medium">Message</span>
-            <textarea className={field} rows={12} value={email.body[lang]} onChange={(e) => edit("body", e.target.value)} />
-          </label>
+          {version === "html" ? (
+            <label className="block">
+              <span className="mb-1 block font-medium">Designed email (HTML)</span>
+              <span className="mb-2 block text-sm text-brown-soft">Paste your own email design here, or edit this one. Leave it empty to send only the plain text.</span>
+              <textarea className={`${field} font-mono text-xs`} rows={16} spellCheck={false} value={email.html[lang]} onChange={(e) => edit("html", e.target.value)} />
+            </label>
+          ) : (
+            <label className="block">
+              <span className="mb-1 block font-medium">Plain-text message</span>
+              <span className="mb-2 block text-sm text-brown-soft">Shown by email apps that don’t display designed emails{email.html[lang].trim() ? "" : " (and sent to everyone while the designed email is empty)"}.</span>
+              <textarea className={field} rows={12} value={email.body[lang]} onChange={(e) => edit("body", e.target.value)} />
+            </label>
+          )}
           <div className="rounded-md bg-cream-deep p-4 text-sm">
             <p className="font-medium text-brown">These words are filled in automatically:</p>
             <ul className="mt-2 space-y-1 text-brown-soft">
@@ -212,8 +231,13 @@ function EmailTemplate({ showings, set }: { showings: Showings; set: (patch: Par
               <p className="text-brown-soft">From: Elora MTL</p>
               <p className="mt-0.5 font-medium text-ink">{fillTemplate(email.subject[lang], blanks)}</p>
             </div>
-            <p className="whitespace-pre-line px-5 py-4 text-brown">{fillTemplate(email.body[lang], blanks)}</p>
-            <p className="mx-5 mb-4 inline-flex items-center gap-2 rounded-md bg-cream-deep px-3 py-2 text-sm text-brown">
+            {version === "html" && email.html[lang].trim() ? (
+              // Sandboxed: the preview can't run anything or reach the admin page.
+              <iframe title="Email preview" sandbox="" srcDoc={fillHtmlTemplate(email.html[lang], blanks)} className="block h-[560px] w-full border-0" />
+            ) : (
+              <p className="whitespace-pre-line px-5 py-4 text-brown">{fillTemplate(email.body[lang], blanks)}</p>
+            )}
+            <p className="mx-5 mb-4 mt-4 inline-flex items-center gap-2 rounded-md bg-cream-deep px-3 py-2 text-sm text-brown">
               <CalendarIcon className="size-4" /> elora-showing.ics
             </p>
           </div>
