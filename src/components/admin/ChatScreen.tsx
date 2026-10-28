@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { chatStatus, dismissChat, listChats } from "@/app/actions/chat";
+import { chatStatus, dismissChat, listChats, testChat } from "@/app/actions/chat";
 import type { FaqItem, SiteContent } from "@/data/content";
 import type { ChatEntry } from "@/lib/chatLog";
 import { ChatIcon, PlusIcon, TrashIcon } from "./AdminIcons";
@@ -48,6 +48,7 @@ export function ChatScreen({ content, update }: { content: SiteContent; update: 
               The AI key isn’t set yet, so the chat won’t appear on the website. Add <code>ANTHROPIC_API_KEY</code> in Amplify and redeploy.
             </p>
           )}
+          <ChatTest />
           <p className="mt-3 text-sm text-brown-soft">Each answer costs about 1–2 cents. The chat is limited to 600 messages a day for the whole site.</p>
         </Step>
 
@@ -143,5 +144,28 @@ export function ChatScreen({ content, update }: { content: SiteContent; update: 
         </Step>
       </div>
     </>
+  );
+}
+
+// Checks the AI key with one tiny request and says what's wrong, if anything.
+function ChatTest() {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const run = async () => {
+    setBusy(true);
+    setResult(await testChat().catch(() => ({ ok: false, message: "The test couldn't run. Refresh the page and try again." })));
+    setBusy(false);
+  };
+  return (
+    <div className="mt-4">
+      <button className={softBtn} onClick={run} disabled={busy}>
+        {busy ? "Testing…" : "Test the chat"}
+      </button>
+      {result && (
+        <p className={`mt-3 rounded-md px-4 py-3 ${result.ok ? "bg-[#e3eee4] text-[#2f5a38]" : "bg-[#f4e1df] text-red-900"}`} role="status">
+          {result.message}
+        </p>
+      )}
+    </div>
   );
 }

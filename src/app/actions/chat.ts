@@ -142,6 +142,34 @@ export async function chatStatus(): Promise<{ aiReady: boolean } | null> {
   return { aiReady: Boolean(process.env.ANTHROPIC_API_KEY) };
 }
 
+// Admin "Test the chat": one tiny request to Claude, with the reason in plain English if it fails.
+export async function testChat(): Promise<{ ok: boolean; message: string } | null> {
+  if (!(await isAdmin())) return null;
+  if (!process.env.ANTHROPIC_API_KEY) return { ok: false, message: "No AI key on the server. Add ANTHROPIC_API_KEY in Amplify (Hosting → Environment variables), then redeploy." };
+  try {
+    const client = new Anthropic();
+    await client.messages.create({ model: "claude-opus-5-5", max_tokens: 16, messages: [{ role: "user", content: "Reply with OK." }] });
+    return { ok: true, message: "The AI answered. The chat is working." };
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    const why =
+      err instanceof Anthropic.AuthenticationError
+        ? "The AI key is not valid. Copy it again from console.anthropic.com (API keys), paste it in Amplify without spaces, and redeploy."
+        : /credit balance|billing/i.test(raw)
+          ? "Your Anthropic account has no credit. Add credit at console.anthropic.com → Billing (it can take a few minutes to start working)."
+          : err instanceof Anthropic.PermissionDeniedError
+            ? "This key isn't allowed to use the AI model. Check the key's workspace and limits in console.anthropic.com."
+            : err instanceof Anthropic.NotFoundError
+              ? "The AI model isn't available to this account."
+              : err instanceof Anthropic.RateLimitError
+                ? "Too many requests right now, or a spending limit was reached. Check Limits in console.anthropic.com."
+                : err instanceof Anthropic.APIConnectionError
+                  ? "The server couldn't reach the AI service. Try again in a minute."
+                  : "The AI service returned an error.";
+    return { ok: false, message: `${why} (Details: ${raw.slice(0, 300)})` };
+  }
+}
+
 export async function listChats(): Promise<ChatEntry[] | null> {
   if (!(await isAdmin())) return null;
   return readChatLog();
