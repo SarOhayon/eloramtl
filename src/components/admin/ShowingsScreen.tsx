@@ -338,6 +338,7 @@ function WeekSchedule({ leads, showings, loading }: { leads: Lead[]; showings: S
                       <span className="block truncate text-brown" title={l.name}>{l.name}</span>
                       <a href={`tel:${l.phone}`} className="block truncate text-xs text-brown-soft underline">{l.phone}</a>
                       {l.type && <span className="block truncate text-xs text-brown-soft">{l.type}</span>}
+                      {l.units?.length ? <span className="block text-xs font-medium text-brown">Show: {l.units.join(", ")}</span> : null}
                       {l.attendance && <span className="block text-xs font-medium text-brown">{l.attendance === "came" ? "Came" : "No-show"}</span>}
                     </li>
                   ))}

@@ -40,7 +40,7 @@ export function InboxScreen({ content }: { content: SiteContent }) {
     listLeads().then((l) => (l ? setLeads(l) : setError(true)));
   }, []);
 
-  const change = async (id: string, patch: { status?: LeadStatus; note?: string; snooze?: boolean }) => {
+  const change = async (id: string, patch: { status?: LeadStatus; note?: string; snooze?: boolean; units?: string[] }) => {
     const { snooze, ...fields } = patch;
     const at = snooze || patch.status ? { statusAt: new Date().toISOString() } : {};
     setLeads((ls) => ls?.map((l) => (l.id === id ? { ...l, ...fields, ...at } : l)) ?? ls);
@@ -170,6 +170,7 @@ export function InboxScreen({ content }: { content: SiteContent }) {
                 ))}
               </div>
               <NoteField value={l.note ?? ""} onSave={(note) => change(l.id, { note })} />
+              <UnitsToShow lead={l} content={content} onSave={(units) => change(l.id, { units })} />
               <Suggestions lead={l} content={content} onLeads={setLeads} />
             </li>
           ))}
@@ -198,6 +199,74 @@ function NoteField({ value, onSave }: { value: string; onSave: (v: string) => vo
 }
 
 const TYPES = dictionaries.en.types;
+
+// Suites picked to show this person, from a drop-down (as many as needed). Only seen here in the admin.
+function UnitsToShow({ lead, content, onSave }: { lead: Lead; content: SiteContent; onSave: (units: string[]) => void }) {
+  const chosen = lead.units ?? [];
+  const label = (id: string) => {
+    const u = UNITS.find((x) => x.id === id);
+    if (!u) return `Suite ${id}`;
+    const info = content.suites[id] ?? {};
+    return `${id} · ${TYPES[u.type]} · ${formatPrice(info.price ?? content.prices[u.type], "en")}`;
+  };
+  const group = (status: string | undefined) => UNITS.filter((u) => (content.suites[u.id]?.status ?? "none") === (status ?? "none") && !chosen.includes(u.id));
+  const groups = [
+    { title: "Available", list: group("available") },
+    { title: "Coming soon", list: group("soon") },
+    { title: "Leased", list: group("leased") },
+    { title: "Not set", list: group(undefined) },
+  ].filter((g) => g.list.length);
+  // The AI's picks that aren't chosen yet, to add in one click.
+  const aiPicks = (lead.suggestion?.picks ?? []).map((p) => p.unit).filter((id) => !chosen.includes(id) && UNITS.some((u) => u.id === id));
+
+  return (
+    <div className="mt-4 rounded-md bg-white p-4 ring-1 ring-sand">
+      <p className="font-medium text-brown">Units to show them</p>
+      {chosen.length > 0 ? (
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {chosen.map((id) => (
+            <li key={id} className="inline-flex items-center gap-1.5 rounded-full bg-cream-deep py-1.5 pl-3.5 pr-1.5 text-sm text-brown ring-1 ring-sand">
+              {label(id)}
+              <button
+                onClick={() => onSave(chosen.filter((x) => x !== id))}
+                aria-label={`Remove suite ${id}`}
+                className="inline-flex size-6 items-center justify-center rounded-full text-brown-soft hover:bg-white hover:text-brown"
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-1 text-sm text-brown-soft">None picked yet. Only you see this list.</p>
+      )}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <select
+          className={`${field} max-w-sm`}
+          value=""
+          onChange={(e) => e.target.value && onSave([...chosen, e.target.value])}
+          aria-label="Add a unit to show"
+        >
+          <option value="">+ Add a unit…</option>
+          {groups.map((g) => (
+            <optgroup key={g.title} label={g.title}>
+              {g.list.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {label(u.id)}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        {aiPicks.length > 0 && (
+          <button className={softBtn} onClick={() => onSave([...chosen, ...aiPicks])}>
+            Add the AI’s picks ({aiPicks.join(", ")})
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 const ago = new Intl.DateTimeFormat("en-CA", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Montreal" });
 
 // The AI's pick of available suites for this person, with a button to ask (again).

@@ -1,5 +1,6 @@
 "use server";
 
+import { UNITS } from "@/data/building";
 import { isAdmin } from "@/lib/adminAuth";
 import { getContent } from "@/lib/content";
 import { runDueJobs } from "@/lib/jobs";
@@ -17,12 +18,17 @@ export async function listLeads(): Promise<Lead[] | null> {
 }
 
 // `snooze` restarts the 4-day follow-up reminder without changing the status.
-export async function updateLead(id: string, patch: { status?: LeadStatus; note?: string; snooze?: boolean }): Promise<Lead[] | null> {
+export async function updateLead(id: string, patch: { status?: LeadStatus; note?: string; snooze?: boolean; units?: string[] }): Promise<Lead[] | null> {
   if (!(await isAdmin())) return null;
-  const clean: { status?: LeadStatus; note?: string; statusAt?: string } = {};
+  const clean: { status?: LeadStatus; note?: string; statusAt?: string; units?: string[] } = {};
   if (patch.status && STATUSES.includes(patch.status)) clean.status = patch.status;
   if (typeof patch.note === "string") clean.note = patch.note.slice(0, 2000);
   if (patch.snooze) clean.statusAt = new Date().toISOString();
+  if (Array.isArray(patch.units)) {
+    const ids = new Set(UNITS.map((u) => u.id));
+    const units = [...new Set(patch.units.map(String))].filter((u) => ids.has(u)).slice(0, 30);
+    clean.units = units.length ? units : undefined;
+  }
   try {
     return await changeLead(String(id), clean);
   } catch (err) {

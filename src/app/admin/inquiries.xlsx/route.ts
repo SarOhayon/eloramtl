@@ -28,6 +28,7 @@ export async function GET() {
     { header: "Follow-up sent", key: "followUp", width: 18 },
     { header: "Comments", key: "comments", width: 50 },
     { header: "Our note", key: "note", width: 40 },
+    { header: "Units to show", key: "units", width: 22 },
     { header: "AI suggestion", key: "suggestion", width: 50 },
     { header: "Language", key: "lang", width: 10 },
   ];
@@ -46,6 +47,7 @@ export async function GET() {
       followUp: l.followUp?.sentAt ? local.format(new Date(l.followUp.sentAt)).replace(",", "") : "",
       comments: l.comments ?? "",
       note: l.note ?? "",
+      units: (l.units ?? []).join(", "),
       suggestion: l.suggestion ? l.suggestion.picks.map((p) => p.unit).join(", ") + (l.suggestion.summary ? ` (${l.suggestion.summary})` : "") : "",
       lang: l.lang === "fr" ? "French" : "English",
     });
@@ -56,7 +58,7 @@ export async function GET() {
   sheet.eachRow((row, i) => {
     if (i > 1) row.alignment = { vertical: "top", wrapText: true };
   });
-  sheet.autoFilter = { from: "A1", to: "O1" };
+  sheet.autoFilter = { from: "A1", to: "P1" };
 
   const body = Buffer.from(await book.xlsx.writeBuffer());
   const today = new Date().toISOString().slice(0, 10);
