@@ -209,15 +209,11 @@ function UnitsToShow({ lead, content, onSave }: { lead: Lead; content: SiteConte
     const info = content.suites[id] ?? {};
     return `${id} · ${TYPES[u.type]} · ${formatPrice(info.price ?? content.prices[u.type], "en")}`;
   };
-  const group = (status: string | undefined) => UNITS.filter((u) => (content.suites[u.id]?.status ?? "none") === (status ?? "none") && !chosen.includes(u.id));
-  const groups = [
-    { title: "Available", list: group("available") },
-    { title: "Coming soon", list: group("soon") },
-    { title: "Leased", list: group("leased") },
-    { title: "Not set", list: group(undefined) },
-  ].filter((g) => g.list.length);
-  // The AI's picks that aren't chosen yet, to add in one click.
-  const aiPicks = (lead.suggestion?.picks ?? []).map((p) => p.unit).filter((id) => !chosen.includes(id) && UNITS.some((u) => u.id === id));
+  // Only suites marked Available in Apartments can be picked.
+  const isAvailable = (id: string) => content.suites[id]?.status === "available";
+  const options = UNITS.filter((u) => isAvailable(u.id) && !chosen.includes(u.id));
+  // The AI's picks that are available and not chosen yet, to add in one click.
+  const aiPicks = (lead.suggestion?.picks ?? []).map((p) => p.unit).filter((id) => !chosen.includes(id) && isAvailable(id));
 
   return (
     <div className="mt-4 rounded-md bg-white p-4 ring-1 ring-sand">
@@ -227,6 +223,7 @@ function UnitsToShow({ lead, content, onSave }: { lead: Lead; content: SiteConte
           {chosen.map((id) => (
             <li key={id} className="inline-flex items-center gap-1.5 rounded-full bg-cream-deep py-1.5 pl-3.5 pr-1.5 text-sm text-brown ring-1 ring-sand">
               {label(id)}
+              {!isAvailable(id) && <span className="text-xs text-red-800">no longer available</span>}
               <button
                 onClick={() => onSave(chosen.filter((x) => x !== id))}
                 aria-label={`Remove suite ${id}`}
@@ -247,15 +244,11 @@ function UnitsToShow({ lead, content, onSave }: { lead: Lead; content: SiteConte
           onChange={(e) => e.target.value && onSave([...chosen, e.target.value])}
           aria-label="Add a unit to show"
         >
-          <option value="">+ Add a unit…</option>
-          {groups.map((g) => (
-            <optgroup key={g.title} label={g.title}>
-              {g.list.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {label(u.id)}
-                </option>
-              ))}
-            </optgroup>
+          <option value="">{options.length ? "+ Add an available unit…" : "No other available units"}</option>
+          {options.map((u) => (
+            <option key={u.id} value={u.id}>
+              {label(u.id)}
+            </option>
           ))}
         </select>
         {aiPicks.length > 0 && (
