@@ -1,26 +1,43 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { Explorer } from "@/components/Explorer";
 import { Gallery } from "@/components/Gallery";
 import { Header } from "@/components/Header";
+import { HeroSlider } from "@/components/HeroSlider";
+import { BackToTop } from "@/components/BackToTop";
+import { InquiryDialog } from "@/components/InquiryDialog";
+import { ChatWidget } from "@/components/ChatWidget";
+import { Tracker } from "@/components/Tracker";
 import { NeighbourhoodMap } from "@/components/NeighbourhoodMap";
+import { OfficeHoursCard } from "@/components/OfficeHoursCard";
+import { OfferBand } from "@/components/OfferBand";
+import { PawTrail } from "@/components/PawTrail";
+import { PromoPopup } from "@/components/PromoPopup";
+import { ContactForms } from "@/components/ContactForms";
+import { PrivacyDialog } from "@/components/PrivacyDialog";
 import { Wordmark } from "@/components/Wordmark";
-import { CheckIcon, PhoneIcon, PinIcon, WhatsAppIcon } from "@/components/icons";
+import { CheckIcon, InstagramIcon, PhoneIcon, PinIcon, RemTrainIcon, WhatsAppIcon } from "@/components/icons";
 import {
   ADDRESS,
+  INSTAGRAM_URL,
   PHONE_MAIN,
   PHONE_MAIN_DISPLAY,
-  PHONE_WHATSAPP_DISPLAY,
+  formatPrice,
   whatsappLink,
 } from "@/data/building";
-import { PHOTOS, type Photo } from "@/data/photos";
+import { applyText, isUploaded, scheduleState } from "@/data/content";
+import type { Photo } from "@/data/photos";
 import { getDictionary, hasLocale, type Locale } from "@/i18n/dictionaries";
+import { getContent } from "@/lib/content";
+import { getOfficeHours } from "@/lib/officeHours";
 
 function SectionHeading({ eyebrow, title, lead, light = false }: { eyebrow: string; title: string; lead?: string; light?: boolean }) {
   return (
     <div className="mb-10 max-w-2xl lg:mb-14">
-      <p className={`text-xs font-medium uppercase tracking-[0.25em] ${light ? "text-green-soft" : "text-green"}`}>{eyebrow}</p>
-      <h2 className={`mt-3 font-display text-4xl leading-[1.05] sm:text-5xl ${light ? "text-cream" : "text-brown"}`}>{title}</h2>
+      <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.3em] text-gold"><span className="h-px w-8 bg-gold" />{eyebrow}</p>
+      <h2 className={`mt-3 font-display text-4xl leading-[1.1] sm:text-5xl ${light ? "text-cream" : "text-ink"}`}>{title}</h2>
       {lead && <p className={`mt-4 text-lg ${light ? "text-cream/80" : "text-brown/80"}`}>{lead}</p>}
     </div>
   );
@@ -28,15 +45,16 @@ function SectionHeading({ eyebrow, title, lead, light = false }: { eyebrow: stri
 
 function PhotoCard({ photo, locale, title, text, className = "" }: { photo: Photo; locale: Locale; title: string; text: string; className?: string }) {
   return (
-    <figure className={`group relative overflow-hidden rounded-3xl bg-brown-deep ${className}`}>
+    <figure className={`group relative overflow-hidden rounded-lg bg-brown-deep ${className}`}>
       <Image
         src={photo.src}
         alt={photo.alt[locale]}
         fill
+        unoptimized={isUploaded(photo.src)}
         sizes="(min-width: 1024px) 40vw, 100vw"
         className="object-cover transition duration-700 group-hover:scale-[1.04]"
       />
-      <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brown-deep/85 via-brown-deep/40 to-transparent p-6 pt-16 text-cream">
+      <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent p-6 pt-16 text-cream">
         <p className="font-display text-2xl">{title}</p>
         <p className="mt-1 max-w-md text-sm text-cream/85">{text}</p>
       </figcaption>
@@ -46,7 +64,7 @@ function PhotoCard({ photo, locale, title, text, className = "" }: { photo: Phot
 
 function IconCard({ title, text, icon }: { title: string; text: string; icon: string }) {
   return (
-    <div className="flex flex-col justify-between rounded-3xl bg-cream-deep p-6 ring-1 ring-brown/10">
+    <div className="flex flex-col justify-between rounded-lg bg-cream-deep p-6 ring-1 ring-brown/10">
       <span className="text-3xl" aria-hidden="true">{icon}</span>
       <div className="mt-8">
         <p className="font-display text-2xl text-brown">{title}</p>
@@ -59,55 +77,88 @@ function IconCard({ title, text, icon }: { title: string; text: string; icon: st
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
-  const locale = lang;
-  const t = getDictionary(locale);
+  return (
+    <>
+      <Header locale={lang} />
+      {/* Content comes from the admin, read on each visit. */}
+      <Suspense fallback={<div className="min-h-svh bg-cream" />}>
+        <Body locale={lang} />
+      </Suspense>
+    </>
+  );
+}
+
+async function Body({ locale }: { locale: Locale }) {
+  const [content, hours] = await Promise.all([getContent(), getOfficeHours()]);
+  const t = applyText(getDictionary(locale), content.text, locale);
   const a = t.amenities.items;
+  const amen = content.photos.amenities;
+  // The first fact is the studio's starting price, kept in sync with the admin prices.
+  const facts = t.hero.facts.map((f, i) => (i === 0 ? { ...f, value: formatPrice(content.prices.studio, locale) } : f));
+
+  // The promotion, if it's on and within its dates.
+  const promo = content.promo;
+  const promoLive = scheduleState(promo) === "live";
+  // Special-day banners showing today (on, within their dates, with a message).
+  const noticeTexts = content.notices.filter((n) => scheduleState(n) === "live" && n.text[locale].trim()).map((n) => n.text[locale].trim());
+  const dateFmt = new Intl.DateTimeFormat(locale === "fr" ? "fr-CA" : "en-CA", { dateStyle: "long", timeZone: "UTC" });
+  const promoText = {
+    kicker: promo.kicker[locale],
+    big: promo.big[locale],
+    sub: promo.sub[locale],
+    fine: promo.fine[locale],
+    cta: promo.cta[locale],
+    dates: promo.end ? t.promo.until(dateFmt.format(new Date(promo.end))) : undefined,
+    applies:
+      promo.types.length || promo.suites.length
+        ? t.promo.applies([...promo.types.map((k) => t.types[k]), ...promo.suites.map((id) => `${t.explorer.unit} ${id}`)].join(" · "))
+        : undefined,
+  };
+  // Changes whenever the promotion changes, so visitors see a new one again.
+  const promoId = [...JSON.stringify(promo)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7).toString(36);
 
   return (
     <>
-      <Header locale={locale} />
-
       <main>
-        {/* Hero */}
-        <section className="relative flex min-h-[100svh] items-end overflow-hidden bg-brown-deep text-cream">
-          <Image src={PHOTOS.facade.src} alt={PHOTOS.facade.alt[locale]} fill priority sizes="100vw" className="object-cover object-[50%_40%]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-brown-deep/60 via-brown-deep/30 to-brown-deep/95" />
-          <div className="absolute inset-0 bg-gradient-to-r from-brown-deep/80 via-brown-deep/35 to-transparent" />
-          <div className="relative mx-auto w-full max-w-7xl px-4 pb-10 pt-32 sm:px-6 lg:px-8 lg:pb-16">
-            <p className="text-xs font-medium uppercase tracking-[0.3em] text-green-soft">{t.hero.eyebrow}</p>
-            <h1 className="mt-4 max-w-4xl font-display text-5xl leading-[1.02] sm:text-6xl lg:text-7xl">{t.hero.title}</h1>
-            <p className="mt-6 max-w-2xl text-lg text-cream/85 sm:text-xl">{t.hero.lead}</p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <a href="#suites" className="inline-flex items-center justify-center rounded-full bg-cream px-7 py-3.5 font-medium text-brown transition hover:bg-white">
-                {t.hero.primary}
-              </a>
-              <a
-                href={whatsappLink(t.contact.whatsappText)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 font-medium text-cream ring-1 ring-cream/50 transition hover:bg-cream/10"
-              >
-                <WhatsAppIcon className="size-5" />
-                {t.hero.secondary}
-              </a>
-            </div>
-            <dl className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-cream/15 sm:grid-cols-4">
-              {t.hero.facts.map((f) => (
-                <div key={f.label} className="bg-brown-deep/50 px-5 py-4 backdrop-blur-sm">
+        {/* Hero: full-screen photo slider */}
+        <div className="pt-16 lg:pt-20">
+          {noticeTexts.map((text) => (
+            <p key={text} role="status" className="border-b border-cream/10 bg-brown px-4 py-2.5 text-center text-sm tracking-wide text-cream last:border-0">
+              <span className="mr-2 text-gold-light" aria-hidden="true">
+                ✦
+              </span>
+              {text}
+            </p>
+          ))}
+          <HeroSlider locale={locale} slides={content.photos.hero} text={{ eyebrow: t.hero.eyebrow, title: t.hero.title, lead: t.hero.lead, primary: t.hero.primary, secondary: t.hero.secondary }} />
+        </div>
+        <section className="bg-cream py-8 lg:py-10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-brown/10 ring-1 ring-brown/10 sm:grid-cols-4">
+              {facts.map((f, i) => (
+                <div key={f.label} className="relative overflow-hidden bg-cream px-5 py-4">
+                  {/* The last fact is "Yes to pets". */}
+                  {i === facts.length - 1 && <PawTrail />}
                   <dt className="sr-only">{f.label}</dt>
-                  <dd className="font-display text-3xl">{f.value}</dd>
-                  <dd className="text-sm text-cream/75">{f.label}</dd>
+                  <dd className="relative flex items-center gap-2 font-display text-4xl text-gold">
+                    {f.value}
+                    {/* The second fact is the walk to the REM station. */}
+                    {i === 1 && <RemTrainIcon className="size-8 opacity-80" />}
+                  </dd>
+                  <dd className="relative text-sm text-brown/75">{f.label}</dd>
                 </div>
               ))}
             </dl>
           </div>
         </section>
 
+        {promoLive && promo.showBand && <OfferBand locale={locale} o={{ ...t.offerBand, ...promoText }} />}
+
         {/* Suites explorer */}
         <section id="suites" className="bg-cream-deep py-20 lg:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading eyebrow={t.explorer.eyebrow} title={t.explorer.title} lead={t.explorer.lead} />
-            <Explorer locale={locale} />
+            <Explorer locale={locale} prices={content.prices} suites={content.suites} floorPlans={content.floorPlans} sun={content.sun} promo={promoLive ? { types: promo.types, suites: promo.suites } : undefined} />
           </div>
         </section>
 
@@ -117,11 +168,11 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
             <SectionHeading eyebrow={t.amenities.eyebrow} title={t.amenities.title} />
             <h3 className="mb-4 text-sm font-medium uppercase tracking-[0.2em] text-brown-soft">{t.amenities.building}</h3>
             <div className="grid auto-rows-[260px] gap-4 sm:grid-cols-2 lg:auto-rows-[300px] lg:grid-cols-4">
-              <PhotoCard photo={PHOTOS.rooftop} locale={locale} title={a.rooftop.title} text={a.rooftop.text} className="sm:col-span-2 lg:row-span-2" />
-              <PhotoCard photo={PHOTOS.gym} locale={locale} title={a.gym.title} text={a.gym.text} className="lg:col-span-2" />
-              <PhotoCard photo={PHOTOS.terrace} locale={locale} title={a.terrace.title} text={a.terrace.text} />
-              <PhotoCard photo={PHOTOS.workBooth} locale={locale} title={a.lounge.title} text={a.lounge.text} />
-              <PhotoCard photo={PHOTOS.ev} locale={locale} title={a.parking.title} text={a.parking.text} className="lg:col-span-2" />
+              <PhotoCard photo={amen.rooftop} locale={locale} title={a.rooftop.title} text={a.rooftop.text} className="sm:col-span-2 lg:row-span-2" />
+              <PhotoCard photo={amen.gym} locale={locale} title={a.gym.title} text={a.gym.text} className="lg:col-span-2" />
+              <PhotoCard photo={amen.terrace} locale={locale} title={a.terrace.title} text={a.terrace.text} />
+              <PhotoCard photo={amen.lounge} locale={locale} title={a.lounge.title} text={a.lounge.text} />
+              <PhotoCard photo={amen.parking} locale={locale} title={a.parking.title} text={a.parking.text} className="lg:col-span-2" />
               <IconCard icon="📦" title={a.storage.title} text={a.storage.text} />
               <IconCard icon="🐾" title={a.pets.title} text={a.pets.text} />
             </div>
@@ -130,15 +181,15 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
             </p>
 
             <div className="mt-16 grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
-                <Image src={PHOTOS.living.src} alt={PHOTOS.living.alt[locale]} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+              <div className="relative aspect-[4/3] overflow-hidden rounded-lg">
+                <Image src={amen.living.src} alt={amen.living.alt[locale]} fill unoptimized={isUploaded(amen.living.src)} sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
               </div>
               <div>
                 <h3 className="text-sm font-medium uppercase tracking-[0.2em] text-brown-soft">{t.amenities.suites}</h3>
                 <ul className="mt-6 divide-y divide-brown/10 border-y border-brown/10">
                   {t.amenities.suiteItems.map((item) => (
                     <li key={item} className="flex items-center gap-4 py-4 text-lg text-brown">
-                      <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-green-soft/40 text-green-deep">
+                      <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-action-light/40 text-action-deep">
                         <CheckIcon className="size-4" />
                       </span>
                       {item}
@@ -150,83 +201,140 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           </div>
         </section>
 
+        {/* About */}
+        <section id="about" className="bg-cream-deep py-20 lg:py-28">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:gap-16 lg:px-8">
+            <div className="relative">
+              <div className="absolute -bottom-4 -right-4 hidden h-full w-full rounded-sm ring-1 ring-gold/50 lg:block" aria-hidden />
+              <Image
+                src={content.photos.about.src}
+                unoptimized={isUploaded(content.photos.about.src)}
+                alt={content.photos.about.alt[locale]}
+                width={1200}
+                height={1500}
+                sizes="(min-width: 1024px) 45vw, 100vw"
+                className="relative aspect-[4/5] w-full rounded-sm object-cover shadow-xl shadow-brown/15"
+              />
+            </div>
+            <div>
+              <SectionHeading eyebrow={t.about.eyebrow} title={t.about.title} />
+              <div className="-mt-4 space-y-5 text-lg text-brown/85">
+                {t.about.text.map((para) => (
+                  <p key={para}>{para}</p>
+                ))}
+              </div>
+              <a href="#visit" className="mt-10 inline-flex items-center justify-center rounded-sm bg-action px-7 py-3.5 font-medium text-white transition hover:bg-action-deep">
+                {t.hero.secondary}
+              </a>
+            </div>
+          </div>
+        </section>
+
         {/* Gallery */}
         <section id="gallery" className="bg-cream-deep py-20 lg:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading eyebrow={t.gallery.eyebrow} title={t.gallery.title} />
-            <Gallery locale={locale} />
+            <Gallery locale={locale} photos={content.photos.gallery} />
           </div>
         </section>
 
         {/* Neighbourhood */}
         <section id="neighbourhood" className="py-20 lg:py-28">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.5fr] lg:gap-14 lg:px-8">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.4fr] lg:items-center lg:gap-14 lg:px-8">
             <div>
-              <SectionHeading eyebrow={t.neighbourhood.eyebrow} title={t.neighbourhood.title} />
-              <div className="-mt-4 space-y-4 text-lg text-brown/85">
-                {t.neighbourhood.text.map((p) => (
-                  <p key={p}>{p}</p>
+              <SectionHeading eyebrow={t.neighbourhood.eyebrow} title={t.neighbourhood.title} lead={t.neighbourhood.intro} />
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-6 border-t border-gold/40 pt-8">
+                {t.commute.items.map((c) => (
+                  <div key={c.label}>
+                    <dt className="sr-only">{c.label}</dt>
+                    <dd className="font-display text-4xl text-gold">{c.value}</dd>
+                    <dd className="mt-1 text-sm text-brown/75">{c.label}</dd>
+                  </div>
                 ))}
-              </div>
-              <div className="relative mt-8 aspect-[3/2] overflow-hidden rounded-3xl">
-                <Image src={PHOTOS.aerial.src} alt={PHOTOS.aerial.alt[locale]} fill sizes="(min-width: 1024px) 35vw, 100vw" className="object-cover" />
-              </div>
+              </dl>
             </div>
             <NeighbourhoodMap locale={locale} />
           </div>
         </section>
 
         {/* Contact */}
-        <section id="contact" className="relative overflow-hidden bg-green-deep py-20 text-cream lg:py-28">
+        <section id="contact" className="bg-cream-deep py-20 text-brown lg:py-28">
           <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
             <div>
-              <SectionHeading eyebrow={t.contact.eyebrow} title={t.contact.title} lead={t.contact.lead} light />
-              <p className="flex items-center gap-2 text-cream/80">
+              <SectionHeading eyebrow={t.contact.eyebrow} title={t.contact.title} lead={t.contact.lead} />
+              <p className="flex items-center gap-2 text-brown/80">
                 <PinIcon className="size-5" /> {ADDRESS}
               </p>
-              <p className="mt-2 text-cream/60">{t.contact.visit}</p>
-            </div>
-            <div className="flex flex-col gap-4 lg:justify-center">
-              <a
-                href={whatsappLink(t.contact.whatsappText)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-5 rounded-3xl bg-cream p-6 text-brown transition hover:bg-white"
-              >
-                <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-whatsapp text-white">
-                  <WhatsAppIcon className="size-7" />
-                </span>
-                <span>
-                  <span className="block text-sm uppercase tracking-[0.2em] text-green">{t.contact.whatsapp}</span>
-                  <span className="block font-display text-3xl">{PHONE_WHATSAPP_DISPLAY}</span>
-                </span>
-              </a>
-              <a
-                href={`tel:+${PHONE_MAIN}`}
-                className="flex items-center gap-5 rounded-3xl p-6 ring-1 ring-cream/30 transition hover:bg-cream/5"
-              >
-                <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-cream/10">
-                  <PhoneIcon className="size-6" />
-                </span>
-                <span>
-                  <span className="block text-sm uppercase tracking-[0.2em] text-green-soft">{t.contact.call}</span>
+              <div className="mt-6">
+                <OfficeHoursCard hours={hours} locale={locale} />
+              </div>
+              {/* One number for WhatsApp and calls. */}
+              <div className="mt-8 flex flex-col gap-5 rounded-lg bg-cream p-6 text-brown ring-1 ring-brown/10 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <span className="block text-sm uppercase tracking-[0.2em] text-action">{t.contact.phone}</span>
                   <span className="block font-display text-3xl">{PHONE_MAIN_DISPLAY}</span>
-                </span>
-              </a>
+                </div>
+                <div className="flex gap-2">
+                  <a
+                    href={whatsappLink(t.contact.whatsappText)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-sm bg-whatsapp px-5 py-3 text-sm font-medium text-white transition hover:brightness-95"
+                  >
+                    <WhatsAppIcon className="size-4" />
+                    {t.contact.whatsapp}
+                  </a>
+                  <a
+                    href={`tel:+${PHONE_MAIN}`}
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-sm px-5 py-3 text-sm font-medium text-brown ring-1 ring-brown/25 transition hover:bg-cream-deep"
+                  >
+                    <PhoneIcon className="size-4" />
+                    {t.contact.call}
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div className="lg:pt-6">
+              <ContactForms locale={locale} />
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="bg-brown-deep py-10 text-cream/70">
+      <footer className="border-t border-sand bg-cream-deep py-10 text-brown-soft">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-4 text-sm sm:flex-row sm:items-center sm:px-6 lg:px-8">
-          <Wordmark className="h-5 w-auto text-cream" />
-          <p>{ADDRESS}</p>
-          <p>
-            © 2026 Elora MTL. {t.footer.rights}
-          </p>
+          <Wordmark className="h-9 w-auto text-brown" />
+          <div className="flex flex-col gap-2">
+            <p>{ADDRESS}</p>
+            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-brown transition hover:text-gold">
+              <InstagramIcon className="size-4" />
+              @eloramtl
+            </a>
+          </div>
+          <div className="flex flex-col gap-2 sm:items-end">
+            <PrivacyDialog locale={locale} />
+            <p>
+              © 2026 Elora MTL. {t.footer.rights}{" "}
+              {/* Discreet entrance to the admin. */}
+              <Link href="/admin" prefetch={false} rel="nofollow" className="text-brown-soft/40 transition hover:text-brown-soft">
+                ·
+              </Link>
+            </p>
+          </div>
         </div>
       </footer>
+
+      {promoLive && (
+        <PromoPopup id={promoId} text={promoText} tab={promo.tab[locale]} photo={promo.photo} showTab={promo.showTab} closeLabel={t.promo.close} />
+      )}
+
+      <BackToTop label={t.backToTop} />
+      <InquiryDialog locale={locale} />
+      <Tracker />
+      {/* The chat assistant, when it's turned on in the admin and the AI key is set. */}
+      {content.faq.enabled && process.env.ANTHROPIC_API_KEY && (
+        <ChatWidget locale={locale} suggestions={content.faq.items.slice(0, 3).map((f) => f.q[locale]).filter(Boolean)} />
+      )}
 
       {/* Floating WhatsApp on small screens */}
       <a

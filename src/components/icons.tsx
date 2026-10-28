@@ -34,10 +34,51 @@ export function ChevronIcon({ className, dir = "right" }: P & { dir?: "left" | "
   );
 }
 
+export function CloseIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  );
+}
+
+export function SunIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" />
+    </svg>
+  );
+}
+
 export function CheckIcon({ className }: P) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
       <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </svg>
+  );
+}
+
+export function InstagramIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+// Front of a REM train: rounded nose, wide panoramic windshield, headlights, on rails.
+export function RemTrainIcon({ className }: P) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 18.5V8.5C6 5.5 8.5 3 12 3s6 2.5 6 5.5v10a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1Z" />
+      <path d="M7.6 11.2 8.2 7.4c.2-1.2 1.8-2.2 3.8-2.2s3.6 1 3.8 2.2l.6 3.8c.1.5-.3.9-.8.9H8.4c-.5 0-.9-.4-.8-.9Z" />
+      <path d="M9.5 15.5h5" />
+      <circle cx="8.6" cy="15.5" r=".7" fill="currentColor" stroke="none" />
+      <circle cx="15.4" cy="15.5" r=".7" fill="currentColor" stroke="none" />
+      <path d="M8.5 19.5 7 22M15.5 19.5 17 22M5.5 22h13" />
     </svg>
   );
 }
