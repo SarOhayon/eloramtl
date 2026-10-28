@@ -32,7 +32,7 @@ export async function submitContact(_prev: ContactState, formData: FormData): Pr
     }),
   ]);
   if (!saved && !sent) return { status: "error", values: v };
-  await Promise.all([countEvent("inquiry"), autoReply(v.name, v.email, lang)]);
+  await Promise.all([countEvent("inquiry"), autoReply(saved || { name: v.name, email: v.email, lang })]);
   return { status: "sent" };
 }
 

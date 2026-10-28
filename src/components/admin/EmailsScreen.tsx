@@ -20,7 +20,7 @@ export function EmailsScreen({ content, update }: { content: SiteContent; update
         help="The emails the website sends by itself. Each one goes out in the language the person used on the website. Turn them on or off, change the wording, or paste your own design."
       />
       <div className="space-y-6">
-        <Step n={1} title="Reply to inquiries and applications" help="Sent right away to everyone who sends the inquiry form or “Apply now”.">
+        <Step n={1} title="Reply to inquiries and applications" help="Sent right away to everyone who sends the inquiry form or “Apply now”. It carries their personal “Book my showing” button: this is the only way to book a showing, so keep {booking} in it.">
           <Switch on={e.autoReply.enabled} onChange={(v) => setEmails({ autoReply: { ...e.autoReply, enabled: v } })} label={e.autoReply.enabled ? "On" : "Off"} />
           {e.autoReply.enabled && (
             <div className="mt-5">
@@ -28,7 +28,7 @@ export function EmailsScreen({ content, update }: { content: SiteContent; update
                 template={e.autoReply}
                 original={D.emails.autoReply}
                 onChange={(t) => setEmails({ autoReply: { ...e.autoReply, ...t } })}
-                blanks={["{name}", "{promotion}", "{phone}", "{address}", "{website}"]}
+                blanks={["{name}", "{booking}", "{promotion}", "{phone}", "{address}", "{website}"]}
               />
             </div>
           )}

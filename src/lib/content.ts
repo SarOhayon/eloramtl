@@ -11,6 +11,13 @@ const MEMO_MS = 3000;
 
 // Puts the logo image into designed emails saved before it existed.
 const logoUp = <T extends EmailTemplate>(t: T): T => ({ ...t, html: { fr: withLogo(t.html.fr), en: withLogo(t.html.en) } });
+// Booking used to open from a link to the website; it now goes through each person's own link.
+const toBookingLink = (v: string) => v.replaceAll("{website}#visit", "{booking}");
+const bookingUp = <T extends EmailTemplate>(t: T): T => ({
+  ...t,
+  body: { fr: toBookingLink(t.body.fr), en: toBookingLink(t.body.en) },
+  html: { fr: toBookingLink(t.html.fr), en: toBookingLink(t.html.en) },
+});
 
 type Saved = Partial<SiteContent> & { offer?: { enabled?: boolean }; notice?: Omit<SiteContent["notices"][number], "id"> };
 
@@ -33,11 +40,12 @@ function merge(saved: Saved): SiteContent {
     notices: saved.notices ?? (saved.notice ? [{ ...saved.notice, id: "banner-1" }] : d.notices),
     showings: { ...d.showings, ...saved.showings, email: logoUp({ ...d.showings.email, ...saved.showings?.email }) },
     emails: {
-      autoReply: logoUp({ ...d.emails.autoReply, ...saved.emails?.autoReply }),
+      autoReply: bookingUp(logoUp({ ...d.emails.autoReply, ...saved.emails?.autoReply })),
       followUp: logoUp({ ...d.emails.followUp, ...saved.emails?.followUp }),
       weekly: { ...d.emails.weekly, ...saved.emails?.weekly },
     },
     faq: { ...d.faq, ...saved.faq },
+    sun: { ...d.sun, ...saved.sun },
     library: saved.library ?? d.library,
   };
 }

@@ -44,8 +44,8 @@ export const DEFAULT_FAQ: FaqItem[] = [
   ),
   qa(
     "visit",
-    ["Can I visit?", "Of course! You can book a private showing online in a few clicks, at a time that suits you."],
-    ["Puis-je visiter?", "Bien sûr! Vous pouvez réserver une visite privée en ligne en quelques clics, au moment qui vous convient."],
+    ["Can I visit?", "Of course! Send us the inquiry form: you'll get an email right away with a button to book your private showing at a time that suits you."],
+    ["Puis-je visiter?", "Bien sûr! Envoyez-nous le formulaire de demande : vous recevrez aussitôt un courriel avec un bouton pour réserver votre visite privée au moment qui vous convient."],
   ),
   qa(
     "apply",

@@ -37,11 +37,11 @@ export function ShowingsScreen({ content, update }: { content: SiteContent; upda
       <ScreenTitle
         icon={<CalendarIcon className="size-5" />}
         title="Showings"
-        help="Let visitors book a showing time on the website. They pick a day and time from your hours, get a confirmation email with a calendar reminder 30 minutes before, and the booking appears here and in Inquiries. The emails are in Automatic emails."
+        help="Showings can only be booked from the “Book my showing” button in the automatic reply people get after they send an inquiry or apply. Each button is a private link for that person: they pick a day and time from your hours, get a confirmation email with a calendar reminder 30 minutes before, and the booking appears here and in Inquiries."
       />
       <div className="space-y-6">
-        <Step n={1} title="Turn online booking on or off" help="When it's off, the “Book a showing” buttons open the regular inquiry form.">
-          <Switch on={s.enabled} onChange={(v) => set({ enabled: v })} label={s.enabled ? "Visitors can book online" : "Online booking is OFF"} />
+        <Step n={1} title="Turn online booking on or off" help="When it's off, the automatic reply has no booking button, and links already sent say to call or reply instead.">
+          <Switch on={s.enabled} onChange={(v) => set({ enabled: v })} label={s.enabled ? "Booking button in the automatic reply" : "Online booking is OFF"} />
         </Step>
 
         <Step n={2} title="Your showing hours" help="Tick the days you do showings and set the hours. Each showing takes one time slot.">

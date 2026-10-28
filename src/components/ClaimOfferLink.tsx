@@ -14,7 +14,7 @@ export function ClaimOfferLink({ className, children }: { className?: string; ch
         e.preventDefault();
         track("claim");
         burstLogos();
-        openInquiry({ askOnly: true });
+        openInquiry();
       }}
     >
       {children}

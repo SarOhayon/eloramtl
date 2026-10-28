@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { UNITS, UNIT_TYPES } from "@/data/building";
-import { DEFAULT_CONTENT, EDITABLE_PATHS, type AmenitySlot, type AutoEmails, type Bilingual, type EmailTemplate, type Faq, type Notice, type Promo, type Showings, type SiteContent, type SuiteStatus, type Weekday } from "@/data/content";
+import { DEFAULT_CONTENT, EDITABLE_PATHS, type AmenitySlot, type AutoEmails, type Bilingual, type EmailTemplate, type Faq, type Notice, type Promo, type Showings, type SiteContent, type SuiteStatus, type SunSettings, type Weekday } from "@/data/content";
 import type { Photo, PhotoCategory } from "@/data/photos";
 import { checkPassword, endSession, isAdmin, startSession } from "@/lib/adminAuth";
 import { getContent, saveContent } from "@/lib/content";
@@ -90,6 +90,7 @@ function clean(input: SiteContent): SiteContent {
     showings: cleanShowings(input.showings),
     emails: cleanEmails(input.emails),
     faq: cleanFaq(input.faq),
+    sun: cleanSun(input.sun),
     library,
   };
 }
@@ -162,6 +163,12 @@ function cleanFaq(f: Partial<Faq> | undefined): Faq {
     }))
     .slice(0, 80);
   return { enabled: f?.enabled === true, items };
+}
+
+function cleanSun(s: Partial<SunSettings> | undefined): SunSettings {
+  const views: SunSettings["views"] = {};
+  for (const [key, src] of Object.entries(s?.views ?? {})) if (/^(top|right|bottom|left):[1-7]$/.test(key) && validSrc(src)) views[key] = src;
+  return { enabled: s?.enabled !== false, topFacing: between(s?.topFacing, 0, 359, DEFAULT_CONTENT.sun.topFacing), views };
 }
 
 function cleanEmails(e: Partial<AutoEmails> | undefined): AutoEmails {

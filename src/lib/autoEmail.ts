@@ -34,10 +34,16 @@ export function sendTemplate(t: EmailTemplate, lang: Lang, to: string, blanks: R
   });
 }
 
-// The automatic reply to inquiries and Apply now (Automatic emails → Inquiry auto-reply).
-export async function autoReply(name: string, email: string, lang: Lang) {
+// The page where someone books a showing: the only way to book, through the link in their auto-reply.
+export const bookingLink = (lead: Pick<Lead, "bookToken" | "lang">) => (lead.bookToken ? `${siteUrl(lead.lang)}/book/${lead.bookToken}` : "");
+
+// The automatic reply to inquiries and Apply now (Automatic emails → Inquiry auto-reply), with their
+// booking link while online booking is on.
+export async function autoReply(lead: Pick<Lead, "name" | "email" | "lang" | "bookToken">) {
   const content = await getContent();
-  if (content.emails.autoReply.enabled) await sendTemplate(content.emails.autoReply, lang, email, emailBlanks(content, lang, { name }));
+  if (!content.emails.autoReply.enabled) return;
+  const booking = content.showings.enabled ? bookingLink(lead) : "";
+  await sendTemplate(content.emails.autoReply, lead.lang, lead.email, { ...emailBlanks(content, lead.lang, { name: lead.name }), booking });
 }
 
 // The logo travels inside the email (not as a link), so it shows even before the site's domain is live.

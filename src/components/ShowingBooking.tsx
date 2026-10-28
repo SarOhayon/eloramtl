@@ -1,11 +1,9 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { bookShowing, type BookState } from "@/app/actions/showings";
-import { UNIT_TYPES } from "@/data/building";
+import { bookByLink, type BookState } from "@/app/actions/showings";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 import type { DaySlots } from "@/lib/showingSlots";
-import { Field, field } from "./ContactForms";
 import { ChevronIcon } from "./icons";
 
 const asDate = (d: string, hhmm = "00:00") => new Date(`${d}T${hhmm}:00Z`);
@@ -16,27 +14,23 @@ const shiftMonth = (ym: string, n: number) => {
   return d.toISOString().slice(0, 7);
 };
 
-// Book a showing in two steps: pick a day and time on a small calendar, then leave contact details.
-export function ShowingBooking({ locale, slots, initialType }: { locale: Locale; slots: DaySlots[]; initialType?: string }) {
+// Book a showing from a personal link: pick a day and time on a small calendar, then confirm.
+// We already have their details from the inquiry, so there is nothing else to fill in.
+export function ShowingBooking({ locale, slots, token }: { locale: Locale; slots: DaySlots[]; token: string }) {
   const t = getDictionary(locale);
-  const f = t.forms;
   const s = t.showing;
-  const [state, formAction, pending] = useActionState<BookState, FormData>(bookShowing, { status: "idle" });
-  const v = state.values ?? {};
+  const [state, formAction, pending] = useActionState<BookState, FormData>(bookByLink, { status: "idle" });
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [month, setMonth] = useState(monthOf(slots[0].date));
-  const [step, setStep] = useState<"pick" | "details">("pick");
 
   const intl = locale === "fr" ? "fr-CA" : "en-CA";
   const fmt = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(intl, { timeZone: "UTC", ...o });
   const timeFmt = fmt({ hour: "numeric", minute: "2-digit" });
   const byDate = new Map(slots.map((d) => [d.date, d.times]));
-  // A time just taken by someone else is dropped, and the visitor is sent back to pick another.
-  const timesOf = (d: string) => (byDate.get(d) ?? []).filter((x) => !(state.status === "taken" && v.date === d && v.time === x));
+  // A time just taken by someone else is dropped, and the visitor picks another.
+  const timesOf = (d: string) => (byDate.get(d) ?? []).filter((x) => !(state.status === "taken" && state.when?.date === d && state.when.time === x));
   const chosen = date && timesOf(date).includes(time) ? time : "";
-  // After "time just taken", the chosen time is gone, so the calendar shows again.
-  const showDetails = step === "details" && Boolean(chosen);
 
   if (state.status === "booked" && state.when) {
     const when = `${locale === "fr" ? "le " : "on "}${fmt({ weekday: "long", month: "long", day: "numeric" }).format(asDate(state.when.date))} ${locale === "fr" ? "à" : "at"} ${timeFmt.format(asDate(state.when.date, state.when.time))}`;
@@ -65,20 +59,17 @@ export function ShowingBooking({ locale, slots, initialType }: { locale: Locale;
 
   return (
     <form action={formAction}>
-      <input type="hidden" name="lang" value={locale} />
+      <input type="hidden" name="token" value={token} />
       <input type="hidden" name="date" value={date} />
       <input type="hidden" name="time" value={chosen} />
-      <h3 className="font-display text-3xl">{s.title}</h3>
-      <p className="mt-1 text-sm text-brown-soft">{s.lead}</p>
 
-      {state.status === "taken" && (
+      {state.status !== "idle" && (
         <p className="mt-4 rounded-sm bg-gold-light/60 px-4 py-2.5 text-sm text-brown" role="alert">
-          {s.taken}
+          {state.status === "taken" ? s.taken : state.status === "closed" ? s.closed : state.status === "invalid" ? s.badLink : t.forms.error}
         </p>
       )}
 
-      {/* Step 1: day and time */}
-      <div className={showDetails ? "hidden" : "mt-6 grid gap-6 sm:grid-cols-[1fr_1fr]"}>
+      <div className="mt-6 grid gap-6 sm:grid-cols-[1fr_1fr]">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <p className="font-medium capitalize text-ink">{fmt({ month: "long", year: "numeric" }).format(first)}</p>
@@ -146,67 +137,11 @@ export function ShowingBooking({ locale, slots, initialType }: { locale: Locale;
         </div>
 
         <button
-          type="button"
-          disabled={!chosen}
-          onClick={() => setStep("details")}
+          type="submit"
+          disabled={!chosen || pending}
           className="inline-flex w-full items-center justify-center rounded-sm bg-action px-6 py-4 text-sm font-medium uppercase tracking-[0.18em] text-white transition hover:bg-action-deep disabled:opacity-40 sm:col-span-2"
         >
-          {chosen ? s.next : s.pickTime}
-        </button>
-      </div>
-
-      {/* Step 2: contact details */}
-      <div className={showDetails ? "mt-6" : "hidden"}>
-        <div className="flex items-center justify-between gap-3 rounded-sm bg-cream-deep px-4 py-3 ring-1 ring-sand">
-          <p className="text-brown">
-            <span className="font-medium capitalize">{date && fmt({ weekday: "long", month: "long", day: "numeric" }).format(asDate(date))}</span>
-            {chosen && ` · ${timeFmt.format(asDate(date, chosen))}`}
-          </p>
-          <button type="button" onClick={() => setStep("pick")} className="text-sm font-medium text-brown underline underline-offset-4">
-            {s.change}
-          </button>
-        </div>
-
-        <p className="mb-3 mt-6 font-medium text-ink">{s.details}</p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={f.fullName} required wide>
-            <input name="name" className={field} autoComplete="name" required={showDetails} defaultValue={v.name} />
-          </Field>
-          <Field label={f.email} required>
-            <input name="email" type="email" className={field} autoComplete="email" required={showDetails} defaultValue={v.email} />
-          </Field>
-          <Field label={f.phone} required>
-            <input name="phone" type="tel" className={field} autoComplete="tel" required={showDetails} defaultValue={v.phone} />
-          </Field>
-          <Field label={f.inquiry.type}>
-            <select name="type" className={field} defaultValue={v.type ?? initialType ?? ""}>
-              <option value="">{f.inquiry.any}</option>
-              {UNIT_TYPES.map((k) => (
-                <option key={k} value={t.types[k]}>
-                  {t.types[k]}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label={f.inquiry.moveIn} required>
-            <input name="moveIn" type="date" className={field} required={showDetails} defaultValue={v.moveIn} />
-          </Field>
-          <Field label={f.inquiry.comments} wide>
-            <textarea name="comments" rows={2} className={field} defaultValue={v.comments} />
-          </Field>
-        </div>
-
-        {(state.status === "invalid" || state.status === "error") && (
-          <p className="mt-4 text-sm text-red-800" role="alert">
-            {state.status === "invalid" ? f.invalid : f.error}
-          </p>
-        )}
-        <button
-          type="submit"
-          disabled={pending}
-          className="mt-6 inline-flex w-full items-center justify-center rounded-sm bg-action px-6 py-4 text-sm font-medium uppercase tracking-[0.18em] text-white transition hover:bg-action-deep disabled:opacity-60"
-        >
-          {pending ? s.sending : s.submit}
+          {pending ? s.sending : chosen ? `${s.submit} · ${timeFmt.format(asDate(date, chosen))}` : s.pickTime}
         </button>
       </div>
     </form>

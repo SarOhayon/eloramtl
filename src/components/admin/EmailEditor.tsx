@@ -38,6 +38,7 @@ export function EmailEditor({
     address: ADDRESS,
     phone: PHONE_MAIN_DISPLAY,
     website: `https://www.eloramtl.com/${lang}`,
+    booking: `https://www.eloramtl.com/${lang}/book/sample`,
     logo: `data:image/png;base64,${EMAIL_LOGO_PNG_BASE64}`,
   };
   const toggle = (on: boolean) => `px-4 py-2 text-sm ${on ? "bg-action text-white" : "bg-white"}`;

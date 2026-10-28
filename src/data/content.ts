@@ -62,6 +62,10 @@ export type AutoEmails = {
 export type FaqItem = { id: string; q: Bilingual; a: Bilingual };
 export type Faq = { enabled: boolean; items: FaqItem[] };
 
+// The sunlight and view feature of the floor plan. `topFacing` is the compass direction the top
+// edge of the floor-plan drawing looks toward. Views are photos keyed "side:floor" (e.g. "top:5").
+export type SunSettings = { enabled: boolean; topFacing: number; views: Record<string, string> };
+
 export type SiteContent = {
   photos: { hero: Photo[]; gallery: Photo[]; about: Photo; amenities: Record<AmenitySlot, Photo> };
   prices: Record<UnitType, number>;
@@ -73,6 +77,7 @@ export type SiteContent = {
   showings: Showings;
   emails: AutoEmails;
   faq: Faq;
+  sun: SunSettings;
   library: LibraryItem[]; // files uploaded through the admin
 };
 
@@ -139,8 +144,8 @@ export const DEFAULT_CONTENT: SiteContent = {
       enabled: true,
       subject: { fr: "Merci de votre intérêt pour Elora MTL", en: "Thank you for your interest in Elora MTL" },
       body: {
-        fr: "Bonjour {name},\n\nMerci de votre intérêt pour Elora MTL! Nous avons bien reçu votre message et un membre de notre équipe de location vous répondra d'ici 24 heures.\n{#promotion}\nOffre en cours : {promotion}\n{/promotion}\nD'ici là, vous pouvez réserver une visite privée en ligne ({website}#visit) ou nous écrire sur WhatsApp au {phone}.\n\nAu plaisir,\nL'équipe Elora",
-        en: "Hi {name},\n\nThank you for your interest in Elora MTL! We received your message and a member of our leasing team will get back to you within 24 hours.\n{#promotion}\nCurrent offer: {promotion}\n{/promotion}\nIn the meantime, you can book a private showing online ({website}#visit) or message us on WhatsApp at {phone}.\n\nTalk soon,\nThe Elora team",
+        fr: "Bonjour {name},\n\nMerci de votre intérêt pour Elora MTL! Nous avons bien reçu votre message et un membre de notre équipe de location vous répondra d'ici 24 heures.\n{#promotion}\nOffre en cours : {promotion}\n{/promotion}\n{#booking}\nVous aimeriez visiter? Réservez le jour et l'heure qui vous conviennent : {booking}\n{/booking}\nDes questions d'ici là? Répondez à ce courriel ou appelez-nous au {phone}.\n\nAu plaisir,\nL'équipe Elora",
+        en: "Hi {name},\n\nThank you for your interest in Elora MTL! We received your message and a member of our leasing team will get back to you within 24 hours.\n{#promotion}\nCurrent offer: {promotion}\n{/promotion}\n{#booking}\nWould you like to visit? Book the day and time that suit you: {booking}\n{/booking}\nQuestions in the meantime? Reply to this email or call us at {phone}.\n\nTalk soon,\nThe Elora team",
       },
       html: AUTO_REPLY_HTML,
     },
@@ -157,6 +162,8 @@ export const DEFAULT_CONTENT: SiteContent = {
     weekly: { enabled: true },
   },
   faq: { enabled: false, items: DEFAULT_FAQ },
+  // Estimated from chemin Bates: the top of the plan looks north-west. Check with a compass.
+  sun: { enabled: true, topFacing: 306, views: {} },
   library: [],
 };
 
@@ -289,6 +296,7 @@ export const EMAIL_BLANKS: Record<string, string> = {
   "{address}": "the building's address",
   "{phone}": "your phone number",
   "{website}": "the website's address",
+  "{booking}": "their personal link to book a showing (inquiry auto-reply only; the only way to book)",
   "{logo}": "the ELORA MTL logo image (use it as <img src=\"{logo}\">)",
 };
 export const siteUrl = (lang: "fr" | "en") => `${(process.env.SITE_URL || "https://www.eloramtl.com").replace(/\/$/, "")}/${lang}`;

@@ -15,11 +15,13 @@ import {
   type Unit,
   type UnitType,
 } from "@/data/building";
-import { todayInMontreal, type SiteContent, type SuiteStatus } from "@/data/content";
+import { todayInMontreal, type SiteContent, type SuiteStatus, type SunSettings } from "@/data/content";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 import { PdfPicture } from "./PdfPicture";
 import { UnitPlan } from "./UnitPlan";
-import { ChevronIcon, CloseIcon, PhoneIcon, WhatsAppIcon } from "./icons";
+import { ChevronIcon, CloseIcon, PhoneIcon, SunIcon, WhatsAppIcon } from "./icons";
+import { SunControls } from "./SunControls";
+import { clockLabel, compassWord, isLit, sideBearing, sunAt, sunHours, unitSides, type Season, type Side } from "@/lib/sun";
 
 const pts = (p: [number, number][]) => p.map((xy) => xy.join(",")).join(" ");
 const centroid = (p: [number, number][]) => {
@@ -34,10 +36,20 @@ type Props = {
   suites: SiteContent["suites"];
   floorPlans: SiteContent["floorPlans"];
   promo?: { types: UnitType[]; suites: string[] }; // set while the promotion is live
+  sun: SunSettings;
 };
 type Suite = Unit & { status?: SuiteStatus; price?: number; plan?: string };
 
-export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
+// Windows of every suite, worked out once from the floor plates.
+const SIDES_BY_UNIT: Record<string, Side[]> = Object.fromEntries(UNITS.map((u) => [u.id, unitSides(u, UNITS)]));
+
+// The photo for a side of the building, from this floor or the nearest floor that has one.
+function viewFor(views: SunSettings["views"], side: Side, floor: number) {
+  for (let d = 0; d < 7; d++) for (const f of [floor - d, floor + d]) if (views[`${side}:${f}`]) return views[`${side}:${f}`];
+  return undefined;
+}
+
+export function Explorer({ locale, prices, suites, floorPlans, promo, sun }: Props) {
   const t = getDictionary(locale);
   // Suite details set in the admin (status, price, date, plan) on top of the building data.
   const units = useMemo<Suite[]>(
@@ -49,6 +61,12 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
   const [filter, setFilter] = useState<UnitType | "all">("all");
   const [selectedId, setSelectedId] = useState<string>("112");
   const [showDetails, setShowDetails] = useState(false);
+  const [sunOn, setSunOn] = useState(false);
+  const [season, setSeason] = useState<Season>("equinox");
+  const [clock, setClock] = useState(10);
+  const [playing, setPlaying] = useState(false);
+  const sunUp = sunAt(season, clock).alt > 0;
+  const litNow = (u: Unit) => sunUp && isLit(season, clock, SIDES_BY_UNIT[u.id], sun.topFacing);
 
   useEffect(() => {
     if (!showDetails) return;
@@ -129,8 +147,46 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
           {t.explorer.availableOn} {dateFmt.format(new Date(u.availableOn))}
         </p>
       )}
+      {sun.enabled && sunFacts(u)}
     </>
   );
+  // Which way the suite looks and how much direct sun it gets in winter and in summer.
+  const sunFacts = (u: Suite) => {
+    const sides = SIDES_BY_UNIT[u.id];
+    if (!sides.length) return null;
+    const s = t.explorer.sun;
+    const faces = sides.map((side) => compassWord(sideBearing(side, sun.topFacing), locale)).join(s.sideJoin);
+    return (
+      <div className="mt-4 border-t border-sand pt-3 text-sm text-brown/90">
+        <p className="flex items-center gap-2">
+          <SunIcon className="size-4 text-gold" />
+          <span>
+            {s.faces} {faces}
+          </span>
+        </p>
+        <ul className="mt-1.5 space-y-0.5 pl-6">
+          {(["winter", "summer"] as const).map((k) => {
+            const { hours, spans } = sunHours(k, sides, sun.topFacing);
+            return (
+              <li key={k}>
+                <span className="text-brown-soft">{s.seasons[k]} · </span>
+                {s.hours(hours)}
+                {hours > 0 && `, ${s.from(clockLabel(spans[0][0], locale), clockLabel(spans[spans.length - 1][1], locale))}`}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  };
+  // View photos uploaded in the admin for the sides this suite looks out on.
+  const views = (u: Suite) =>
+    sun.enabled
+      ? SIDES_BY_UNIT[u.id]
+          .map((side) => ({ side, src: viewFor(sun.views, side, u.floor) }))
+          .filter((v): v is { side: Side; src: string } => Boolean(v.src))
+          .filter((v, i, all) => all.findIndex((w) => w.src === v.src) === i)
+      : [];
   const contactButtons = (u: Suite) => (
     <div className="flex flex-col gap-2">
       <a
@@ -288,6 +344,22 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
           {/* Floor plate + suite */}
           <div className="flex min-w-0 flex-col">
             <div className="px-4 pt-4 sm:px-5 sm:pt-5">
+            {sun.enabled && (
+              <div className="mb-2 flex justify-end">
+                <button
+                  type="button"
+                  aria-pressed={sunOn}
+                  onClick={() => {
+                    setSunOn(!sunOn);
+                    setPlaying(false);
+                  }}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium uppercase tracking-[0.12em] ring-1 transition ${sunOn ? "bg-gold text-white ring-gold" : "bg-cream text-brown ring-brown/20 hover:ring-brown/40"}`}
+                >
+                  <SunIcon className="size-4" />
+                  {t.explorer.sun.toggle}
+                </button>
+              </div>
+            )}
             <svg viewBox="0 0 617 340" className="h-auto w-full" aria-label={floorLabel(floor)}>
               <polygon points={pts(layoutFor(floor).outline)} fill="#f0ece6" stroke="#3a2c24" strokeWidth={4} />
               {layoutFor(floor).cores.map((c, i) => (
@@ -329,11 +401,11 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
                   >
                     <polygon
                       points={pts(u.shape)}
-                      fill={isSel ? "#503d32" : !rentable(u) ? "#e8e2da" : !ok ? "#faf8f5" : "#efe2c8"}
+                      fill={sunOn && !isSel && litNow(u) ? (ok ? "#f5c84c" : "#f7df98") : isSel ? "#503d32" : !rentable(u) ? "#e8e2da" : !ok ? "#faf8f5" : "#efe2c8"}
                       stroke="#3b2a20"
                       strokeWidth={1.5}
                       className={ok ? "transition-colors duration-150 hover:fill-[#e9d6ae]" : undefined}
-                      opacity={ok ? 1 : 0.55}
+                      opacity={ok || (sunOn && litNow(u)) ? 1 : 0.55}
                     />
                     <text
                       x={cx}
@@ -350,7 +422,11 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
                   </g>
                 );
               })}
+              {sunOn && sunUp && <SunlitWalls outline={layoutFor(floor).outline} lit={(side) => isLit(season, clock, [side], sun.topFacing)} />}
             </svg>
+            {sunOn && (
+              <SunControls t={t} locale={locale} topFacing={sun.topFacing} season={season} setSeason={setSeason} clock={clock} setClock={setClock} playing={playing} setPlaying={setPlaying} />
+            )}
             {matchCount(floor) === 0 && <p className="py-2 text-center text-sm text-brown-soft">{filter === "all" ? t.explorer.noneAvailable : t.explorer.noMatch}</p>}
             {floorPlans[String(floor)] && (
               <p className="pt-2 text-center text-sm">
@@ -409,6 +485,16 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
                 {t.explorer.bookVisit}
               </a>
               <div className="mt-2">{contactButtons(selected)}</div>
+              {views(selected).map((v) => (
+                <figure key={v.side} className="mt-5">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- photo uploaded in the admin */}
+                  <img src={v.src} alt="" className="aspect-[4/3] w-full rounded-sm object-cover" />
+                  <figcaption className="mt-1.5 text-xs text-brown-soft">
+                    {t.explorer.sun.view(selected.floor)} · {compassWord(sideBearing(v.side, sun.topFacing), locale)}
+                  </figcaption>
+                </figure>
+              ))}
+              {sun.enabled && SIDES_BY_UNIT[selected.id].length > 0 && <p className="mt-4 text-xs leading-relaxed text-brown-soft">{t.explorer.sun.note}</p>}
             </div>
             <div className="flex min-h-[50svh] flex-col bg-white p-3 sm:p-4">
               {selected.plan?.endsWith(".pdf") ? (
@@ -444,5 +530,21 @@ export function Explorer({ locale, prices, suites, floorPlans, promo }: Props) {
         </div>
       )}
     </div>
+  );
+}
+
+// A warm line along the outside walls the sun is shining on.
+function SunlitWalls({ outline, lit }: { outline: [number, number][]; lit: (side: Side) => boolean }) {
+  const xs = outline.map((p) => p[0]);
+  const ys = outline.map((p) => p[1]);
+  const [x1, x2, y1, y2] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const walls: Record<Side, [number, number, number, number]> = { top: [x1, y1, x2, y1], right: [x2, y1, x2, y2], bottom: [x1, y2, x2, y2], left: [x1, y1, x1, y2] };
+  return (
+    <g pointerEvents="none">
+      {(Object.keys(walls) as Side[]).filter(lit).map((side) => {
+        const [ax, ay, bx, by] = walls[side];
+        return <line key={side} x1={ax} y1={ay} x2={bx} y2={by} stroke="#f2c14e" strokeWidth={7} strokeLinecap="round" opacity={0.9} />;
+      })}
+    </g>
   );
 }

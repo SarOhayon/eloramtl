@@ -2,51 +2,31 @@
 
 import { sendShowingEmails } from "@/lib/autoEmail";
 import { getContent } from "@/lib/content";
-import { addLead, readLeads } from "@/lib/leads";
-import { freeSlots, type DaySlots } from "@/lib/showingSlots";
+import { changeLead, findByToken, readLeads } from "@/lib/leads";
+import { freeSlots } from "@/lib/showingSlots";
 import { countEvent } from "@/lib/stats";
 
-// Showing times visitors can book from the inquiry pop-up (empty when booking is turned off).
-export async function getShowingSlots(): Promise<DaySlots[]> {
+export type BookState = { status: "idle" | "booked" | "invalid" | "taken" | "closed" | "error"; when?: { date: string; time: string } };
+
+// Books (or moves) a showing from someone's personal link in the inquiry auto-reply. This is the
+// only way visitors can book: the link's token identifies who they are.
+export async function bookByLink(_prev: BookState, formData: FormData): Promise<BookState> {
+  const token = String(formData.get("token") ?? "");
+  const date = String(formData.get("date") ?? "");
+  const time = String(formData.get("time") ?? "");
+  const lead = await findByToken(token);
+  if (!lead || lead.status === "closed") return { status: "invalid" };
   const { showings } = await getContent();
-  if (!showings.enabled) return [];
-  return freeSlots(showings, await bookedShowings());
-}
+  if (!showings.enabled) return { status: "closed" };
 
-async function bookedShowings() {
-  return (await readLeads()).filter((l) => l.showing && l.status !== "closed").map((l) => l.showing!);
-}
+  // Check the time is still free right before booking it (their own current booking doesn't count).
+  const booked = (await readLeads()).filter((l) => l.showing && l.status !== "closed" && l.id !== lead.id).map((l) => l.showing!);
+  if (!freeSlots(showings, booked).some((d) => d.date === date && d.times.includes(time))) return { status: "taken", when: { date, time } };
 
-export type BookState = { status: "idle" | "booked" | "invalid" | "taken" | "error"; values?: Record<string, string>; when?: { date: string; time: string } };
-
-export async function bookShowing(_prev: BookState, formData: FormData): Promise<BookState> {
-  const get = (k: string) => String(formData.get(k) ?? "").trim().slice(0, 2000);
-  const v: Record<string, string> = {};
-  for (const k of ["date", "time", "name", "email", "phone", "type", "moveIn", "comments", "lang"]) v[k] = get(k);
-  const lang = v.lang === "fr" ? "fr" : "en";
-
-  if (!v.name || v.phone.replace(/\D/g, "").length < 10 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email) || !/^\d{4}-\d{2}-\d{2}$/.test(v.moveIn)) {
-    return { status: "invalid", values: v };
-  }
-  // Check the time is still free right before booking it.
-  const { showings } = await getContent();
-  const open = freeSlots(showings, await bookedShowings()).some((d) => d.date === v.date && d.times.includes(v.time));
-  if (!open) return { status: "taken", values: v };
-
-  const lead = await addLead({
-    kind: "showing",
-    name: v.name,
-    email: v.email,
-    phone: v.phone,
-    type: v.type || undefined,
-    moveIn: v.moveIn,
-    comments: v.comments || undefined,
-    lang,
-    showing: { date: v.date, time: v.time },
-  });
-  if (!lead) return { status: "error", values: v };
+  const showing = { date, time };
+  const saved = await changeLead(lead.id, { showing, attendance: undefined, followUp: undefined });
+  if (!saved) return { status: "error" };
   await countEvent("showing");
-
-  await sendShowingEmails(lead, { team: true });
-  return { status: "booked", when: { date: v.date, time: v.time } };
+  await sendShowingEmails({ ...lead, showing }, { team: true });
+  return { status: "booked", when: showing };
 }

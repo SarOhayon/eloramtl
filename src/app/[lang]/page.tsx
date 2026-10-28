@@ -158,7 +158,7 @@ async function Body({ locale }: { locale: Locale }) {
         <section id="suites" className="bg-cream-deep py-20 lg:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading eyebrow={t.explorer.eyebrow} title={t.explorer.title} lead={t.explorer.lead} />
-            <Explorer locale={locale} prices={content.prices} suites={content.suites} floorPlans={content.floorPlans} promo={promoLive ? { types: promo.types, suites: promo.suites } : undefined} />
+            <Explorer locale={locale} prices={content.prices} suites={content.suites} floorPlans={content.floorPlans} sun={content.sun} promo={promoLive ? { types: promo.types, suites: promo.suites } : undefined} />
           </div>
         </section>
 

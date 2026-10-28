@@ -47,7 +47,7 @@ export function ChatWidget({ locale, suggestions }: { locale: Locale; suggestion
     const go = () => {
       setOpen(false);
       if (a === "apply") openApply();
-      else openInquiry({ askOnly: a === "contact" });
+      else openInquiry();
     };
     return (
       <button onClick={go} className="mt-2 rounded-full bg-action px-4 py-1.5 text-xs font-medium uppercase tracking-[0.12em] text-white transition hover:bg-action-deep">

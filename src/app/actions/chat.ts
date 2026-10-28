@@ -24,7 +24,7 @@ const Reply = z.object({
   reply: z.string().describe("The answer to show the visitor: short, friendly, in the visitor's language. Plain text, no markdown."),
   action: z
     .enum(["none", "book", "contact", "apply"])
-    .describe("A button to show under the answer: book = book a showing, contact = send a question to the leasing team, apply = apply now, none = no button."),
+    .describe("A button to show under the answer: book = request a showing (opens the inquiry form; they then get an email with their booking link), contact = send a question to the leasing team, apply = apply now, none = no button."),
   answered: z.boolean().describe("false if the FAQ and facts didn't contain the answer."),
 });
 
@@ -120,7 +120,7 @@ Rules:
 - Answer only from the FAQ and the facts below. If they don't contain the answer, say you don't have that information and offer to pass the question to the leasing team (action "contact"); set answered to false. Never guess or invent details, prices, policies or availability.
 - Never promise anything that isn't written below (discounts, approvals, exceptions, legal or lease terms). For those, offer the leasing team.
 - Answer in the language the visitor writes in (French or English). Keep answers to 1-3 short sentences, plain text without markdown.
-- When someone shows interest in visiting, suggest booking a showing (action "book"). When they want to rent, "apply". Otherwise "none", unless the leasing team is needed ("contact").
+- When someone shows interest in visiting, explain that they send the inquiry form and get an email with a button to book their showing (action "book"). Showings can only be booked from that email. When they want to rent, "apply". Otherwise "none", unless the leasing team is needed ("contact").
 - Stay on topic. If asked about unrelated things, politely bring the conversation back to Elora.
 
 Contact: phone and WhatsApp ${PHONE_MAIN_DISPLAY}. Office hours: ${hours || "by appointment"} (evenings and weekends by appointment).

@@ -24,6 +24,7 @@ export type Lead = {
   suggestion?: Suggestion; // AI suggestion of suites, kept until asked again
   attendance?: "came" | "no-show"; // for showings, marked by the team
   followUp?: { due: string; sentAt?: string }; // ISO times of the follow-up email after a showing
+  bookToken?: string; // secret in their personal booking link (sent in the auto-reply)
 };
 export type Suggestion = { at: string; summary: string; picks: { unit: string; reason: string }[]; ask: string };
 
@@ -40,11 +41,17 @@ export async function readLeads(): Promise<Lead[]> {
   }
 }
 
+// The lead a personal booking link belongs to.
+export async function findByToken(token: string): Promise<Lead | null> {
+  if (!/^[\w-]{16}$/.test(token)) return null;
+  return (await readLeads()).find((l) => l.bookToken === token) ?? null;
+}
+
 const write = (leads: Lead[]) => putFile(KEY, JSON.stringify(leads.slice(0, MAX)), "application/json");
 
 // Adds a lead (newest first). Returns false if it couldn't be stored.
 export async function addLead(lead: Omit<Lead, "id" | "createdAt" | "status">): Promise<Lead | null> {
-  const full: Lead = { ...lead, id: `${Date.now()}-${randomBytes(3).toString("hex")}`, createdAt: new Date().toISOString(), status: "new" };
+  const full: Lead = { bookToken: randomBytes(12).toString("base64url"), ...lead, id: `${Date.now()}-${randomBytes(3).toString("hex")}`, createdAt: new Date().toISOString(), status: "new" };
   try {
     await write([full, ...(await readLeads())]);
     return full;

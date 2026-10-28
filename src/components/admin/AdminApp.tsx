@@ -38,13 +38,15 @@ import { InboxScreen } from "./InboxScreen";
 import { NoticeScreen } from "./NoticeScreen";
 import { ShowingsScreen } from "./ShowingsScreen";
 import { StatsScreen } from "./StatsScreen";
+import { SunScreen } from "./SunScreen";
+import { SunIcon } from "../icons";
 import { BilingualFields, ScheduleStatus, ScreenTitle, Step, Switch, bigBtn, field, softBtn, type Update, type Upload } from "./ui";
 import { Wordmark } from "../Wordmark";
 
 // A deliberately simple admin: a home screen with big buttons, one task per screen,
 // plain-English help and automatic saving.
 
-type Screen = "home" | "inbox" | "promo" | "notice" | "apartments" | "showings" | "emails" | "chat" | "photos" | "prices" | "text" | "stats";
+type Screen = "home" | "inbox" | "promo" | "notice" | "apartments" | "showings" | "emails" | "chat" | "photos" | "prices" | "text" | "stats" | "sun";
 
 const TYPE_LABELS = dictionaries.en.types;
 const isPdf = (src: string) => src.endsWith(".pdf");
@@ -167,6 +169,7 @@ export function AdminApp({ initial }: { initial: SiteContent }) {
             {screen === "emails" && <EmailsScreen content={content} update={update} />}
             {screen === "chat" && <ChatScreen content={content} update={update} />}
             {screen === "stats" && <StatsScreen />}
+            {screen === "sun" && <SunScreen content={content} update={update} upload={upload} />}
             {screen === "apartments" && <ApartmentsScreen content={content} update={update} upload={upload} />}
             {screen === "photos" && <PhotosScreen content={content} update={update} upload={upload} />}
             {screen === "prices" && <PricesScreen content={content} update={update} />}
@@ -249,6 +252,13 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
       note: <ScheduleStatus state={content.faq.enabled ? "live" : "off"} label={content.faq.enabled ? "On" : "Turned off"} />,
     },
     { screen: "apartments", icon: <BuildingIcon className="size-6" />, title: "Apartments", text: "Mark apartments available or rented, set prices, dates and plans.", note: `${available} marked available` },
+    {
+      screen: "sun",
+      icon: <SunIcon className="size-6" />,
+      title: "Sunlight & views",
+      text: "Which way the building faces, and view photos from each side.",
+      note: <ScheduleStatus state={content.sun.enabled ? "live" : "off"} label={content.sun.enabled ? "On" : "Turned off"} />,
+    },
     { screen: "promo", icon: <TagIcon className="size-6" />, title: "Promotion", text: "Create or change your special offer.", note: <ScheduleStatus state={scheduleState(content.promo)} /> },
     {
       screen: "notice",

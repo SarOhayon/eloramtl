@@ -45,7 +45,7 @@ export async function submitApplication(_prev: ApplyState, formData: FormData): 
     }),
   ]);
   if (!saved && !sent) return { status: "error", values: app };
-  await Promise.all([countEvent("application"), autoReply(app.name, app.email, app.lang === "fr" ? "fr" : "en")]);
+  await Promise.all([countEvent("application"), autoReply(saved || { name: app.name, email: app.email, lang: app.lang === "fr" ? "fr" : "en" })]);
   return { status: "sent" };
 }
 
