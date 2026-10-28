@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { addShowingByHand, listLeads, updateLead } from "@/app/actions/leads";
 import { todayInMontreal, type ShowingHours, type Showings, type SiteContent, type Weekday } from "@/data/content";
 import type { Lead } from "@/lib/leads";
-import { CalendarIcon, CloseIcon, PlusIcon } from "./AdminIcons";
+import { ArrowLeftIcon, CalendarIcon, CloseIcon, PlusIcon } from "./AdminIcons";
 import { Attendance } from "./Attendance";
 import { ScreenTitle, Step, Switch, bigBtn, field, softBtn, useNow, type Update } from "./ui";
 
@@ -132,7 +132,7 @@ export function ShowingsScreen({ content, update }: { content: SiteContent; upda
           )}
         </Step>
 
-        <Upcoming />
+        <Upcoming showings={s} />
       </div>
     </>
   );
@@ -140,7 +140,7 @@ export function ShowingsScreen({ content, update }: { content: SiteContent; upda
 
 // Booked showings: today and coming up (soonest first), and the last two weeks to mark who came.
 // Cancelling frees the time for someone else.
-function Upcoming() {
+function Upcoming({ showings }: { showings: Showings }) {
   const [leads, setLeads] = useState<Lead[] | null>(null);
   useEffect(() => {
     listLeads().then(setLeads);
@@ -183,6 +183,7 @@ function Upcoming() {
 
   return (
     <>
+      <WeekSchedule leads={booked} showings={showings} loading={!leads} />
       <AddByHand onLeads={setLeads} />
       <Step title="Today and coming up" help="Everyone who booked a time. From 15 minutes before a showing, mark whether they came: people who came get the follow-up email.">
         {!leads ? <p className="text-brown-soft">Loading…</p> : upcoming.length === 0 ? <p className="text-brown-soft">No showings booked yet.</p> : <ul className="divide-y divide-sand">{upcoming.map((l) => row(l, true))}</ul>}
@@ -277,6 +278,75 @@ function AddByHand({ onLeads }: { onLeads: (l: Lead[]) => void }) {
           </div>
         </form>
       )}
+    </Step>
+  );
+}
+
+// The week at a glance: Monday to Sunday, each showing in its day, with arrows to other weeks.
+const shortDay = new Intl.DateTimeFormat("en-CA", { weekday: "short", timeZone: "UTC" });
+const monthDay = new Intl.DateTimeFormat("en-CA", { month: "short", day: "numeric", timeZone: "UTC" });
+const clock = new Intl.DateTimeFormat("en-CA", { hour: "numeric", minute: "2-digit", timeZone: "UTC" });
+const addDays = (d: string, n: number) => new Date(Date.parse(`${d}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
+const mondayOf = (d: string) => addDays(d, -((new Date(`${d}T00:00:00Z`).getUTCDay() + 6) % 7));
+
+function WeekSchedule({ leads, showings, loading }: { leads: Lead[]; showings: Showings; loading: boolean }) {
+  const today = todayInMontreal();
+  const [monday, setMonday] = useState(() => mondayOf(today));
+  const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+  const inWeek = leads.filter((l) => l.showing!.date >= days[0] && l.showing!.date <= days[6]);
+  const label = `${monthDay.format(new Date(`${days[0]}T00:00:00Z`))} – ${monthDay.format(new Date(`${days[6]}T00:00:00Z`))}`;
+  const thisWeek = monday === mondayOf(today);
+
+  return (
+    <Step title="Your week" help="Every showing booked this week. Use the arrows to see other weeks.">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <button className={softBtn} onClick={() => setMonday(addDays(monday, -7))} aria-label="Previous week">
+          <ArrowLeftIcon className="size-4" />
+        </button>
+        <button className={softBtn} onClick={() => setMonday(addDays(monday, 7))} aria-label="Next week">
+          <ArrowLeftIcon className="size-4 rotate-180" />
+        </button>
+        <p className="ml-1 font-display text-2xl text-ink">{thisWeek ? "This week" : label}</p>
+        {thisWeek ? <span className="text-brown-soft">· {label}</span> : (
+          <button className="text-sm underline underline-offset-4" onClick={() => setMonday(mondayOf(today))}>
+            Back to this week
+          </button>
+        )}
+        <span className="ml-auto rounded-full bg-cream-deep px-3 py-1 text-sm text-brown ring-1 ring-sand">
+          {loading ? "Loading…" : `${inWeek.length} showing${inWeek.length === 1 ? "" : "s"}`}
+        </span>
+      </div>
+      <div className="grid gap-2 md:grid-cols-7">
+        {days.map((d) => {
+          const list = inWeek.filter((l) => l.showing!.date === d).sort((a, b) => a.showing!.time.localeCompare(b.showing!.time));
+          const weekday = String(new Date(`${d}T00:00:00Z`).getUTCDay()) as Weekday;
+          const closed = !showings.hours[weekday] || showings.blocked.includes(d);
+          const isToday = d === today;
+          return (
+            <div key={d} className={`min-h-28 rounded-md p-2.5 ring-1 ${isToday ? "bg-white ring-2 ring-gold" : closed ? "bg-cream-deep/60 ring-sand" : "bg-white ring-sand"} ${d < today ? "opacity-70" : ""}`}>
+              <p className={`text-sm ${isToday ? "font-semibold text-ink" : "text-brown-soft"}`}>
+                {shortDay.format(new Date(`${d}T00:00:00Z`))} <span className="text-ink">{Number(d.slice(8))}</span>
+                {isToday && <span className="ml-1 text-xs uppercase tracking-wide text-gold">Today</span>}
+              </p>
+              {list.length === 0 ? (
+                <p className="mt-2 text-xs text-brown-soft/70">{closed ? (showings.blocked.includes(d) ? "Day off" : "No showing hours") : "—"}</p>
+              ) : (
+                <ul className="mt-2 space-y-1.5">
+                  {list.map((l) => (
+                    <li key={l.id} className={`rounded px-2 py-1.5 text-sm leading-snug ${l.attendance === "came" ? "bg-[#e3eee4]" : l.attendance === "no-show" ? "bg-[#f4e1df]" : "bg-gold-light/50"}`}>
+                      <span className="font-medium text-ink">{clock.format(new Date(`2000-01-01T${l.showing!.time}:00Z`))}</span>
+                      <span className="block truncate text-brown" title={l.name}>{l.name}</span>
+                      <a href={`tel:${l.phone}`} className="block truncate text-xs text-brown-soft underline">{l.phone}</a>
+                      {l.type && <span className="block truncate text-xs text-brown-soft">{l.type}</span>}
+                      {l.attendance && <span className="block text-xs font-medium text-brown">{l.attendance === "came" ? "Came" : "No-show"}</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </Step>
   );
 }
