@@ -1,7 +1,8 @@
 import { ADDRESS, INBOX_EMAIL, PHONE_MAIN_DISPLAY } from "@/data/building";
 import { button, layout } from "@/data/emailDesigns";
 import { EMAIL_LOGO_CID, EMAIL_LOGO_PNG_BASE64 } from "@/data/emailLogo";
-import { fillHtmlTemplate, fillTemplate, scheduleState, siteUrl, type EmailTemplate, type SiteContent } from "@/data/content";
+import { headers } from "next/headers";
+import { fillHtmlTemplate, fillTemplate, scheduleState, type EmailTemplate, type SiteContent } from "@/data/content";
 import { getContent } from "./content";
 import type { Lead } from "./leads";
 import { sendMail, type Attachment } from "./mail";
@@ -11,13 +12,28 @@ import { montrealToUtc, showingWords } from "./showingSlots";
 
 type Lang = "fr" | "en";
 
+// The website's address for links in emails: the address the visitor (or admin) is using right now,
+// so links work whether the site is reached at eloramtl.com or its Amplify address. Only our own
+// domains are trusted; otherwise SITE_URL, then www.eloramtl.com.
+const OUR_HOSTS = /^(?:[\w-]+\.)*(?:eloramtl\.com|amplifyapp\.com)$|^localhost(?::\d+)?$/;
+export async function siteBase(): Promise<string> {
+  try {
+    const h = await headers();
+    const host = (h.get("x-forwarded-host") ?? h.get("host") ?? "").split(",")[0].trim().toLowerCase();
+    if (OUR_HOSTS.test(host)) return `${host.startsWith("localhost") ? "http" : "https"}://${host}`;
+  } catch {
+    // Not during a request.
+  }
+  return (process.env.SITE_URL || "https://www.eloramtl.com").replace(/\/$/, "");
+}
+
 // The words filled into an email: the person's details plus the building's.
-export function emailBlanks(content: SiteContent, lang: Lang, person: { name: string; date?: string; time?: string }) {
+export function emailBlanks(content: SiteContent, lang: Lang, person: { name: string; date?: string; time?: string }, base: string) {
   const p = content.promo;
   // The promotion as one line, e.g. "One month FREE on select units".
   const sub = p.sub[lang].trim();
   const promotion = scheduleState(p) === "live" ? [p.kicker[lang].trim(), p.big[lang].trim().toUpperCase(), sub.charAt(0).toLowerCase() + sub.slice(1)].filter(Boolean).join(" ") : "";
-  return { name: person.name, date: person.date ?? "", time: person.time ?? "", promotion, address: ADDRESS, phone: PHONE_MAIN_DISPLAY, website: siteUrl(lang), logo: `cid:${EMAIL_LOGO_CID}` };
+  return { name: person.name, date: person.date ?? "", time: person.time ?? "", promotion, address: ADDRESS, phone: PHONE_MAIN_DISPLAY, website: `${base}/${lang}`, logo: `cid:${EMAIL_LOGO_CID}` };
 }
 
 // Sends one of the admin-editable emails to a visitor, in their language.
@@ -35,15 +51,16 @@ export function sendTemplate(t: EmailTemplate, lang: Lang, to: string, blanks: R
 }
 
 // The page where someone books a showing: the only way to book, through the link in their auto-reply.
-export const bookingLink = (lead: Pick<Lead, "bookToken" | "lang">) => (lead.bookToken ? `${siteUrl(lead.lang)}/book/${lead.bookToken}` : "");
+export const bookingLink = (lead: Pick<Lead, "bookToken" | "lang">, base: string) => (lead.bookToken ? `${base}/${lead.lang}/book/${lead.bookToken}` : "");
 
 // The automatic reply to inquiries and Apply now (Automatic emails → Inquiry auto-reply), with their
 // booking link while online booking is on.
 export async function autoReply(lead: Pick<Lead, "name" | "email" | "lang" | "bookToken">) {
   const content = await getContent();
   if (!content.emails.autoReply.enabled) return;
-  const booking = content.showings.enabled ? bookingLink(lead) : "";
-  await sendTemplate(content.emails.autoReply, lead.lang, lead.email, { ...emailBlanks(content, lead.lang, { name: lead.name }), booking });
+  const base = await siteBase();
+  const booking = content.showings.enabled ? bookingLink(lead, base) : "";
+  await sendTemplate(content.emails.autoReply, lead.lang, lead.email, { ...emailBlanks(content, lead.lang, { name: lead.name }, base), booking });
 }
 
 // The logo travels inside the email (not as a link), so it shows even before the site's domain is live.
@@ -53,7 +70,7 @@ const withLogoImage = (html: string, attachments: Attachment[]) => (html.include
 const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 // A notice to the leasing team (new booking, weekly summary…), as a designed email with a plain-text copy.
-export function sendTeamNotice({ subject, heading, rows, note, sections = [], replyTo, attachments }: {
+export async function sendTeamNotice({ subject, heading, rows, note, sections = [], replyTo, attachments }: {
   subject: string;
   heading: string;
   rows: [string, string][];
@@ -62,7 +79,7 @@ export function sendTeamNotice({ subject, heading, rows, note, sections = [], re
   replyTo?: string;
   attachments?: Attachment[];
 }) {
-  const admin = `${siteUrl("en").replace(/\/en$/, "")}/admin`;
+  const admin = `${await siteBase()}/admin`;
   const table = rows.length
     ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px;border:1px solid #e8e2da;">${rows
         .map(([k, v]) => `<tr><td style="padding:10px 14px;border-bottom:1px solid #e8e2da;font-size:13px;color:#7d6b5d;width:38%;">${esc(k)}</td><td style="padding:10px 14px;border-bottom:1px solid #e8e2da;font-size:14px;color:#1d1814;">${esc(v)}</td></tr>`)
@@ -119,7 +136,7 @@ export async function sendShowingEmails(lead: Lead, { team, confirm = true }: { 
         attachments,
       }),
     // Wording set in the admin (Automatic emails → Showing confirmation).
-    confirm && sendTemplate(content.showings.email, lead.lang, lead.email, emailBlanks(content, lead.lang, { name: lead.name, date, time }), attachments),
+    confirm && sendTemplate(content.showings.email, lead.lang, lead.email, emailBlanks(content, lead.lang, { name: lead.name, date, time }, await siteBase()), attachments),
   ]);
 }
 
@@ -128,7 +145,7 @@ export async function sendFollowUp(lead: Lead) {
   if (!lead.showing) return false;
   const content = await getContent();
   const { date, time } = showingWords(lead.showing.date, lead.showing.time, lead.lang);
-  return sendTemplate(content.emails.followUp, lead.lang, lead.email, emailBlanks(content, lead.lang, { name: lead.name, date, time }));
+  return sendTemplate(content.emails.followUp, lead.lang, lead.email, emailBlanks(content, lead.lang, { name: lead.name, date, time }, await siteBase()));
 }
 
 // A calendar invite for the showing, with a 30-minute reminder.
