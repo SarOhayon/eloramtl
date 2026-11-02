@@ -26,6 +26,8 @@ export type Lead = {
   followUp?: { due: string; sentAt?: string }; // ISO times of the follow-up email after a showing
   bookToken?: string; // secret in their personal booking link (sent in the auto-reply)
   units?: string[]; // suites the team picked to show them (admin only, never emailed)
+  source?: string; // where a lead from outside the website came from, e.g. "Apartments.com"
+  sourceId?: string; // the lead email's Message-ID, so it's only added once
 };
 export type Suggestion = { at: string; summary: string; picks: { unit: string; reason: string }[]; ask: string };
 
@@ -51,10 +53,11 @@ export async function findByToken(token: string): Promise<Lead | null> {
 const write = (leads: Lead[]) => putFile(KEY, JSON.stringify(leads.slice(0, MAX)), "application/json");
 
 // Adds a lead (newest first). Returns false if it couldn't be stored.
-export async function addLead(lead: Omit<Lead, "id" | "createdAt" | "status">): Promise<Lead | null> {
-  const full: Lead = { bookToken: randomBytes(12).toString("base64url"), ...lead, id: `${Date.now()}-${randomBytes(3).toString("hex")}`, createdAt: new Date().toISOString(), status: "new" };
+export async function addLead(lead: Omit<Lead, "id" | "createdAt" | "status"> & { createdAt?: string }): Promise<Lead | null> {
+  const full: Lead = { bookToken: randomBytes(12).toString("base64url"), createdAt: new Date().toISOString(), ...lead, id: `${Date.now()}-${randomBytes(3).toString("hex")}`, status: "new" };
   try {
-    await write([full, ...(await readLeads())]);
+    // Newest first, also for leads added later with an earlier date (e.g. from the mailbox).
+    await write([full, ...(await readLeads())].sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
     return full;
   } catch (err) {
     console.error("[leads] could not save", err);

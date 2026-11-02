@@ -6,6 +6,7 @@ import { getContent } from "@/lib/content";
 import { runDueJobs } from "@/lib/jobs";
 import { sendFollowUp, sendShowingEmails } from "@/lib/autoEmail";
 import { addLead, changeLead, changeLeads, readLeads, type Lead, type LeadStatus } from "@/lib/leads";
+import { extractLead, importInboxLeads, inboxConfigured, readInboxState, type ExtractedLead, type InboxState } from "@/lib/inboxLeads";
 import { montrealToUtc } from "@/lib/showingSlots";
 
 const STATUSES: LeadStatus[] = ["new", "contacted", "toured", "leased", "closed"];
@@ -126,4 +127,57 @@ export async function scheduleShowing(id: string, date: string, time: string, co
   if (!leads || !lead) return { ok: false, error: "This inquiry no longer exists." };
   if (confirm) await sendShowingEmails(lead, { team: false });
   return { ok: true, leads };
+}
+
+// Leads from the mailbox: when it last checked, and a button to check right away.
+export async function inboxStatus(): Promise<{ configured: boolean; aiReady: boolean; state: InboxState } | null> {
+  if (!(await isAdmin())) return null;
+  return { configured: inboxConfigured(), aiReady: Boolean(process.env.ANTHROPIC_API_KEY), state: await readInboxState() };
+}
+
+export async function checkInboxNow(): Promise<{ ok: boolean; added: number; error?: string; leads?: Lead[]; state?: InboxState } | null> {
+  if (!(await isAdmin())) return null;
+  const res = await importInboxLeads();
+  return { ...res, leads: await readLeads(), state: await readInboxState() };
+}
+
+// An inquiry that came another way (phone, text, Instagram, an email): typed in by the team.
+// Nobody is emailed.
+export async function addInquiryByHand(input: { name: string; email: string; phone: string; type?: string; moveIn?: string; source?: string; comments?: string; lang: "fr" | "en" }): Promise<{ ok: true; leads: Lead[] } | { ok: false; error: string }> {
+  if (!(await isAdmin())) return { ok: false, error: "Please sign in again." };
+  const str = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
+  const name = str(input.name, 200);
+  const email = str(input.email, 200);
+  const phone = str(input.phone, 60);
+  if (!name) return { ok: false, error: "Add their name." };
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "That email doesn't look right." };
+  if (!email && !phone) return { ok: false, error: "Add an email or a phone number." };
+  const lead = await addLead({
+    kind: "inquiry",
+    name,
+    email,
+    phone,
+    type: str(input.type, 60) || undefined,
+    moveIn: /^\d{4}-\d{2}-\d{2}$/.test(str(input.moveIn, 10)) ? str(input.moveIn, 10) : undefined,
+    comments: str(input.comments, 4000) || undefined,
+    source: str(input.source, 40) || "Added by hand",
+    lang: input.lang === "fr" ? "fr" : "en",
+  });
+  if (!lead) return { ok: false, error: "Couldn't save it. Try again." };
+  return { ok: true, leads: await readLeads() };
+}
+
+// Fills the "Add an inquiry" form from a pasted email or message, with the AI.
+export async function readPastedLead(text: string): Promise<{ ok: true; lead: ExtractedLead } | { ok: false; error: string }> {
+  if (!(await isAdmin())) return { ok: false, error: "Please sign in again." };
+  if (!process.env.ANTHROPIC_API_KEY) return { ok: false, error: "The AI isn't set up yet, so fill in the fields yourself." };
+  const pasted = String(text ?? "").slice(0, 15000);
+  if (pasted.trim().length < 10) return { ok: false, error: "Paste the email or message first." };
+  try {
+    const lead = await extractLead({ from: "", replyTo: "", subject: "", text: pasted });
+    return lead ? { ok: true, lead } : { ok: false, error: "This doesn't look like someone asking to rent." };
+  } catch (err) {
+    console.error("[leads] read pasted", err);
+    return { ok: false, error: "The AI didn't answer. Try again in a moment." };
+  }
 }

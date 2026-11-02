@@ -17,6 +17,7 @@ export async function GET() {
   sheet.columns = [
     { header: "Received", key: "received", width: 18 },
     { header: "Form", key: "kind", width: 13 },
+    { header: "Source", key: "source", width: 16 },
     { header: "Status", key: "status", width: 12 },
     { header: "Name", key: "name", width: 24 },
     { header: "Email", key: "email", width: 30 },
@@ -36,6 +37,7 @@ export async function GET() {
     sheet.addRow({
       received: local.format(new Date(l.createdAt)).replace(",", ""),
       kind: KIND[l.kind],
+      source: l.source ?? "Website",
       status: STATUS[l.status],
       name: l.name,
       email: l.email,
@@ -58,7 +60,7 @@ export async function GET() {
   sheet.eachRow((row, i) => {
     if (i > 1) row.alignment = { vertical: "top", wrapText: true };
   });
-  sheet.autoFilter = { from: "A1", to: "P1" };
+  sheet.autoFilter = { from: "A1", to: "Q1" };
 
   const body = Buffer.from(await book.xlsx.writeBuffer());
   const today = new Date().toISOString().slice(0, 10);

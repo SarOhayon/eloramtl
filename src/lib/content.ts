@@ -46,6 +46,7 @@ function merge(saved: Saved): SiteContent {
     },
     faq: { ...d.faq, ...saved.faq },
     sun: { ...d.sun, ...saved.sun },
+    inbox: { ...d.inbox, ...saved.inbox },
     library: saved.library ?? d.library,
   };
 }

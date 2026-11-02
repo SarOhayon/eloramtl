@@ -66,6 +66,10 @@ export type Faq = { enabled: boolean; items: FaqItem[] };
 // edge of the floor-plan drawing looks toward. Views are photos keyed "side:floor" (e.g. "top:5").
 export type SunSettings = { enabled: boolean; topFacing: number; views: Record<string, string> };
 
+// Lead emails (Rentsync, Apartments.com, Zumper…) read from the sarah@eloramtl.com mailbox into the
+// inquiries, from `since` (YYYY-MM-DD) on.
+export type InboxImport = { enabled: boolean; since?: string };
+
 export type SiteContent = {
   photos: { hero: Photo[]; gallery: Photo[]; about: Photo; amenities: Record<AmenitySlot, Photo> };
   prices: Record<UnitType, number>;
@@ -78,6 +82,7 @@ export type SiteContent = {
   emails: AutoEmails;
   faq: Faq;
   sun: SunSettings;
+  inbox: InboxImport;
   library: LibraryItem[]; // files uploaded through the admin
 };
 
@@ -164,6 +169,7 @@ export const DEFAULT_CONTENT: SiteContent = {
   faq: { enabled: false, items: DEFAULT_FAQ },
   // Estimated from chemin Bates: the top of the plan looks north-west. Check with a compass.
   sun: { enabled: true, topFacing: 306, views: {} },
+  inbox: { enabled: false },
   library: [],
 };
 

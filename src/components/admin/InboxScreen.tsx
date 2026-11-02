@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { listLeads, scheduleShowing, updateLead } from "@/app/actions/leads";
+import { addInquiryByHand, checkInboxNow, inboxStatus, listLeads, readPastedLead, scheduleShowing, updateLead } from "@/app/actions/leads";
 import { suggestUnits } from "@/app/actions/suggest";
-import { UNITS, formatPrice } from "@/data/building";
+import { UNITS, UNIT_TYPES, formatPrice } from "@/data/building";
 import { todayInMontreal, type SiteContent } from "@/data/content";
 import { dictionaries } from "@/i18n/dictionaries";
 import { FOLLOW_UP_AFTER_DAYS, daysSinceUpdate, needsFollowUp } from "@/lib/followUp";
+import type { InboxState } from "@/lib/inboxLeads";
 import type { Lead, LeadKind, LeadStatus } from "@/lib/leads";
-import { BellIcon, CalendarIcon, InboxIcon, SparkleIcon, TableIcon } from "./AdminIcons";
+import { BellIcon, CalendarIcon, InboxIcon, MailIcon, PlusIcon, SparkleIcon, TableIcon } from "./AdminIcons";
 import { Attendance } from "./Attendance";
-import { ScreenTitle, field, softBtn, useNow } from "./ui";
+import { ScreenTitle, Switch, bigBtn, field, softBtn, useNow, type Update } from "./ui";
 
 const STATUS: { key: LeadStatus; label: string; on: string }[] = [
   { key: "new", label: "New", on: "bg-gold text-white ring-gold" },
@@ -31,7 +32,7 @@ const waLink = (phone: string) => {
 };
 
 // Everything sent from the website's forms, newest first, with a status for follow-up.
-export function InboxScreen({ content }: { content: SiteContent }) {
+export function InboxScreen({ content, update }: { content: SiteContent; update: Update }) {
   const [leads, setLeads] = useState<Lead[] | null>(null);
   const [filter, setFilter] = useState<LeadStatus | "all">("all");
   const [error, setError] = useState(false);
@@ -63,8 +64,12 @@ export function InboxScreen({ content }: { content: SiteContent }) {
       <ScreenTitle
         icon={<InboxIcon className="size-5" />}
         title="Inquiries"
-        help="Every form sent from the website, newest first: inquiries, applications and booked showings. Change the status as you follow up, and add a note for yourself."
+        help="Every inquiry, newest first: forms sent from the website, booked showings, lead emails (Rentsync, Apartments.com, Zumper…) and ones you add by hand. Change the status as you follow up, and add a note for yourself."
       />
+      <div className="mb-6 grid gap-4 lg:grid-cols-2">
+        <EmailLeads content={content} update={update} onLeads={setLeads} />
+        <AddInquiry onLeads={setLeads} />
+      </div>
       <a href="/admin/inquiries.xlsx" download className="mb-6 inline-flex items-center gap-2 rounded-md bg-white px-4 py-2.5 ring-1 ring-brown/20 transition hover:bg-cream-deep">
         <TableIcon className="size-5" /> Download all to Excel
       </a>
@@ -120,6 +125,7 @@ export function InboxScreen({ content }: { content: SiteContent }) {
                 <h2 className="font-display text-3xl text-ink">{l.name}</h2>
                 <p className="text-sm text-brown-soft">
                   <span className="mr-2 rounded-full bg-cream-deep px-3 py-1 font-medium text-brown">{KIND[l.kind]}</span>
+                  {l.source && <span className="mr-2 rounded-full bg-gold-light/60 px-3 py-1 font-medium text-brown">{l.source}</span>}
                   {when.format(new Date(l.createdAt))}
                 </p>
               </div>
@@ -127,22 +133,26 @@ export function InboxScreen({ content }: { content: SiteContent }) {
               <ShowingBox lead={l} onLeads={setLeads} />
 
               <dl className="mt-3 grid gap-x-6 gap-y-1 text-brown sm:grid-cols-2">
-                <div>
-                  <dt className="inline text-brown-soft">Phone: </dt>
-                  <dd className="inline">
-                    <a href={`tel:${l.phone}`} className="underline">{l.phone}</a>
-                    {" · "}
-                    <a href={waLink(l.phone)} target="_blank" rel="noopener noreferrer" className="underline">
-                      WhatsApp
-                    </a>
-                  </dd>
-                </div>
-                <div>
-                  <dt className="inline text-brown-soft">Email: </dt>
-                  <dd className="inline">
-                    <a href={`mailto:${l.email}`} className="underline">{l.email}</a>
-                  </dd>
-                </div>
+                {l.phone && (
+                  <div>
+                    <dt className="inline text-brown-soft">Phone: </dt>
+                    <dd className="inline">
+                      <a href={`tel:${l.phone}`} className="underline">{l.phone}</a>
+                      {" · "}
+                      <a href={waLink(l.phone)} target="_blank" rel="noopener noreferrer" className="underline">
+                        WhatsApp
+                      </a>
+                    </dd>
+                  </div>
+                )}
+                {l.email && (
+                  <div>
+                    <dt className="inline text-brown-soft">Email: </dt>
+                    <dd className="inline">
+                      <a href={`mailto:${l.email}`} className="underline">{l.email}</a>
+                    </dd>
+                  </div>
+                )}
                 {l.type && (
                   <div>
                     <dt className="inline text-brown-soft">Suite type: </dt>
@@ -398,5 +408,174 @@ function ShowingBox({ lead, onLeads }: { lead: Lead; onLeads: (l: Lead[]) => voi
         )
       )}
     </div>
+  );
+}
+
+const timeAgo = (iso: string, now: number) => {
+  const min = Math.max(0, Math.round((now - Date.parse(iso)) / 60e3));
+  return min < 1 ? "just now" : min < 60 ? `${min} min ago` : min < 1440 ? `${Math.round(min / 60)} h ago` : `${Math.round(min / 1440)} days ago`;
+};
+
+// Lead emails from the sarah@eloramtl.com mailbox, added to the inquiries every 10 minutes.
+function EmailLeads({ content, update, onLeads }: { content: SiteContent; update: Update; onLeads: (l: Lead[]) => void }) {
+  const inbox = content.inbox;
+  const [status, setStatus] = useState<{ configured: boolean; aiReady: boolean; state: InboxState } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const now = useNow();
+  useEffect(() => {
+    inboxStatus().then(setStatus);
+  }, []);
+  const set = (patch: Partial<SiteContent["inbox"]>) => update((c) => ({ ...c, inbox: { ...c.inbox, ...patch } }));
+  const check = async () => {
+    setBusy(true);
+    setMsg("");
+    const res = await checkInboxNow().catch(() => null);
+    if (!res) setMsg("The check couldn't run. Refresh the page and try again.");
+    else {
+      if (res.leads) onLeads(res.leads);
+      if (res.state) setStatus((s) => (s ? { ...s, state: res.state! } : s));
+      setMsg(res.ok ? (res.added ? `Added ${res.added} new lead${res.added === 1 ? "" : "s"}.` : "No new lead emails.") : (res.error ?? "Something went wrong."));
+    }
+    setBusy(false);
+  };
+  const st = status?.state;
+
+  return (
+    <section className="rounded-lg bg-cream p-5 shadow-sm ring-1 ring-sand">
+      <p className="flex items-center gap-2 font-display text-xl text-ink">
+        <MailIcon className="size-5 text-gold" /> Leads from your email
+      </p>
+      <p className="mt-1 text-sm text-brown-soft">
+        Lead emails that reach sarah@eloramtl.com (Rentsync, Apartments.com, Zumper…) are added here every 10 minutes. Your emails stay as they are, and no one gets an automatic reply.
+      </p>
+      <div className="mt-3">
+        <Switch
+          on={inbox.enabled}
+          onChange={(v) => set({ enabled: v, since: inbox.since ?? new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10) })}
+          label={inbox.enabled ? "On" : "Off"}
+        />
+      </div>
+      {inbox.enabled && (
+        <>
+          <label className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+            <span className="text-brown-soft">Add lead emails received since</span>
+            <input type="date" className={`${field} w-auto py-2`} value={inbox.since ?? ""} onChange={(e) => set({ since: e.target.value || undefined })} />
+          </label>
+          {status && !status.configured && <p className="mt-3 rounded-md bg-gold-light/60 px-3 py-2 text-sm text-brown">The mailbox login isn’t set on the server (SMTP_HOST, SMTP_USER, SMTP_PASS in Amplify).</p>}
+          {status && !status.aiReady && <p className="mt-3 rounded-md bg-gold-light/60 px-3 py-2 text-sm text-brown">Without the AI key, only the sender’s name and email are filled in, with the whole email as the comment.</p>}
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button className={softBtn} onClick={check} disabled={busy}>
+              {busy ? "Checking…" : "Check now"}
+            </button>
+            {st?.lastCheck && (
+              <span className="text-sm text-brown-soft">
+                Last checked {timeAgo(st.lastCheck, now)}
+                {st.imported ? ` · ${st.imported} added so far` : ""}
+              </span>
+            )}
+          </div>
+          {msg && <p className="mt-2 text-sm text-brown">{msg}</p>}
+          {st?.error && !msg && <p className="mt-2 text-sm text-red-800">{st.error}</p>}
+        </>
+      )}
+    </section>
+  );
+}
+
+const SOURCES = ["Phone call", "Text / WhatsApp", "Walk-in", "Instagram", "Facebook", "Apartments.com", "Zumper", "Rentsync", "Email", "Referral"];
+
+// An inquiry that came another way, typed in or read from a pasted email or message.
+function AddInquiry({ onLeads }: { onLeads: (l: Lead[]) => void }) {
+  const empty = { name: "", email: "", phone: "", type: "", moveIn: "", source: "Phone call", comments: "", lang: "en" as "fr" | "en" };
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(empty);
+  const [paste, setPaste] = useState("");
+  const [busy, setBusy] = useState<"" | "read" | "save">("");
+  const [msg, setMsg] = useState("");
+  const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
+
+  const read = async () => {
+    setBusy("read");
+    setMsg("");
+    const res = await readPastedLead(paste).catch(() => ({ ok: false as const, error: "The AI didn't answer. Try again in a moment." }));
+    if (res.ok) {
+      const l = res.lead;
+      setForm((f) => ({ ...f, name: l.name, email: l.email, phone: l.phone, type: l.type ?? "", moveIn: l.moveIn ?? "", comments: l.comments ?? "", source: l.source || f.source, lang: l.lang }));
+      setMsg("Filled in from the text. Check it, then save.");
+    } else setMsg(res.error);
+    setBusy("");
+  };
+  const save = async () => {
+    setBusy("save");
+    setMsg("");
+    const res = await addInquiryByHand(form);
+    if (res.ok) {
+      onLeads(res.leads);
+      setForm(empty);
+      setPaste("");
+      setOpen(false);
+    } else setMsg(res.error);
+    setBusy("");
+  };
+
+  return (
+    <section className="rounded-lg bg-cream p-5 shadow-sm ring-1 ring-sand">
+      <p className="flex items-center gap-2 font-display text-xl text-ink">
+        <PlusIcon className="size-5 text-gold" /> Add an inquiry
+      </p>
+      <p className="mt-1 text-sm text-brown-soft">For leads by phone, text, Instagram or anywhere else. Nobody is emailed.</p>
+      {!open ? (
+        <button className={`${softBtn} mt-3`} onClick={() => setOpen(true)}>
+          Add one
+        </button>
+      ) : (
+        <div className="mt-4 space-y-3">
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium">Paste an email or message (optional)</span>
+            <textarea rows={3} className={field} value={paste} onChange={(e) => setPaste(e.target.value)} placeholder="Paste it here and the AI fills in the fields below…" />
+          </label>
+          <button className={softBtn} onClick={read} disabled={busy !== "" || !paste.trim()}>
+            <SparkleIcon className="size-4 text-gold" /> {busy === "read" ? "Reading…" : "Fill in from the text"}
+          </button>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <input className={field} placeholder="Name *" value={form.name} onChange={(e) => set({ name: e.target.value })} />
+            <input className={field} placeholder="Phone" type="tel" value={form.phone} onChange={(e) => set({ phone: e.target.value })} />
+            <input className={`${field} sm:col-span-2`} placeholder="Email" type="email" value={form.email} onChange={(e) => set({ email: e.target.value })} />
+            <select className={field} value={form.type} onChange={(e) => set({ type: e.target.value })} aria-label="Suite type">
+              <option value="">Suite type: not sure</option>
+              {UNIT_TYPES.map((k) => (
+                <option key={k} value={TYPES[k]}>
+                  {TYPES[k]}
+                </option>
+              ))}
+            </select>
+            <label className="flex items-center gap-2 text-sm">
+              <span className="shrink-0 text-brown-soft">Move-in</span>
+              <input className={field} type="date" value={form.moveIn} onChange={(e) => set({ moveIn: e.target.value })} />
+            </label>
+            <select className={field} value={form.source} onChange={(e) => set({ source: e.target.value })} aria-label="Where it came from">
+              {[...new Set([form.source, ...SOURCES])].map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+            <select className={field} value={form.lang} onChange={(e) => set({ lang: e.target.value as "fr" | "en" })} aria-label="Language">
+              <option value="en">English</option>
+              <option value="fr">French</option>
+            </select>
+            <textarea rows={3} className={`${field} sm:col-span-2`} placeholder="What they’re looking for, budget, notes…" value={form.comments} onChange={(e) => set({ comments: e.target.value })} />
+          </div>
+          {msg && <p className="text-sm text-brown">{msg}</p>}
+          <div className="flex flex-wrap gap-2">
+            <button className={bigBtn} onClick={save} disabled={busy !== ""}>
+              {busy === "save" ? "Saving…" : "Save the inquiry"}
+            </button>
+            <button className={softBtn} onClick={() => setOpen(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

@@ -1,6 +1,7 @@
 import { UNITS } from "@/data/building";
 import { sendFollowUp, sendTeamNotice } from "./autoEmail";
 import { getContent } from "./content";
+import { importInboxLeads } from "./inboxLeads";
 import { changeLeads, readLeads, type Lead } from "./leads";
 import { wallClock } from "./showingSlots";
 import { recentCounts } from "./stats";
@@ -29,8 +30,9 @@ export async function runDueJobs({ force = false } = {}) {
   // Claim this run first, so two visits at once don't both send.
   await putFile(STATE, JSON.stringify({ ...state, lastRun: Date.now() }), "application/json");
   const content = await getContent();
+  // Lead emails first, so the weekly summary counts them.
+  if (content.inbox.enabled) await importInboxLeads().catch((err) => console.error("[jobs] inbox", err));
   const leads = await readLeads();
-
   if (content.emails.followUp.enabled) await sendFollowUps(leads);
   if (content.emails.weekly.enabled) {
     const week = weeklyDue(state.lastWeekly);

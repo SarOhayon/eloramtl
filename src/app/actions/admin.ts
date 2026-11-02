@@ -91,6 +91,7 @@ function clean(input: SiteContent): SiteContent {
     emails: cleanEmails(input.emails),
     faq: cleanFaq(input.faq),
     sun: cleanSun(input.sun),
+    inbox: { enabled: input.inbox?.enabled === true, ...(date(input.inbox?.since) ? { since: date(input.inbox?.since) } : {}) },
     library,
   };
 }

@@ -37,7 +37,9 @@ export function emailBlanks(content: SiteContent, lang: Lang, person: { name: st
 }
 
 // Sends one of the admin-editable emails to a visitor, in their language.
-export function sendTemplate(t: EmailTemplate, lang: Lang, to: string, blanks: Record<string, string>, attachments: Attachment[] = []) {
+export async function sendTemplate(t: EmailTemplate, lang: Lang, to: string, blanks: Record<string, string>, attachments: Attachment[] = []) {
+  // Leads added by hand may have only a phone number.
+  if (!to.trim()) return false;
   const html = t.html[lang].trim() ? fillHtmlTemplate(t.html[lang], blanks) : "";
   return sendMail({
     to,
