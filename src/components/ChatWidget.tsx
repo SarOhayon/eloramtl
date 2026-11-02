@@ -60,9 +60,9 @@ export function ChatWidget({ locale, suggestions }: { locale: Locale; suggestion
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 left-4 z-30 inline-flex items-center gap-2 rounded-full bg-brown px-4 py-3 text-sm font-medium text-cream shadow-lg shadow-black/20 transition hover:bg-brown-deep sm:bottom-6 sm:left-6"
+        className="fixed bottom-4 right-4 z-30 inline-flex h-14 items-center gap-2.5 rounded-full bg-brown px-6 text-base font-medium text-cream shadow-lg shadow-black/25 ring-1 ring-gold/40 transition hover:-translate-y-0.5 hover:bg-brown-deep sm:bottom-6 sm:right-6"
       >
-        <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true">
+        <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true">
           <path d="M4.5 6.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H10l-4 3.5v-3.5h0a2 2 0 0 1-1.5-2v-8Z" />
           <path d="M8.5 9.5h7M8.5 12.5h4.5" />
         </svg>
@@ -71,7 +71,7 @@ export function ChatWidget({ locale, suggestions }: { locale: Locale; suggestion
     );
 
   return (
-    <div className="fixed inset-x-3 bottom-3 z-50 flex max-h-[80svh] flex-col overflow-hidden rounded-lg bg-cream shadow-2xl ring-1 ring-brown/15 sm:inset-x-auto sm:bottom-6 sm:left-6 sm:h-[540px] sm:w-[380px]" role="dialog" aria-label={t.title}>
+    <div className="fixed inset-x-3 bottom-3 z-50 flex max-h-[80svh] flex-col overflow-hidden rounded-lg bg-cream shadow-2xl ring-1 ring-brown/15 sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[580px] sm:w-[400px]" role="dialog" aria-label={t.title}>
       <div className="flex items-center justify-between border-t-2 border-gold bg-brown px-4 py-3 text-cream">
         <div>
           <p className="font-display text-xl leading-none tracking-[0.2em]">{t.title.toUpperCase()}</p>

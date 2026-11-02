@@ -90,6 +90,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
 
 async function Body({ locale }: { locale: Locale }) {
   const [content, hours] = await Promise.all([getContent(), getOfficeHours()]);
+  const chatOn = Boolean(content.faq.enabled && process.env.ANTHROPIC_API_KEY);
   const t = applyText(getDictionary(locale), content.text, locale);
   const a = t.amenities.items;
   const amen = content.photos.amenities;
@@ -328,11 +329,11 @@ async function Body({ locale }: { locale: Locale }) {
         <PromoPopup id={promoId} text={promoText} tab={promo.tab[locale]} photo={promo.photo} showTab={promo.showTab} closeLabel={t.promo.close} />
       )}
 
-      <BackToTop label={t.backToTop} />
+      <BackToTop label={t.backToTop} raised={chatOn} />
       <InquiryDialog locale={locale} />
       <Tracker />
       {/* The chat assistant, when it's turned on in the admin and the AI key is set. */}
-      {content.faq.enabled && process.env.ANTHROPIC_API_KEY && (
+      {chatOn && (
         <ChatWidget locale={locale} suggestions={content.faq.items.slice(0, 3).map((f) => f.q[locale]).filter(Boolean)} />
       )}
 
@@ -342,7 +343,7 @@ async function Body({ locale }: { locale: Locale }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label={t.contact.whatsapp}
-        className="fixed bottom-4 right-4 z-30 inline-flex size-14 items-center justify-center rounded-full bg-whatsapp text-white shadow-lg shadow-black/20 sm:hidden"
+        className={`fixed right-4 z-30 inline-flex size-14 items-center justify-center rounded-full bg-whatsapp text-white shadow-lg shadow-black/20 sm:hidden ${chatOn ? "bottom-[5.25rem]" : "bottom-4"}`}
       >
         <WhatsAppIcon className="size-7" />
       </a>
