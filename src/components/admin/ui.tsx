@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronIcon } from "../icons";
 import { IconBadge } from "./AdminIcons";
 import type { Bilingual, SiteContent } from "@/data/content";
 
@@ -25,16 +26,41 @@ export function ScreenTitle({ title, help, icon }: { title: string; help: string
   );
 }
 
-export function Step({ n, title, help, children }: { n?: number; title: string; help?: string; children: React.ReactNode }) {
+// A section of a screen that folds open and closed by its title. Numbered steps (settings) start
+// closed except step 1; the others (lists like the week's showings) start open. Whatever you open
+// or close is remembered on this computer.
+export function Step({ n, title, help, children, defaultOpen }: { n?: number; title: string; help?: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  const key = `elora-admin-step:${title}`;
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved && ref.current) ref.current.open = saved === "open";
+    } catch {
+      // Private browsing: just use the default.
+    }
+  }, [key]);
   return (
-    <section className="rounded-lg bg-cream p-6 shadow-sm ring-1 ring-sand">
-      <h2 className="flex items-center gap-3 font-display text-2xl text-ink">
-        {n !== undefined && <span className="inline-flex size-9 items-center justify-center rounded-full bg-action font-sans text-base text-white">{n}</span>}
-        {title}
-      </h2>
-      {help && <p className="mt-1 text-brown-soft">{help}</p>}
-      <div className="mt-5">{children}</div>
-    </section>
+    <details
+      ref={ref}
+      open={defaultOpen ?? (n === undefined || n === 1)}
+      onToggle={(e) => {
+        try {
+          localStorage.setItem(key, e.currentTarget.open ? "open" : "closed");
+        } catch {}
+      }}
+      className="group rounded-lg bg-cream shadow-sm ring-1 ring-sand"
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-3 p-6 [&::-webkit-details-marker]:hidden">
+        {n !== undefined && <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-action font-sans text-base text-white">{n}</span>}
+        <h2 className="flex-1 font-display text-2xl text-ink">{title}</h2>
+        <ChevronIcon dir="down" className="size-5 shrink-0 text-brown-soft transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="px-6 pb-6">
+        {help && <p className="-mt-3 text-brown-soft">{help}</p>}
+        <div className="mt-5">{children}</div>
+      </div>
+    </details>
   );
 }
 
