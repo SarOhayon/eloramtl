@@ -289,7 +289,7 @@ const clock = new Intl.DateTimeFormat("en-CA", { hour: "numeric", minute: "2-dig
 const addDays = (d: string, n: number) => new Date(Date.parse(`${d}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
 const mondayOf = (d: string) => addDays(d, -((new Date(`${d}T00:00:00Z`).getUTCDay() + 6) % 7));
 
-function WeekSchedule({ leads, showings, loading }: { leads: Lead[]; showings: Showings; loading: boolean }) {
+export function WeekSchedule({ leads, showings, loading }: { leads: Lead[]; showings: Showings; loading: boolean }) {
   const today = todayInMontreal();
   const [monday, setMonday] = useState(() => mondayOf(today));
   const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
@@ -335,7 +335,7 @@ function WeekSchedule({ leads, showings, loading }: { leads: Lead[]; showings: S
                   {list.map((l) => (
                     <li key={l.id} className={`rounded px-2 py-1.5 text-sm leading-snug ${l.attendance === "came" ? "bg-[#e3eee4]" : l.attendance === "no-show" ? "bg-[#f4e1df]" : "bg-gold-light/50"}`}>
                       <span className="font-medium text-ink">{clock.format(new Date(`2000-01-01T${l.showing!.time}:00Z`))}</span>
-                      <span className="block truncate text-brown" title={l.name}>{l.name}</span>
+                      <span className="block break-words text-brown">{l.name}</span>
                       <a href={`tel:${l.phone}`} className="block truncate text-xs text-brown-soft underline">{l.phone}</a>
                       {l.type && <span className="block truncate text-xs text-brown-soft">{l.type}</span>}
                       {l.units?.length ? <span className="block text-xs font-medium text-brown">Show: {l.units.join(", ")}</span> : null}

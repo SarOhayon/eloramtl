@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { logout, saveSiteContent, uploadFile } from "@/app/actions/admin";
 import { listLeads } from "@/app/actions/leads";
 import { needsFollowUp } from "@/lib/followUp";
+import type { Lead } from "@/lib/leads";
 import { FLOORS, UNITS, UNIT_TYPES, formatPrice, type UnitType } from "@/data/building";
 import { AMENITY_SLOTS, EDITABLE_TEXT, scheduleState, readPath, type Bilingual, type Promo, type SiteContent, type SuiteStatus } from "@/data/content";
 import { GALLERY, PHOTOS, type Photo, type PhotoCategory } from "@/data/photos";
@@ -37,7 +38,7 @@ import { ChatScreen } from "./ChatScreen";
 import { EmailsScreen } from "./EmailsScreen";
 import { InboxScreen } from "./InboxScreen";
 import { NoticeScreen } from "./NoticeScreen";
-import { ShowingsScreen } from "./ShowingsScreen";
+import { ShowingsScreen, WeekSchedule } from "./ShowingsScreen";
 import { StatsScreen } from "./StatsScreen";
 import { SunScreen } from "./SunScreen";
 import { AiScreen } from "./AiScreen";
@@ -216,8 +217,13 @@ function BannerSummary({ notices }: { notices: SiteContent["notices"] }) {
 function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }) {
   const available = Object.values(content.suites).filter((s) => s.status === "available").length;
   const [leadCounts, setLeadCounts] = useState<{ fresh: number; follow: number } | null>(null);
+  const [booked, setBooked] = useState<Lead[] | null>(null);
   useEffect(() => {
-    listLeads().then((l) => l && setLeadCounts({ fresh: l.filter((x) => x.status === "new").length, follow: l.filter((x) => needsFollowUp(x, Date.now())).length }));
+    listLeads().then((l) => {
+      if (!l) return;
+      setLeadCounts({ fresh: l.filter((x) => x.status === "new").length, follow: l.filter((x) => needsFollowUp(x, Date.now())).length });
+      setBooked(l.filter((x) => x.showing && x.status !== "closed"));
+    });
   }, []);
   const [ai, setAi] = useState<{ left: number | null; warnings: string[] } | null>(null);
   useEffect(() => {
@@ -296,7 +302,14 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
         </button>
       ))}
       <h1 className="font-display text-4xl text-ink">Welcome</h1>
-      <p className="mt-2 text-lg text-brown-soft">What would you like to do? Click a box to start. Everything saves by itself.</p>
+      {/* The week's showings first: what's going on matters most. */}
+      <div className="mt-6">
+        <WeekSchedule leads={booked ?? []} showings={content.showings} loading={!booked} />
+        <button onClick={() => go("showings")} className="mt-2 text-sm font-medium text-brown underline underline-offset-4">
+          Check people in, cancel or add a showing →
+        </button>
+      </div>
+      <p className="mt-8 text-lg text-brown-soft">What would you like to do? Click a box to start. Everything saves by itself.</p>
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {tiles.map((t) => (
           <button
