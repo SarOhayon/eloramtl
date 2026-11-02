@@ -44,6 +44,7 @@ import { StatsScreen } from "./StatsScreen";
 import { SunScreen } from "./SunScreen";
 import { AiScreen } from "./AiScreen";
 import { TenantsScreen } from "./TenantsScreen";
+import { ThemeToggle } from "./ThemeToggle";
 import { aiAccount } from "@/app/actions/ai";
 import { aiWarnings, creditLeft } from "@/lib/aiAlerts";
 import { SunIcon } from "../icons";
@@ -142,6 +143,7 @@ export function AdminApp({ initial }: { initial: SiteContent }) {
           </button>
           <div className="flex flex-wrap items-center gap-2">
             <SaveBadge state={saveState} />
+            <ThemeToggle />
             <a href="/en" target="_blank" className={softBtn}>
               View my website <ExternalIcon className="size-4" />
             </a>

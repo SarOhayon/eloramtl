@@ -13,7 +13,11 @@ export const metadata: Metadata = {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${serif.variable} ${jakarta.variable} antialiased`}>
+    <html lang="en" className={`${serif.variable} ${jakarta.variable} antialiased`} suppressHydrationWarning>
+      <head>
+        {/* Dark or light, chosen with the switch in the top bar; set before the page paints so it doesn't flash. */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem("elora-admin-theme")==="dark")document.documentElement.dataset.adminTheme="dark"}catch(e){}` }} />
+      </head>
       <body className="min-h-svh bg-cream-deep font-sans text-brown">{children}</body>
     </html>
   );

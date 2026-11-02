@@ -81,3 +81,32 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .paw-step { animation: none; opacity: 0.35; }
 }
+
+/* Admin dark mode (the switch in the admin's top bar sets data-admin-theme on <html>). The brand
+   colours are swapped for deep walnut surfaces, warm cream text and champagne-gold buttons. */
+html[data-admin-theme="dark"] {
+  color-scheme: dark;
+  --color-cream: #241c17;
+  --color-cream-deep: #1a1411;
+  --color-sand: #3e322a;
+  --color-brown: #e6d9c7;
+  --color-brown-deep: #120e0b;
+  --color-brown-soft: #b4a291;
+  --color-action: #a8875a;
+  --color-action-deep: #8c6f48;
+  --color-action-light: #3b3027;
+  --color-gold: #c9a46a;
+  --color-gold-light: #4a3b29;
+  --color-ink: #f6eee3;
+}
+html[data-admin-theme="dark"] .bg-white { background-color: #2d241e; }
+html[data-admin-theme="dark"] .hover\:bg-white:hover { background-color: #3a2f27; }
+html[data-admin-theme="dark"] .bg-\[\#e3eee4\],
+html[data-admin-theme="dark"] .bg-\[\#eaf3ec\] { background-color: #1f3326; }
+html[data-admin-theme="dark"] .text-\[\#2f5a38\] { color: #9fd3a9; }
+html[data-admin-theme="dark"] .bg-\[\#f4e1df\],
+html[data-admin-theme="dark"] .bg-red-50 { background-color: #3d2222; }
+html[data-admin-theme="dark"] .text-red-900,
+html[data-admin-theme="dark"] .text-red-800 { color: #f1b3ab; }
+html[data-admin-theme="dark"] .ring-red-200 { --tw-ring-color: #6b3434; }
+html[data-admin-theme="dark"] .accent-\[\#503d32\] { accent-color: #a8875a; }
