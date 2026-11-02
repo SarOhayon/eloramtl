@@ -20,9 +20,10 @@ export async function listLeads(): Promise<Lead[] | null> {
 }
 
 // `snooze` restarts the 4-day follow-up reminder without changing the status.
-export async function updateLead(id: string, patch: { status?: LeadStatus; note?: string; snooze?: boolean; units?: string[] }): Promise<Lead[] | null> {
+export async function updateLead(id: string, patch: { status?: LeadStatus; note?: string; snooze?: boolean; units?: string[]; leasedUnit?: string }): Promise<Lead[] | null> {
   if (!(await isAdmin())) return null;
-  const clean: { status?: LeadStatus; note?: string; statusAt?: string; units?: string[] } = {};
+  const clean: { status?: LeadStatus; note?: string; statusAt?: string; units?: string[]; leasedUnit?: string } = {};
+  if (typeof patch.leasedUnit === "string") clean.leasedUnit = UNITS.some((u) => u.id === patch.leasedUnit) ? patch.leasedUnit : undefined;
   if (patch.status && STATUSES.includes(patch.status)) clean.status = patch.status;
   if (typeof patch.note === "string") clean.note = patch.note.slice(0, 2000);
   if (patch.snooze) clean.statusAt = new Date().toISOString();

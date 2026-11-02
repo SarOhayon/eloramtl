@@ -44,6 +44,12 @@ export const UploadIcon = (p: P) => (
     <path d="M12 15.5v-11M7.5 9 12 4.5 16.5 9M4.5 15v3.5a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1V15" />
   </Icon>
 );
+export const KeyIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="8" cy="15" r="4" />
+    <path d="M10.8 12.2 19 4M16 7l2.5 2.5M14 9l2 2" />
+  </Icon>
+);
 export const PlusIcon = (p: P) => (
   <Icon {...p}>
     <path d="M12 5v14M5 12h14" />

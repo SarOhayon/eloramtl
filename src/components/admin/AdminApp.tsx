@@ -27,6 +27,7 @@ import {
   MegaphoneIcon,
   PlusIcon,
   PriceIcon,
+  KeyIcon,
   SparkleIcon,
   TableIcon,
   TagIcon,
@@ -42,6 +43,7 @@ import { ShowingsScreen, WeekSchedule } from "./ShowingsScreen";
 import { StatsScreen } from "./StatsScreen";
 import { SunScreen } from "./SunScreen";
 import { AiScreen } from "./AiScreen";
+import { TenantsScreen } from "./TenantsScreen";
 import { aiAccount } from "@/app/actions/ai";
 import { aiWarnings, creditLeft } from "@/lib/aiAlerts";
 import { SunIcon } from "../icons";
@@ -51,7 +53,7 @@ import { Wordmark } from "../Wordmark";
 // A deliberately simple admin: a home screen with big buttons, one task per screen,
 // plain-English help and automatic saving.
 
-type Screen = "home" | "inbox" | "promo" | "notice" | "apartments" | "showings" | "emails" | "chat" | "photos" | "prices" | "text" | "stats" | "sun" | "ai";
+type Screen = "home" | "inbox" | "promo" | "notice" | "apartments" | "showings" | "emails" | "chat" | "photos" | "prices" | "text" | "stats" | "sun" | "ai" | "tenants";
 
 const TYPE_LABELS = dictionaries.en.types;
 const isPdf = (src: string) => src.endsWith(".pdf");
@@ -169,13 +171,14 @@ export function AdminApp({ initial }: { initial: SiteContent }) {
             </button>
             {screen === "promo" && <PromoScreen content={content} update={update} upload={upload} />}
             {screen === "notice" && <NoticeScreen content={content} update={update} />}
-            {screen === "inbox" && <InboxScreen content={content} update={update} />}
+            {screen === "inbox" && <InboxScreen content={content} update={update} onTenants={() => setScreen("tenants")} />}
             {screen === "showings" && <ShowingsScreen content={content} update={update} />}
             {screen === "emails" && <EmailsScreen content={content} update={update} />}
             {screen === "chat" && <ChatScreen content={content} update={update} />}
             {screen === "stats" && <StatsScreen />}
             {screen === "sun" && <SunScreen content={content} update={update} upload={upload} />}
             {screen === "ai" && <AiScreen content={content} update={update} />}
+            {screen === "tenants" && <TenantsScreen content={content} update={update} />}
             {screen === "apartments" && <ApartmentsScreen content={content} update={update} upload={upload} />}
             {screen === "photos" && <PhotosScreen content={content} update={update} upload={upload} />}
             {screen === "prices" && <PricesScreen content={content} update={update} />}
@@ -218,11 +221,13 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
   const available = Object.values(content.suites).filter((s) => s.status === "available").length;
   const [leadCounts, setLeadCounts] = useState<{ fresh: number; follow: number } | null>(null);
   const [booked, setBooked] = useState<Lead[] | null>(null);
+  const [tenants, setTenants] = useState<number | null>(null);
   useEffect(() => {
     listLeads().then((l) => {
       if (!l) return;
       setLeadCounts({ fresh: l.filter((x) => x.status === "new").length, follow: l.filter((x) => needsFollowUp(x, Date.now())).length });
       setBooked(l.filter((x) => x.showing && x.status !== "closed"));
+      setTenants(l.filter((x) => x.status === "leased").length);
     });
   }, []);
   const [ai, setAi] = useState<{ left: number | null; warnings: string[] } | null>(null);
@@ -242,6 +247,7 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
           "Nothing new"
         ),
     },
+    { screen: "tenants", icon: <KeyIcon className="size-6" />, title: "Leased tenants", text: "Everyone who signed: the suite they took and when.", note: tenants === null ? undefined : `${tenants} leased` },
     {
       screen: "showings",
       icon: <CalendarIcon className="size-6" />,

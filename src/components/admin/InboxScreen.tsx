@@ -32,11 +32,12 @@ const waLink = (phone: string) => {
 };
 
 // Everything sent from the website's forms, newest first, with a status for follow-up.
-export function InboxScreen({ content, update }: { content: SiteContent; update: Update }) {
+export function InboxScreen({ content, update, onTenants }: { content: SiteContent; update: Update; onTenants: () => void }) {
   const [leads, setLeads] = useState<Lead[] | null>(null);
   const [filter, setFilter] = useState<LeadStatus | "all">("all");
   const [error, setError] = useState(false);
-  const [opened, setOpened] = useState<string[]>([]); // leased cards shown again
+  const [opened, setOpened] = useState<string[]>([]); // closed cards shown again
+  const [moved, setMoved] = useState(""); // name of someone just moved to Leased tenants
 
   useEffect(() => {
     listLeads().then((l) => (l ? setLeads(l) : setError(true)));
@@ -51,7 +52,10 @@ export function InboxScreen({ content, update }: { content: SiteContent; update:
     else setError(true);
   };
 
-  const shown = leads?.filter((l) => filter === "all" || l.status === filter) ?? [];
+  // Leased people live in Leased tenants, not here.
+  const open = leads?.filter((l) => l.status !== "leased");
+  const shown = open?.filter((l) => filter === "all" || l.status === filter) ?? [];
+  const tenants = leads?.filter((l) => l.status === "leased").length ?? 0;
   const now = useNow();
   const toFollow = (leads ?? []).filter((l) => needsFollowUp(l, now)).sort((a, b) => daysSinceUpdate(b, now) - daysSinceUpdate(a, now));
   const jump = (id: string) => {
@@ -78,14 +82,22 @@ export function InboxScreen({ content, update }: { content: SiteContent; update:
 
       <div className="mb-6 flex flex-wrap gap-2">
         <button onClick={() => setFilter("all")} className={`rounded-md px-4 py-2.5 ring-1 ${filter === "all" ? "bg-action text-white ring-action" : "bg-white ring-brown/20"}`}>
-          All {leads ? `(${leads.length})` : ""}
+          All {open ? `(${open.length})` : ""}
         </button>
-        {STATUS.map((s) => (
+        {STATUS.filter((s) => s.key !== "leased").map((s) => (
           <button key={s.key} onClick={() => setFilter(s.key)} className={`rounded-md px-4 py-2.5 ring-1 ${filter === s.key ? "bg-action text-white ring-action" : "bg-white ring-brown/20"}`}>
             {s.label} ({count(s.key)})
           </button>
         ))}
+        <button onClick={onTenants} className="rounded-md bg-[#e3eee4] px-4 py-2.5 text-[#2f5a38] ring-1 ring-[#3b6b45]/30 hover:ring-[#3b6b45]/60">
+          🎉 Leased tenants ({tenants}) →
+        </button>
       </div>
+      {moved && (
+        <p className="mb-4 rounded-md bg-[#e3eee4] px-4 py-3 text-[#2f5a38]" role="status">
+          🎉 {moved} moved to <button onClick={onTenants} className="font-medium underline underline-offset-4">Leased tenants</button>.
+        </p>
+      )}
 
       {!leads && !error && <p className="text-brown-soft">Loading…</p>}
       {leads && shown.length === 0 && <p className="rounded-lg bg-cream p-6 text-brown-soft ring-1 ring-sand">Nothing here yet.</p>}
@@ -117,13 +129,13 @@ export function InboxScreen({ content, update }: { content: SiteContent; update:
         <ul className="min-w-0 space-y-4">
           {shown.map((l) => (
             <li key={l.id} id={`lead-${l.id}`} className={`relative scroll-mt-28 overflow-hidden rounded-lg bg-cream p-5 shadow-sm ring-1 ${l.status === "new" ? "ring-gold" : "ring-sand"}`}>
-              {/* Leased: the card is blurred out of the way, one click shows it again. */}
-              {l.status === "leased" && !opened.includes(l.id) && (
+              {/* Closed: the card is blurred out of the way, one click shows it again. */}
+              {l.status === "closed" && !opened.includes(l.id) && (
                 <button
                   onClick={() => setOpened((o) => [...o, l.id])}
                   className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-cream/40 backdrop-blur-[3px] transition hover:bg-cream/20"
                 >
-                  <span className="rounded-full bg-[#3b6b45] px-4 py-1.5 font-medium text-white shadow">🎉 Leased · {l.name}</span>
+                  <span className="rounded-full bg-brown px-4 py-1.5 font-medium text-white shadow">Closed · {l.name}</span>
                   <span className="text-sm text-brown underline underline-offset-4">Click to view</span>
                 </button>
               )}
@@ -185,7 +197,10 @@ export function InboxScreen({ content, update }: { content: SiteContent; update:
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {STATUS.map((s) => (
-                  <button key={s.key} onClick={() => change(l.id, { status: s.key })} className={`rounded-md px-4 py-2 text-sm ring-1 ${l.status === s.key ? s.on : "bg-white ring-brown/20 hover:ring-brown/40"}`}>
+                  <button key={s.key} onClick={() => {
+                      change(l.id, { status: s.key });
+                      if (s.key === "leased") setMoved(l.name);
+                    }} className={`rounded-md px-4 py-2 text-sm ring-1 ${l.status === s.key ? s.on : "bg-white ring-brown/20 hover:ring-brown/40"}`}>
                     {s.label}
                   </button>
                 ))}
