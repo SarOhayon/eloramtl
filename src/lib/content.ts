@@ -43,6 +43,8 @@ function merge(saved: Saved): SiteContent {
       autoReply: bookingUp(logoUp({ ...d.emails.autoReply, ...saved.emails?.autoReply })),
       followUp: logoUp({ ...d.emails.followUp, ...saved.emails?.followUp }),
       weekly: { ...d.emails.weekly, ...saved.emails?.weekly },
+      morning: { ...d.emails.morning, ...saved.emails?.morning },
+      cheatSheet: { ...d.emails.cheatSheet, ...saved.emails?.cheatSheet },
     },
     faq: { ...d.faq, ...saved.faq },
     sun: { ...d.sun, ...saved.sun },

@@ -2,6 +2,7 @@ import { UNITS } from "@/data/building";
 import { sendFollowUp, sendTeamNotice } from "./autoEmail";
 import { getContent } from "./content";
 import { importInboxLeads } from "./inboxLeads";
+import { markWeeklyFaq, morningDue, readFaqSuggestions, sendMorningBrief, suggestFaqAnswers, weeklyFaqDue } from "./briefs";
 import { changeLeads, readLeads, type Lead } from "./leads";
 import { wallClock } from "./showingSlots";
 import { recentCounts } from "./stats";
@@ -34,12 +35,19 @@ export async function runDueJobs({ force = false } = {}) {
   if (content.inbox.enabled) await importInboxLeads().catch((err) => console.error("[jobs] inbox", err));
   const leads = await readLeads();
   if (content.emails.followUp.enabled) await sendFollowUps(leads);
-  if (content.emails.weekly.enabled) {
-    const week = weeklyDue(state.lastWeekly);
-    if (week) {
-      await sendWeekly(leads);
-      await putFile(STATE, JSON.stringify({ ...(await readState()), lastWeekly: week }), "application/json");
-    }
+  if (content.emails.morning.enabled) {
+    const today = await morningDue();
+    if (today) await sendMorningBrief(today).catch((err) => console.error("[jobs] morning brief", err));
+  }
+  // Monday: draft FAQ answers for the chat's unanswered questions, then the weekly summary.
+  const monday = weeklyDue(state.lastWeekly);
+  if (monday && (await weeklyFaqDue(monday))) {
+    await markWeeklyFaq(monday);
+    await suggestFaqAnswers().catch((err) => console.error("[jobs] FAQ suggestions", err));
+  }
+  if (content.emails.weekly.enabled && monday) {
+    await sendWeekly(leads);
+    await putFile(STATE, JSON.stringify({ ...(await readState()), lastWeekly: monday }), "application/json");
   }
 }
 
@@ -91,6 +99,7 @@ async function sendWeekly(leads: Lead[]) {
   const available = UNITS.filter((u) => content.suites[u.id]?.status === "available").length;
   const soon = UNITS.filter((u) => content.suites[u.id]?.status === "soon").length;
   const kinds = { inquiry: "inquiry", application: "application", showing: "showing" };
+  const faqWaiting = (await readFaqSuggestions()).length;
 
   await sendTeamNotice({
     subject: `Elora weekly summary: ${newLeads.length} new, ${coming.length} showing${coming.length === 1 ? "" : "s"} this week`,
@@ -101,6 +110,7 @@ async function sendWeekly(leads: Lead[]) {
       ["Last week's showings", `${lastWeek.length} booked · ${came} came · ${noShow} no-show${lastWeek.length - came - noShow ? ` · ${lastWeek.length - came - noShow} not marked` : ""}`],
       ["Suites", `${available} available · ${soon} coming soon`],
       ["Website (last 7 days)", `${total("visit")} visits · ${total("whatsapp")} WhatsApp · ${total("call")} call clicks`],
+      ...(faqWaiting ? [["Chat FAQ", `${faqWaiting} suggested answer${faqWaiting === 1 ? "" : "s"} to approve (Admin → Chat assistant)`] as [string, string]] : []),
     ],
     sections: [
       { title: "Showings this week", lines: coming.map((l) => `${fmtDay(l.showing!.date)} at ${l.showing!.time}: ${l.name} (${l.phone})`) },

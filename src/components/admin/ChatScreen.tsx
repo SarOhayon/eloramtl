@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { chatStatus, dismissChat, listChats, testChat } from "@/app/actions/chat";
+import { chatStatus, closeFaqSuggestion, dismissChat, draftFaqNow, listChats, listFaqSuggestions, testChat } from "@/app/actions/chat";
 import type { FaqItem, SiteContent } from "@/data/content";
+import type { FaqSuggestion } from "@/lib/briefs";
 import type { ChatEntry } from "@/lib/chatLog";
-import { ChatIcon, PlusIcon, TrashIcon } from "./AdminIcons";
+import { ChatIcon, CheckIcon, PlusIcon, SparkleIcon, TrashIcon } from "./AdminIcons";
 import { BilingualFields, ScreenTitle, Step, Switch, bigBtn, softBtn, type Update } from "./ui";
 
 const newId = () => `faq-${Date.now()}`;
@@ -51,6 +52,12 @@ export function ChatScreen({ content, update }: { content: SiteContent; update: 
           <ChatTest />
           <p className="mt-3 text-sm text-brown-soft">Each answer costs about 1–2 cents. The chat is limited to 600 messages a day for the whole site.</p>
         </Step>
+
+        <SuggestedAnswers
+          aiReady={aiReady}
+          onApprove={(s) => setItems((items) => [{ id: newId(), q: s.q, a: s.a }, ...items])}
+          onLog={setLog}
+        />
 
         {unanswered.length > 0 && (
           <Step title="Questions it couldn’t answer" help="Add the answer to the FAQ and the chat will know it next time.">
@@ -167,5 +174,70 @@ function ChatTest() {
         </p>
       )}
     </div>
+  );
+}
+
+// Each Monday the AI drafts FAQ entries for the questions the chat couldn't answer. Edit if needed,
+// then Approve adds it to the FAQ (the chat uses it right away); Dismiss drops it.
+function SuggestedAnswers({ aiReady, onApprove, onLog }: { aiReady: boolean | null; onApprove: (s: FaqSuggestion) => void; onLog: (l: ChatEntry[]) => void }) {
+  const [list, setList] = useState<FaqSuggestion[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  useEffect(() => {
+    listFaqSuggestions().then(setList);
+  }, []);
+  const edit = (id: string, patch: Partial<FaqSuggestion>) => setList((l) => l?.map((s) => (s.id === id ? { ...s, ...patch } : s)) ?? l);
+  const close = async (s: FaqSuggestion, approve: boolean) => {
+    if (approve) onApprove(s);
+    setList((l) => l?.filter((x) => x.id !== s.id) ?? l);
+    const res = await closeFaqSuggestion(s.id);
+    if (res) onLog(res.log);
+  };
+  const draft = async () => {
+    setBusy(true);
+    setMsg("");
+    const res = await draftFaqNow().catch(() => ({ error: "The AI didn't answer. Try again in a moment." }));
+    if (res && "list" in res) {
+      setList(res.list);
+      setMsg(res.added ? `${res.added} new suggestion${res.added === 1 ? "" : "s"}.` : "No new unanswered questions to draft from.");
+    } else setMsg(res?.error ?? "Please sign in again.");
+    setBusy(false);
+  };
+
+  return (
+    <Step title="Suggested answers" help="Every Monday, the AI drafts answers for the questions the chat couldn’t answer. Check the wording (fill in anything marked [to confirm]), then Approve adds it to the FAQ in one click.">
+      {aiReady !== false && (
+        <button className={softBtn} onClick={draft} disabled={busy}>
+          <SparkleIcon className="size-4 text-gold" /> {busy ? "Drafting…" : "Draft answers now"}
+        </button>
+      )}
+      {msg && <p className="mt-2 text-sm text-brown">{msg}</p>}
+      {list && list.length === 0 && <p className="mt-3 text-sm text-brown-soft">Nothing waiting. New suggestions appear here each Monday.</p>}
+      <ul className="mt-4 space-y-4">
+        {list?.map((s) => (
+          <li key={s.id} className="rounded-md bg-white p-4 ring-1 ring-gold/50">
+            {s.from.length > 0 && (
+              <p className="mb-3 text-sm text-brown-soft">
+                Visitors asked: {s.from.slice(0, 3).map((f) => `“${f.question}”`).join(" · ")}
+                {s.from.length > 3 ? ` +${s.from.length - 3} more` : ""}
+              </p>
+            )}
+            <BilingualFields label="Question" value={s.q} onChange={(q) => edit(s.id, { q })} />
+            <div className="mt-3">
+              <BilingualFields label="Answer" long value={s.a} onChange={(a) => edit(s.id, { a })} />
+            </div>
+            {/\[to confirm/i.test(`${s.a.en} ${s.a.fr}`) && <p className="mt-2 text-sm text-red-800">Fill in the parts marked [to confirm] before approving.</p>}
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button className={bigBtn} onClick={() => close(s, true)} disabled={/\[to confirm/i.test(`${s.a.en} ${s.a.fr}`)}>
+                <CheckIcon className="size-5" /> Approve
+              </button>
+              <button className={softBtn} onClick={() => close(s, false)}>
+                Dismiss
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Step>
   );
 }

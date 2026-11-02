@@ -6,6 +6,7 @@ import { getContent } from "@/lib/content";
 import { runDueJobs } from "@/lib/jobs";
 import { sendFollowUp, sendShowingEmails } from "@/lib/autoEmail";
 import { addLead, changeLead, changeLeads, readLeads, type Lead, type LeadStatus } from "@/lib/leads";
+import { sendCheatSheet } from "@/lib/briefs";
 import { extractLead, importInboxLeads, inboxConfigured, readInboxState, type ExtractedLead, type InboxState } from "@/lib/inboxLeads";
 import { montrealToUtc } from "@/lib/showingSlots";
 
@@ -180,4 +181,13 @@ export async function readPastedLead(text: string): Promise<{ ok: true; lead: Ex
     console.error("[leads] read pasted", err);
     return { ok: false, error: "The AI didn't answer. Try again in a moment." };
   }
+}
+
+// Emails the pre-tour cheat sheet to the team; called right after someone is checked in ("Came").
+export async function sendCheatSheetNow(id: string): Promise<boolean> {
+  if (!(await isAdmin())) return false;
+  return sendCheatSheet(String(id)).catch((err) => {
+    console.error("[leads] cheat sheet", err);
+    return false;
+  });
 }

@@ -178,6 +178,8 @@ function cleanEmails(e: Partial<AutoEmails> | undefined): AutoEmails {
     autoReply: { enabled: e?.autoReply?.enabled !== false, ...cleanTemplate(e?.autoReply, d.autoReply) },
     followUp: { enabled: e?.followUp?.enabled !== false, days: between(e?.followUp?.days, 1, 14, d.followUp.days), ...cleanTemplate(e?.followUp, d.followUp) },
     weekly: { enabled: e?.weekly?.enabled !== false },
+    morning: { enabled: e?.morning?.enabled !== false },
+    cheatSheet: { enabled: e?.cheatSheet?.enabled !== false },
   };
 }
 

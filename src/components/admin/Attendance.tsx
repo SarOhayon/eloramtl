@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { markAttendance, sendFollowUpNow } from "@/app/actions/leads";
+import { listLeads, markAttendance, sendCheatSheetNow, sendFollowUpNow } from "@/app/actions/leads";
 import type { Lead } from "@/lib/leads";
 import { montrealToUtc } from "@/lib/showingSlots";
 import { useNow } from "./ui";
@@ -22,6 +22,12 @@ export function Attendance({ lead, onLeads }: { lead: Lead; onLeads: (l: Lead[])
     const next = await markAttendance(lead.id, value);
     if (next) onLeads(next);
     setBusy(false);
+    // Checked in: the cheat sheet goes to your inbox (in the background; the AI takes a few seconds).
+    if (value === "came" && next && !lead.cheatSheetAt) {
+      sendCheatSheetNow(lead.id).then((sent) => {
+        if (sent) listLeads().then((l) => l && onLeads(l));
+      });
+    }
   };
   const btn = (on: boolean, tone: string) => `rounded-md px-4 py-2 text-sm ring-1 transition disabled:opacity-50 ${on ? tone : "bg-white ring-brown/20 hover:ring-brown/40"}`;
 
@@ -34,6 +40,7 @@ export function Attendance({ lead, onLeads }: { lead: Lead; onLeads: (l: Lead[])
       <button disabled={busy} onClick={() => mark(lead.attendance === "no-show" ? null : "no-show")} className={btn(lead.attendance === "no-show", "bg-brown text-white ring-brown")}>
         {lead.attendance === "no-show" ? "✓ No-show" : "No-show"}
       </button>
+      {lead.cheatSheetAt && <span className="text-sm text-brown-soft">Cheat sheet emailed</span>}
       {lead.followUp && (
         <span className="text-sm text-brown-soft">
           {lead.followUp.sentAt ? `Follow-up sent ${when.format(new Date(lead.followUp.sentAt))}` : `Follow-up email on ${when.format(new Date(lead.followUp.due))}`}

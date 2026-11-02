@@ -28,6 +28,7 @@ export type Lead = {
   units?: string[]; // suites the team picked to show them (admin only, never emailed)
   source?: string; // where a lead from outside the website came from, e.g. "Apartments.com"
   sourceId?: string; // the lead email's Message-ID, so it's only added once
+  cheatSheetAt?: string; // ISO: when the pre-tour cheat sheet was emailed to the team
 };
 export type Suggestion = { at: string; summary: string; picks: { unit: string; reason: string }[]; ask: string };
 
@@ -65,7 +66,7 @@ export async function addLead(lead: Omit<Lead, "id" | "createdAt" | "status"> & 
   }
 }
 
-type Patch = Partial<Pick<Lead, "status" | "statusAt" | "note" | "suggestion" | "attendance" | "followUp" | "showing" | "units">>;
+type Patch = Partial<Pick<Lead, "status" | "statusAt" | "note" | "suggestion" | "attendance" | "followUp" | "showing" | "units" | "cheatSheetAt">>;
 
 // Changes one lead; a field set to undefined is removed.
 export async function changeLead(id: string, patch: Patch): Promise<Lead[] | null> {

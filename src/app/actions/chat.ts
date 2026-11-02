@@ -8,6 +8,7 @@ import { ADDRESS, PHONE_MAIN_DISPLAY, UNITS } from "@/data/building";
 import { scheduleState, todayInMontreal } from "@/data/content";
 import { dictionaries } from "@/i18n/dictionaries";
 import { isAdmin } from "@/lib/adminAuth";
+import { readFaqSuggestions, saveFaqSuggestions, suggestFaqAnswers, type FaqSuggestion } from "@/lib/briefs";
 import { readChatLog, removeChat, logChat, type ChatEntry } from "@/lib/chatLog";
 import { getContent } from "@/lib/content";
 import { getOfficeHours } from "@/lib/officeHours";
@@ -168,6 +169,37 @@ export async function testChat(): Promise<{ ok: boolean; message: string } | nul
                   : "The AI service returned an error.";
     return { ok: false, message: `${why} (Details: ${raw.slice(0, 300)})` };
   }
+}
+
+// Suggested FAQ answers (drafted each Monday from the questions the chat couldn't answer).
+export async function listFaqSuggestions(): Promise<FaqSuggestion[] | null> {
+  if (!(await isAdmin())) return null;
+  return readFaqSuggestions();
+}
+
+export async function draftFaqNow(): Promise<{ added: number; list: FaqSuggestion[] } | { error: string } | null> {
+  if (!(await isAdmin())) return null;
+  if (!process.env.ANTHROPIC_API_KEY) return { error: "The AI key isn't set up yet." };
+  try {
+    const added = await suggestFaqAnswers();
+    return { added, list: await readFaqSuggestions() };
+  } catch (err) {
+    console.error("[chat] FAQ drafts", err);
+    return { error: "The AI didn't answer. Try again in a moment." };
+  }
+}
+
+// Removes a suggestion once approved (added to the FAQ in the admin) or dismissed, along with the
+// unanswered questions it covered.
+export async function closeFaqSuggestion(id: string): Promise<{ list: FaqSuggestion[]; log: ChatEntry[] } | null> {
+  if (!(await isAdmin())) return null;
+  const list = await readFaqSuggestions();
+  const done = list.find((s) => s.id === String(id));
+  const rest = list.filter((s) => s.id !== String(id));
+  await saveFaqSuggestions(rest);
+  let log = await readChatLog();
+  for (const f of done?.from ?? []) log = await removeChat(f.at);
+  return { list: rest, log };
 }
 
 export async function listChats(): Promise<ChatEntry[] | null> {

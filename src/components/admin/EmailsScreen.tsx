@@ -73,6 +73,14 @@ export function EmailsScreen({ content, update }: { content: SiteContent; update
         <Step n={4} title="Weekly summary" help="Every Monday at 8 a.m., to the leasing inbox: new inquiries, this week’s showings, who came last week, suites available and visitor numbers.">
           <Switch on={e.weekly.enabled} onChange={(v) => setEmails({ weekly: { enabled: v } })} label={e.weekly.enabled ? "On" : "Off"} />
         </Step>
+
+        <Step n={5} title="Morning brief" help="Every day at 7:30 a.m., to the leasing inbox: today’s showings with the suites to show each person, new leads from the last 24 hours with suggested suites, who needs a follow-up, and a fun fact of the day.">
+          <Switch on={e.morning.enabled} onChange={(v) => setEmails({ morning: { enabled: v } })} label={e.morning.enabled ? "On" : "Off"} />
+        </Step>
+
+        <Step n={6} title="Pre-tour cheat sheet" help="When you check someone in for their showing (“Came”), the leasing inbox gets a one-glance sheet: who they are, budget, move-in, pets, what they asked, the suites to show and two talking points.">
+          <Switch on={e.cheatSheet.enabled} onChange={(v) => setEmails({ cheatSheet: { enabled: v } })} label={e.cheatSheet.enabled ? "On" : "Off"} />
+        </Step>
       </div>
     </>
   );
