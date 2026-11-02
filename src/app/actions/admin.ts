@@ -190,6 +190,7 @@ function cleanEmails(e: Partial<AutoEmails> | undefined): AutoEmails {
     weekly: { enabled: e?.weekly?.enabled !== false },
     morning: { enabled: e?.morning?.enabled !== false },
     cheatSheet: { enabled: e?.cheatSheet?.enabled !== false },
+    testMode: e?.testMode !== false,
   };
 }
 

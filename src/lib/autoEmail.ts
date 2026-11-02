@@ -41,11 +41,14 @@ export async function sendTemplate(t: EmailTemplate, lang: Lang, to: string, bla
   // Leads added by hand may have only a phone number.
   if (!to.trim()) return false;
   const html = t.html[lang].trim() ? fillHtmlTemplate(t.html[lang], blanks) : "";
+  const inbox = process.env.MAIL_TO || INBOX_EMAIL;
+  // Test mode (Automatic emails): nothing reaches a client; it comes to the leasing inbox instead.
+  const test = (await getContent()).emails.testMode;
   return sendMail({
-    to,
+    to: test ? inbox : to,
     fromName: "Elora MTL",
-    replyTo: process.env.MAIL_TO || INBOX_EMAIL,
-    subject: fillTemplate(t.subject[lang], blanks),
+    replyTo: inbox,
+    subject: `${test ? `[TEST · would have gone to ${to}] ` : ""}${fillTemplate(t.subject[lang], blanks)}`,
     text: fillTemplate(t.body[lang], blanks),
     ...(html ? { html } : {}),
     attachments: withLogoImage(html, attachments),

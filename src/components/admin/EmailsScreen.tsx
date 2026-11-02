@@ -19,6 +19,15 @@ export function EmailsScreen({ content, update }: { content: SiteContent; update
         title="Automatic emails"
         help="The emails the website sends by itself. Each one goes out in the language the person used on the website. Turn them on or off, change the wording, or paste your own design."
       />
+      <section className={`mb-6 rounded-lg p-5 ring-1 ${e.testMode ? "bg-gold-light/50 ring-gold" : "bg-cream ring-sand"}`}>
+        <p className="font-display text-2xl text-ink">Test mode</p>
+        <p className="mt-1 text-brown-soft">
+          While the website is being set up: every email meant for a client (auto-reply, booking confirmation, follow-up) comes to your inbox instead, marked “TEST · would have gone to …”. Turn it off when you go live.
+        </p>
+        <div className="mt-3">
+          <Switch on={e.testMode} onChange={(v) => setEmails({ testMode: v })} label={e.testMode ? "ON: clients receive nothing" : "OFF: emails go to clients"} />
+        </div>
+      </section>
       <div className="space-y-6">
         <Step n={1} title="Reply to inquiries and applications" help="Sent right away to everyone who sends the inquiry form or “Apply now”. It carries their personal “Book my showing” button: this is the only way to book a showing, so keep {booking} in it.">
           <Switch on={e.autoReply.enabled} onChange={(v) => setEmails({ autoReply: { ...e.autoReply, enabled: v } })} label={e.autoReply.enabled ? "On" : "Off"} />

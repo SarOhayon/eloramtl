@@ -307,6 +307,11 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
           <AlertIcon className="mt-0.5 size-5 shrink-0" /> {w}
         </button>
       ))}
+      {content.emails.testMode && (
+        <button onClick={() => go("emails")} className="mb-3 flex w-full items-start gap-2 rounded-md bg-gold-light/60 px-4 py-3 text-left text-brown ring-1 ring-gold">
+          <AlertIcon className="mt-0.5 size-5 shrink-0" /> Test mode is on: emails meant for clients come to your inbox instead. Turn it off in Automatic emails when you go live.
+        </button>
+      )}
       <h1 className="font-display text-4xl text-ink">Welcome</h1>
       {/* The week's showings first: what's going on matters most. */}
       <div className="mt-6">
