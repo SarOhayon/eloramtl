@@ -96,7 +96,7 @@ const fr = {
   explorer: {
     eyebrow: "Les résidences",
     title: "Des résidences pensées pour vous",
-    lead: "Du studio au trois chambres, chaque résidence baigne dans la lumière naturelle, avec quartz, bois clair, cinq électroménagers, luminaires et eau chaude inclus. Choisissez un étage, puis entrez.",
+    lead: "Du studio au trois chambres, chaque résidence baigne dans la lumière naturelle, avec climatisation, balcon privé, quartz, bois clair, cinq électroménagers, luminaires et eau chaude inclus. Choisissez un étage, puis entrez.",
     from: "À partir de",
     perMonth: "/mois",
     floor: "Étage",
@@ -110,6 +110,7 @@ const fr = {
     beds: (n: number) => (n === 0 ? "Studio" : `${n} chambre${n > 1 ? "s" : ""}`),
     baths: (n: number) => `${n} salle${n > 1 ? "s" : ""} de bain`,
     den: "+ bureau",
+    perks: "Climatisation · balcon privé",
     sqft: "pi²",
     availableOn: "Disponible le",
     leased: "Loué",
@@ -286,7 +287,7 @@ const fr = {
       parking: { title: "Stationnement intérieur + bornes VÉ", text: "Places chauffées au sous-sol avec recharge pour véhicules électriques." },
       storage: { title: "Casiers de rangement", text: "Pour les vélos, les skis et tout ce qui ne rentre pas dans le placard." },
       pets: { title: "Animaux bienvenus", text: "Chiens et chats font partie de la famille." },
-      more: { title: "Et aussi :", text: "Ascenseurs, espaces pour bicyclettes, caméras de surveillance, accès pour personnes à mobilité réduite." },
+      more: { title: "Accessible et pratique :", text: "Entrée accessible avec rampe et porte à ouverture automatique, ascenseurs, espaces pour bicyclettes et caméras de surveillance." },
     },
     suiteItems: [
       "Laveuse et sécheuse dans chaque logement",
@@ -434,7 +435,7 @@ const en: Dictionary = {
   explorer: {
     eyebrow: "The residences",
     title: "Residences designed around you",
-    lead: "From studios to three-bedroom homes, every residence is bathed in natural light and finished in quartz and warm wood, with five appliances, lighting and hot water included. Choose a floor, then step inside.",
+    lead: "From studios to three-bedroom homes, every residence is bathed in natural light, with air conditioning, a private balcony, quartz and warm wood, and five appliances, lighting and hot water included. Choose a floor, then step inside.",
     from: "From",
     perMonth: "/mo",
     floor: "Floor",
@@ -448,6 +449,7 @@ const en: Dictionary = {
     beds: (n: number) => (n === 0 ? "Studio" : `${n} bedroom${n > 1 ? "s" : ""}`),
     baths: (n: number) => `${n} bathroom${n > 1 ? "s" : ""}`,
     den: "+ den",
+    perks: "Air conditioning · private balcony",
     sqft: "sq ft",
     availableOn: "Available on",
     leased: "Leased",
@@ -625,7 +627,7 @@ const en: Dictionary = {
       parking: { title: "Indoor parking + EV charging", text: "Heated underground spots with electric vehicle chargers." },
       storage: { title: "Storage lockers", text: "For bikes, skis and everything that doesn't fit in the closet." },
       pets: { title: "Pet friendly", text: "Dogs and cats are part of the family." },
-      more: { title: "Also:", text: "Elevators, bicycle room, video surveillance, wheelchair access." },
+      more: { title: "Accessible and easy:", text: "Wheelchair-accessible entrance with a ramp and automatic door opener, elevators, bicycle room and video surveillance." },
     },
     suiteItems: [
       "In-suite washer and dryer",

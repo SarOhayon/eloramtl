@@ -123,6 +123,7 @@ export function Explorer({ locale, prices, suites, floorPlans, promo, sun }: Pro
           {t.explorer.beds(u.beds)} {u.type === "1br-den" ? t.explorer.den : ""}
         </li>
         <li>{t.explorer.baths(u.baths)}</li>
+        <li>{t.explorer.perks}</li>
         <li>
           {u.sqft.toLocaleString(locale === "fr" ? "fr-CA" : "en-CA")} {t.explorer.sqft}
         </li>

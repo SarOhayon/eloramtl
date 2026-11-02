@@ -134,6 +134,9 @@ ${suites || "- none listed right now; the leasing team can tell them about upcom
 Starting prices by type: ${Object.entries(content.prices).map(([k, v]) => `${types[k as keyof typeof types]} from $${v}/month`).join(", ")}.
 Current promotion: ${promo}.
 
+Building features (true for the building; use them to answer): ${Object.values(dictionaries.en.amenities.items).map((a) => `${a.title.replace(/\s*:$/, "")}: ${a.text}`).join(" ")}
+In every suite: ${dictionaries.en.amenities.suiteItems.join("; ")}.
+
 FAQ:
 ${faq}`;
 }
