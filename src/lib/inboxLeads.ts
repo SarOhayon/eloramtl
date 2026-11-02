@@ -17,7 +17,8 @@ import { getFile, putFile } from "./storage";
 // Nothing is moved, deleted or marked read in the mailbox, and no one is emailed.
 
 const STATE = "inbox/state.json";
-export type InboxState = { lastCheck?: string; uidValidity?: string; lastUid?: number; imported?: number; error?: string };
+type Mark = { uidValidity: string; lastUid: number };
+export type InboxState = { lastCheck?: string; folders?: Record<string, Mark>; foldersRead?: string[]; imported?: number; error?: string; uidValidity?: string; lastUid?: number };
 
 // Who sends leads, matched against the sender and subject.
 const LEAD_SENDERS = /rentsync|apartments\.com|zumper|padmapper|rentals\.ca|rentfaster|kijiji|liv\.rent|realtor\.ca|centris/i;
@@ -53,63 +54,73 @@ export async function importInboxLeads(): Promise<{ ok: boolean; added: number; 
 
   const state = await readInboxState();
   const client = new ImapFlow({ ...config, logger: false, socketTimeout: 30e3, connectionTimeout: 15e3 });
+  const since = new Date(`${inbox.since || todayInMontreal()}T00:00:00-05:00`);
+  // Where each folder was read up to. Earlier versions only read the inbox.
+  const marks: Record<string, Mark> = { ...(state.uidValidity ? { INBOX: { uidValidity: state.uidValidity, lastUid: state.lastUid ?? 0 } } : {}), ...state.folders };
   let added = 0;
+  let budget = MAX_PER_RUN;
   try {
     await client.connect();
-    const lock = await client.getMailboxLock("INBOX");
-    try {
-      const box = client.mailbox;
-      const validity = box && typeof box === "object" ? String(box.uidValidity) : "";
-      const fromUid = state.uidValidity === validity ? (state.lastUid ?? 0) + 1 : 1;
-      const since = new Date(`${inbox.since || todayInMontreal()}T00:00:00-05:00`);
-      const uids = ((await client.search({ since, uid: `${fromUid}:*` }, { uid: true })) || []).filter((u) => u >= fromUid);
+    // The inbox, plus any folder a mail rule files leads into (e.g. "Leads" or "INBOX.Leads").
+    const folders = ["INBOX", ...(await client.list()).filter((f) => f.path !== "INBOX" && /lead/i.test(f.name)).map((f) => f.path)];
+    const known = new Set((await readLeads()).map((l) => l.sourceId).filter(Boolean));
+    for (const path of folders) {
+      const lock = await client.getMailboxLock(path);
+      try {
+        const box = client.mailbox;
+        const validity = box && typeof box === "object" ? String(box.uidValidity) : "";
+        const fromUid = marks[path]?.uidValidity === validity ? marks[path].lastUid + 1 : 1;
+        const uids = ((await client.search({ since, uid: `${fromUid}:*` }, { uid: true })) || []).filter((u) => u >= fromUid);
+        const leadFolder = path !== "INBOX";
 
-      // Headers first, to pick out lead emails without downloading everything.
-      const candidates: number[] = [];
-      let lastSeen = fromUid - 1;
-      if (uids.length) {
-        for await (const msg of client.fetch(uids, { uid: true, envelope: true }, { uid: true })) {
-          const from = msg.envelope?.from?.map((a) => `${a.name ?? ""} ${a.address ?? ""}`).join(" ") ?? "";
-          const subject = msg.envelope?.subject ?? "";
-          if (LEAD_SENDERS.test(from) || LEAD_SENDERS.test(subject) || (LEAD_SUBJECTS.test(subject) && !/noreply@eloramtl|@eloramtl\.com/i.test(from))) candidates.push(msg.uid);
-          else lastSeen = Math.max(lastSeen, msg.uid);
+        // Headers first, to pick out lead emails without downloading everything. In a leads folder,
+        // every email is looked at (the AI still skips anything that isn't a lead).
+        const candidates: number[] = [];
+        let lastSeen = fromUid - 1;
+        if (uids.length) {
+          for await (const msg of client.fetch(uids, { uid: true, envelope: true }, { uid: true })) {
+            const from = msg.envelope?.from?.map((a) => `${a.name ?? ""} ${a.address ?? ""}`).join(" ") ?? "";
+            const subject = msg.envelope?.subject ?? "";
+            if (leadFolder || LEAD_SENDERS.test(from) || LEAD_SENDERS.test(subject) || (LEAD_SUBJECTS.test(subject) && !/@eloramtl\.com/i.test(from))) candidates.push(msg.uid);
+            else lastSeen = Math.max(lastSeen, msg.uid);
+          }
         }
-      }
-      candidates.sort((a, b) => a - b);
-      const batch = candidates.slice(0, MAX_PER_RUN);
-      // Stop the bookmark before any lead email left for the next run.
-      const leftover = candidates[MAX_PER_RUN];
+        candidates.sort((a, b) => a - b);
+        const batch = candidates.slice(0, budget);
+        budget -= batch.length;
+        // Stop the bookmark before any lead email left for the next run.
+        const leftover = candidates[batch.length];
 
-      const known = new Set((await readLeads()).map((l) => l.sourceId).filter(Boolean));
-      for (const uid of batch) {
-        const msg = await client.fetchOne(String(uid), { uid: true, source: true }, { uid: true });
-        if (msg && msg.source) {
-          const mail = await simpleParser(msg.source);
-          const sourceId = mail.messageId || `uid-${validity}-${uid}`;
-          // The mailbox filters by arrival date; also skip emails written before the start date.
-          if (!known.has(sourceId) && (!mail.date || mail.date >= since)) {
-            const lead = await extractLead({
-              from: mail.from?.text ?? "",
-              replyTo: mail.replyTo?.text ?? "",
-              subject: mail.subject ?? "",
-              text: mail.text || htmlToText(typeof mail.html === "string" ? mail.html : ""),
-            });
-            if (lead) {
-              const saved = await addLead({ ...lead, kind: "inquiry", sourceId, createdAt: (mail.date ?? new Date()).toISOString() });
-              if (saved) {
-                added++;
-                known.add(sourceId);
+        for (const uid of batch) {
+          const msg = await client.fetchOne(String(uid), { uid: true, source: true }, { uid: true });
+          if (msg && msg.source) {
+            const mail = await simpleParser(msg.source);
+            const sourceId = mail.messageId || `uid-${path}-${validity}-${uid}`;
+            // The mailbox filters by arrival date; also skip emails written before the start date.
+            if (!known.has(sourceId) && (!mail.date || mail.date >= since)) {
+              const lead = await extractLead({
+                from: mail.from?.text ?? "",
+                replyTo: mail.replyTo?.text ?? "",
+                subject: mail.subject ?? "",
+                text: mail.text || htmlToText(typeof mail.html === "string" ? mail.html : ""),
+              });
+              if (lead) {
+                const saved = await addLead({ ...lead, kind: "inquiry", sourceId, createdAt: (mail.date ?? new Date()).toISOString() });
+                if (saved) {
+                  added++;
+                  known.add(sourceId);
+                }
               }
             }
           }
+          lastSeen = Math.max(lastSeen, uid);
         }
-        lastSeen = Math.max(lastSeen, uid);
+        marks[path] = { uidValidity: validity, lastUid: leftover ? leftover - 1 : Math.max(lastSeen, ...uids) };
+      } finally {
+        lock.release();
       }
-      const bookmark = leftover ? leftover - 1 : Math.max(lastSeen, ...uids);
-      await saveState({ lastCheck: new Date().toISOString(), uidValidity: validity, lastUid: bookmark, imported: (state.imported ?? 0) + added });
-    } finally {
-      lock.release();
     }
+    await saveState({ lastCheck: new Date().toISOString(), folders: marks, foldersRead: folders, imported: (state.imported ?? 0) + added });
     await client.logout();
     return { ok: true, added };
   } catch (err) {

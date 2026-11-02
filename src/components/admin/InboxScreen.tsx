@@ -458,7 +458,7 @@ function EmailLeads({ content, update, onLeads }: { content: SiteContent; update
         <MailIcon className="size-5 text-gold" /> Leads from your email
       </p>
       <p className="mt-1 text-sm text-brown-soft">
-        Lead emails that reach sarah@eloramtl.com (Rentsync, Apartments.com, Zumper…) are added here every 10 minutes. Your emails stay as they are, and no one gets an automatic reply.
+        Lead emails that reach sarah@eloramtl.com (Rentsync, Apartments.com, Zumper…), in the inbox or a “Leads” folder, are added here every 10 minutes. Your emails stay as they are, and no one gets an automatic reply.
       </p>
       <div className="mt-3">
         <Switch
@@ -483,6 +483,7 @@ function EmailLeads({ content, update, onLeads }: { content: SiteContent; update
               <span className="text-sm text-brown-soft">
                 Last checked {timeAgo(st.lastCheck, now)}
                 {st.imported ? ` · ${st.imported} added so far` : ""}
+                {st.foldersRead?.length ? ` · Reads: ${st.foldersRead.map((f) => (f === "INBOX" ? "Inbox" : f.replace(/^INBOX[./]/, ""))).join(", ")}` : ""}
               </span>
             )}
           </div>
