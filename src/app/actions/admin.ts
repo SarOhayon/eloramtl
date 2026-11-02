@@ -98,6 +98,9 @@ function clean(input: SiteContent): SiteContent {
         .filter((c) => c.date && Number.isFinite(c.amount) && c.amount > 0 && c.amount < 100000)
         .slice(0, 100),
       ...(date(input.ai?.keyExpires) ? { keyExpires: date(input.ai?.keyExpires) } : {}),
+      ...(input.ai?.balance && date(input.ai.balance.date) && Number.isFinite(Number(input.ai.balance.amount)) && Number(input.ai.balance.amount) >= 0
+        ? { balance: { amount: Math.round(Number(input.ai.balance.amount) * 100) / 100, date: date(input.ai.balance.date)!, spentBefore: Math.max(0, Number(input.ai.balance.spentBefore) || 0) } }
+        : {}),
     },
     library,
   };

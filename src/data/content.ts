@@ -74,7 +74,9 @@ export type InboxImport = { enabled: boolean; since?: string };
 
 // The AI credit bought from Anthropic (typed in by the team; the site subtracts what it counts the
 // AI features spending), and when the AI key expires.
-export type AiAccount = { credits: { date: string; amount: number }[]; keyExpires?: string };
+// `balance` is the balance read in the Anthropic Console on a day (with what the site had already
+// counted that day, so only later use is subtracted); credits bought after that day are added on.
+export type AiAccount = { credits: { date: string; amount: number }[]; balance?: { amount: number; date: string; spentBefore: number }; keyExpires?: string };
 export const AI_LOW_CREDIT = 3; // dollars
 export const KEY_EXPIRY_WARN_DAYS = 14;
 

@@ -7,6 +7,11 @@ export type UsageDay = { date: string; cost: number; byFeature: Partial<Record<s
 export const spentSince = (days: UsageDay[], from: string) => days.filter((d) => d.date >= from).reduce((n, d) => n + d.cost, 0);
 
 export function creditLeft(ai: AiAccount, days: UsageDay[]) {
+  const b = ai.balance;
+  if (b) {
+    const later = ai.credits.filter((c) => c.date > b.date).reduce((n, c) => n + c.amount, 0);
+    return b.amount + later - Math.max(0, spentSince(days, b.date) - b.spentBefore);
+  }
   if (!ai.credits.length) return null;
   const bought = ai.credits.reduce((n, c) => n + c.amount, 0);
   const from = ai.credits.map((c) => c.date).sort()[0];

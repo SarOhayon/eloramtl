@@ -26,6 +26,7 @@ export function AiScreen({ content, update }: { content: SiteContent; update: Up
   const ai = content.ai;
   const [info, setInfo] = useState<AiAccountInfo | null>(null);
   const [buy, setBuy] = useState({ date: todayInMontreal(), amount: "" });
+  const [balance, setBalance] = useState("");
   const now = useNow();
   useEffect(() => {
     aiAccount().then(setInfo);
@@ -61,7 +62,11 @@ export function AiScreen({ content, update }: { content: SiteContent; update: Up
         <div className={`rounded-lg p-5 ring-1 ${left !== null && left < AI_LOW_CREDIT ? "bg-[#f4e1df] ring-red-200" : "bg-cream ring-sand"}`}>
           <p className="text-sm text-brown-soft">Credit left (estimate)</p>
           <p className="mt-1 font-display text-4xl text-ink">{left === null ? "—" : money(Math.max(0, left))}</p>
-          {left === null && <p className="mt-1 text-sm text-brown-soft">Add what you bought below.</p>}
+          {left === null ? (
+            <p className="mt-1 text-sm text-brown-soft">Set your balance below.</p>
+          ) : (
+            ai.balance && <p className="mt-1 text-sm text-brown-soft">Counting down from {money(ai.balance.amount)} on {fmtDate(ai.balance.date)}</p>
+          )}
         </div>
         <div className="rounded-lg bg-cream p-5 ring-1 ring-sand">
           <p className="text-sm text-brown-soft">Spent this month</p>
@@ -79,7 +84,28 @@ export function AiScreen({ content, update }: { content: SiteContent; update: Up
       </div>
 
       <div className="space-y-6">
-        <Step n={1} title="Credit you bought" help="Each time you add credit at console.anthropic.com (Billing), add it here with the date. What’s left is your total minus what the site counted since your first purchase.">
+        <Step n={1} title="Your balance" help="Type the balance shown at console.anthropic.com (Billing). The site counts down from it as the AI is used. Update it any time the two don’t match.">
+          <div className="flex flex-wrap items-end gap-3">
+            <label>
+              <span className="mb-1 block text-sm text-brown-soft">Balance in the Console today (USD)</span>
+              <input type="number" min={0} step="0.01" className={`${field} w-44`} placeholder={left !== null ? left.toFixed(2) : "9.78"} value={balance} onChange={(e) => setBalance(e.target.value)} />
+            </label>
+            <button
+              className={softBtn}
+              disabled={balance === "" || !(Number(balance) >= 0)}
+              onClick={() => {
+                const today = todayInMontreal();
+                // What the site already counted today is before this balance; only later use comes off it.
+                set({ balance: { amount: Math.round(Number(balance) * 100) / 100, date: today, spentBefore: spentSince(days.filter((d) => d.date === today), today) } });
+                setBalance("");
+              }}
+            >
+              Set my balance
+            </button>
+          </div>
+        </Step>
+
+        <Step n={2} title="Credit you add later" help="When you buy more credit, add it here with the date, and it’s added to your balance. (Or just set your balance again.)">
           <div className="flex flex-wrap items-end gap-3">
             <label>
               <span className="mb-1 block text-sm text-brown-soft">Date</span>
@@ -116,7 +142,7 @@ export function AiScreen({ content, update }: { content: SiteContent; update: Up
           )}
         </Step>
 
-        <Step n={2} title="What it was spent on (this month)">
+        <Step n={3} title="What it was spent on (this month)">
           {!info ? (
             <p className="text-brown-soft">Loading…</p>
           ) : Object.keys(monthBy).length === 0 ? (
@@ -139,7 +165,7 @@ export function AiScreen({ content, update }: { content: SiteContent; update: Up
         </Step>
 
         <Step
-          n={3}
+          n={4}
           title="When the AI key expires"
           help="You get a warning here, on the admin home and in the morning brief 14 days before it expires, so the chat never stops by surprise."
         >
