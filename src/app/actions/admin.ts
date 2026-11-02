@@ -92,6 +92,13 @@ function clean(input: SiteContent): SiteContent {
     faq: cleanFaq(input.faq),
     sun: cleanSun(input.sun),
     inbox: { enabled: input.inbox?.enabled === true, ...(date(input.inbox?.since) ? { since: date(input.inbox?.since) } : {}) },
+    ai: {
+      credits: (Array.isArray(input.ai?.credits) ? input.ai.credits : [])
+        .map((c) => ({ date: date(c?.date) ?? "", amount: Math.round(Number(c?.amount) * 100) / 100 }))
+        .filter((c) => c.date && Number.isFinite(c.amount) && c.amount > 0 && c.amount < 100000)
+        .slice(0, 100),
+      ...(date(input.ai?.keyExpires) ? { keyExpires: date(input.ai?.keyExpires) } : {}),
+    },
     library,
   };
 }

@@ -3,6 +3,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
+import { recordAiUsage } from "@/lib/aiUsage";
 import { UNITS } from "@/data/building";
 import { todayInMontreal, scheduleState } from "@/data/content";
 import { dictionaries } from "@/i18n/dictionaries";
@@ -74,6 +75,7 @@ export async function suggestUnits(leadId: string): Promise<SuggestResult> {
       output_config: { effort: "medium", format: betaZodOutputFormat(Answer) },
       messages: [{ role: "user", content: `Today is ${todayInMontreal()}.\n\nSuites available:\n${suiteList}\n\nThe person:\n${person}` }],
     });
+    await recordAiUsage("suggest", response.usage);
     if (response.stop_reason === "refusal" || !response.parsed_output) return { ok: false, error: "The AI couldn't make a suggestion for this one." };
 
     const ids = new Set(open.map((u) => u.id));

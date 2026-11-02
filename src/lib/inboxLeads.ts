@@ -3,6 +3,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
 import { z } from "zod";
+import { recordAiUsage } from "./aiUsage";
 import { UNIT_TYPES, type UnitType } from "@/data/building";
 import { todayInMontreal } from "@/data/content";
 import { dictionaries } from "@/i18n/dictionaries";
@@ -171,6 +172,7 @@ export async function extractLead(mail: { from: string; replyTo: string; subject
     output_config: { effort: "low", format: betaZodOutputFormat(Extracted) },
     messages: [{ role: "user", content: `Today is ${todayInMontreal()}.\n\nFrom: ${mail.from}\nReply-To: ${mail.replyTo}\nSubject: ${mail.subject}\n\n${body}` }],
   });
+  await recordAiUsage("leads", response.usage);
   const out = response.parsed_output;
   if (response.stop_reason === "refusal" || !out || !out.isLead) return null;
   const type = UNIT_TYPES.includes(out.suiteType as UnitType) ? dictionaries.en.types[out.suiteType as UnitType] : undefined;

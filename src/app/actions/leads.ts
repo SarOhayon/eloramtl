@@ -6,7 +6,7 @@ import { getContent } from "@/lib/content";
 import { runDueJobs } from "@/lib/jobs";
 import { sendFollowUp, sendShowingEmails } from "@/lib/autoEmail";
 import { addLead, changeLead, changeLeads, readLeads, type Lead, type LeadStatus } from "@/lib/leads";
-import { sendCheatSheet } from "@/lib/briefs";
+import { sendCheatSheet, type CheatSheetResult } from "@/lib/briefs";
 import { extractLead, importInboxLeads, inboxConfigured, readInboxState, type ExtractedLead, type InboxState } from "@/lib/inboxLeads";
 import { montrealToUtc } from "@/lib/showingSlots";
 
@@ -183,11 +183,12 @@ export async function readPastedLead(text: string): Promise<{ ok: true; lead: Ex
   }
 }
 
-// Emails the pre-tour cheat sheet to the team; called right after someone is checked in ("Came").
-export async function sendCheatSheetNow(id: string): Promise<boolean> {
-  if (!(await isAdmin())) return false;
-  return sendCheatSheet(String(id)).catch((err) => {
+// Emails the pre-tour cheat sheet to the leasing inbox: automatically right after someone is
+// checked in ("Came"), or any time with `manual` (the "Email me the cheat sheet" button).
+export async function sendCheatSheetNow(id: string, manual = false): Promise<CheatSheetResult> {
+  if (!(await isAdmin())) return { sent: false, reason: "Please sign in again." };
+  return sendCheatSheet(String(id), { manual }).catch((err) => {
     console.error("[leads] cheat sheet", err);
-    return false;
+    return { sent: false, reason: "Something went wrong. Try the button again." };
   });
 }

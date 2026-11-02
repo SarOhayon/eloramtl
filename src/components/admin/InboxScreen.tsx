@@ -36,6 +36,7 @@ export function InboxScreen({ content, update }: { content: SiteContent; update:
   const [leads, setLeads] = useState<Lead[] | null>(null);
   const [filter, setFilter] = useState<LeadStatus | "all">("all");
   const [error, setError] = useState(false);
+  const [opened, setOpened] = useState<string[]>([]); // leased cards shown again
 
   useEffect(() => {
     listLeads().then((l) => (l ? setLeads(l) : setError(true)));
@@ -115,7 +116,17 @@ export function InboxScreen({ content, update }: { content: SiteContent; update:
 
         <ul className="min-w-0 space-y-4">
           {shown.map((l) => (
-            <li key={l.id} id={`lead-${l.id}`} className={`scroll-mt-28 rounded-lg bg-cream p-5 shadow-sm ring-1 ${l.status === "new" ? "ring-gold" : "ring-sand"}`}>
+            <li key={l.id} id={`lead-${l.id}`} className={`relative scroll-mt-28 overflow-hidden rounded-lg bg-cream p-5 shadow-sm ring-1 ${l.status === "new" ? "ring-gold" : "ring-sand"}`}>
+              {/* Leased: the card is blurred out of the way, one click shows it again. */}
+              {l.status === "leased" && !opened.includes(l.id) && (
+                <button
+                  onClick={() => setOpened((o) => [...o, l.id])}
+                  className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-cream/40 backdrop-blur-[3px] transition hover:bg-cream/20"
+                >
+                  <span className="rounded-full bg-[#3b6b45] px-4 py-1.5 font-medium text-white shadow">🎉 Leased · {l.name}</span>
+                  <span className="text-sm text-brown underline underline-offset-4">Click to view</span>
+                </button>
+              )}
               {needsFollowUp(l, now) && (
                 <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-gold-light px-3 py-1 text-sm text-brown">
                   <BellIcon className="size-4" /> No update in {daysSinceUpdate(l, now)} days: time to follow up

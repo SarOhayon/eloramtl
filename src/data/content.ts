@@ -72,6 +72,12 @@ export type SunSettings = { enabled: boolean; topFacing: number; views: Record<s
 // inquiries, from `since` (YYYY-MM-DD) on.
 export type InboxImport = { enabled: boolean; since?: string };
 
+// The AI credit bought from Anthropic (typed in by the team; the site subtracts what it counts the
+// AI features spending), and when the AI key expires.
+export type AiAccount = { credits: { date: string; amount: number }[]; keyExpires?: string };
+export const AI_LOW_CREDIT = 3; // dollars
+export const KEY_EXPIRY_WARN_DAYS = 14;
+
 export type SiteContent = {
   photos: { hero: Photo[]; gallery: Photo[]; about: Photo; amenities: Record<AmenitySlot, Photo> };
   prices: Record<UnitType, number>;
@@ -85,6 +91,7 @@ export type SiteContent = {
   faq: Faq;
   sun: SunSettings;
   inbox: InboxImport;
+  ai: AiAccount;
   library: LibraryItem[]; // files uploaded through the admin
 };
 
@@ -174,6 +181,7 @@ export const DEFAULT_CONTENT: SiteContent = {
   // Estimated from chemin Bates: the top of the plan looks north-west. Check with a compass.
   sun: { enabled: true, topFacing: 306, views: {} },
   inbox: { enabled: false },
+  ai: { credits: [] },
   library: [],
 };
 

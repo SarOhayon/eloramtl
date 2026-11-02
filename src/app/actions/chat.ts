@@ -4,6 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { headers } from "next/headers";
 import { z } from "zod";
+import { recordAiUsage } from "@/lib/aiUsage";
 import { ADDRESS, PHONE_MAIN_DISPLAY, UNITS } from "@/data/building";
 import { scheduleState, todayInMontreal } from "@/data/content";
 import { dictionaries } from "@/i18n/dictionaries";
@@ -78,6 +79,7 @@ export async function askElora(history: ChatTurn[], lang: "fr" | "en"): Promise<
       output_config: { effort: "low", format: betaZodOutputFormat(Reply) },
       messages: turns.map((t) => ({ role: t.role, content: t.text })),
     });
+    await recordAiUsage("chat", response.usage);
     const out = response.parsed_output;
     if (response.stop_reason === "refusal" || !out) return { ok: false, error: "failed" };
     await Promise.all([
@@ -149,7 +151,8 @@ export async function testChat(): Promise<{ ok: boolean; message: string } | nul
   if (!process.env.ANTHROPIC_API_KEY) return { ok: false, message: "No AI key on the server. Add ANTHROPIC_API_KEY in Amplify (Hosting → Environment variables), then redeploy." };
   try {
     const client = new Anthropic();
-    await client.messages.create({ model: "claude-opus-5-5", max_tokens: 16, messages: [{ role: "user", content: "Reply with OK." }] });
+    const response = await client.messages.create({ model: "claude-opus-5-5", max_tokens: 16, messages: [{ role: "user", content: "Reply with OK." }] });
+    await recordAiUsage("test", response.usage);
     return { ok: true, message: "The AI answered. The chat is working." };
   } catch (err) {
     const raw = err instanceof Error ? err.message : String(err);

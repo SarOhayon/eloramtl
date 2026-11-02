@@ -12,22 +12,42 @@ const when = new Intl.DateTimeFormat("en-CA", { weekday: "short", month: "short"
 // the follow-up email (Automatic emails); the note says when it goes or went out.
 export function Attendance({ lead, onLeads }: { lead: Lead; onLeads: (l: Lead[]) => void }) {
   const [busy, setBusy] = useState(false);
+  const [sheet, setSheet] = useState<"" | "sending" | string>("");
   const now = useNow();
   if (!lead.showing) return null;
   const opensAt = montrealToUtc(lead.showing.date, lead.showing.time).getTime() - 15 * 60e3;
-  if (now < opensAt) return <p className="text-sm text-brown-soft">You can mark attendance from 15 minutes before the showing.</p>;
+
+  // The pre-tour cheat sheet: says where it went, or why it wasn't sent.
+  const emailSheet = async (manual: boolean) => {
+    setSheet("sending");
+    const res = await sendCheatSheetNow(lead.id, manual);
+    setSheet(res.sent ? `Cheat sheet sent to ${res.to}.` : (res.reason ?? ""));
+    if (res.sent) listLeads().then((l) => l && onLeads(l));
+  };
+  const sheetBox = (
+    <span className="flex flex-wrap items-center gap-2 text-sm text-brown-soft">
+      <button disabled={sheet === "sending"} onClick={() => emailSheet(true)} className="font-medium text-brown underline underline-offset-4 disabled:opacity-50">
+        {sheet === "sending" ? "Preparing the cheat sheet…" : lead.cheatSheetAt ? "Email the cheat sheet again" : "Email me the cheat sheet"}
+      </button>
+      {sheet && sheet !== "sending" && <span>{sheet}</span>}
+      {!sheet && lead.cheatSheetAt && <span>Cheat sheet emailed {when.format(new Date(lead.cheatSheetAt))}</span>}
+    </span>
+  );
+  if (now < opensAt)
+    return (
+      <div className="space-y-1">
+        <p className="text-sm text-brown-soft">You can mark attendance from 15 minutes before the showing.</p>
+        {sheetBox}
+      </div>
+    );
 
   const mark = async (value: "came" | "no-show" | null) => {
     setBusy(true);
     const next = await markAttendance(lead.id, value);
     if (next) onLeads(next);
     setBusy(false);
-    // Checked in: the cheat sheet goes to your inbox (in the background; the AI takes a few seconds).
-    if (value === "came" && next && !lead.cheatSheetAt) {
-      sendCheatSheetNow(lead.id).then((sent) => {
-        if (sent) listLeads().then((l) => l && onLeads(l));
-      });
-    }
+    // Checked in: the cheat sheet goes to your inbox (the AI takes a few seconds).
+    if (value === "came" && next && !lead.cheatSheetAt) emailSheet(false);
   };
   const btn = (on: boolean, tone: string) => `rounded-md px-4 py-2 text-sm ring-1 transition disabled:opacity-50 ${on ? tone : "bg-white ring-brown/20 hover:ring-brown/40"}`;
 
@@ -40,7 +60,7 @@ export function Attendance({ lead, onLeads }: { lead: Lead; onLeads: (l: Lead[])
       <button disabled={busy} onClick={() => mark(lead.attendance === "no-show" ? null : "no-show")} className={btn(lead.attendance === "no-show", "bg-brown text-white ring-brown")}>
         {lead.attendance === "no-show" ? "✓ No-show" : "No-show"}
       </button>
-      {lead.cheatSheetAt && <span className="text-sm text-brown-soft">Cheat sheet emailed</span>}
+      <span className="basis-full">{sheetBox}</span>
       {lead.followUp && (
         <span className="text-sm text-brown-soft">
           {lead.followUp.sentAt ? `Follow-up sent ${when.format(new Date(lead.followUp.sentAt))}` : `Follow-up email on ${when.format(new Date(lead.followUp.due))}`}

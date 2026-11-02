@@ -26,6 +26,7 @@ import {
   MegaphoneIcon,
   PlusIcon,
   PriceIcon,
+  SparkleIcon,
   TableIcon,
   TagIcon,
   TrashIcon,
@@ -39,6 +40,9 @@ import { NoticeScreen } from "./NoticeScreen";
 import { ShowingsScreen } from "./ShowingsScreen";
 import { StatsScreen } from "./StatsScreen";
 import { SunScreen } from "./SunScreen";
+import { AiScreen } from "./AiScreen";
+import { aiAccount } from "@/app/actions/ai";
+import { aiWarnings, creditLeft } from "@/lib/aiAlerts";
 import { SunIcon } from "../icons";
 import { BilingualFields, ScheduleStatus, ScreenTitle, Step, Switch, bigBtn, field, softBtn, type Update, type Upload } from "./ui";
 import { Wordmark } from "../Wordmark";
@@ -46,7 +50,7 @@ import { Wordmark } from "../Wordmark";
 // A deliberately simple admin: a home screen with big buttons, one task per screen,
 // plain-English help and automatic saving.
 
-type Screen = "home" | "inbox" | "promo" | "notice" | "apartments" | "showings" | "emails" | "chat" | "photos" | "prices" | "text" | "stats" | "sun";
+type Screen = "home" | "inbox" | "promo" | "notice" | "apartments" | "showings" | "emails" | "chat" | "photos" | "prices" | "text" | "stats" | "sun" | "ai";
 
 const TYPE_LABELS = dictionaries.en.types;
 const isPdf = (src: string) => src.endsWith(".pdf");
@@ -170,6 +174,7 @@ export function AdminApp({ initial }: { initial: SiteContent }) {
             {screen === "chat" && <ChatScreen content={content} update={update} />}
             {screen === "stats" && <StatsScreen />}
             {screen === "sun" && <SunScreen content={content} update={update} upload={upload} />}
+            {screen === "ai" && <AiScreen content={content} update={update} />}
             {screen === "apartments" && <ApartmentsScreen content={content} update={update} upload={upload} />}
             {screen === "photos" && <PhotosScreen content={content} update={update} upload={upload} />}
             {screen === "prices" && <PricesScreen content={content} update={update} />}
@@ -214,6 +219,10 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
   useEffect(() => {
     listLeads().then((l) => l && setLeadCounts({ fresh: l.filter((x) => x.status === "new").length, follow: l.filter((x) => needsFollowUp(x, Date.now())).length }));
   }, []);
+  const [ai, setAi] = useState<{ left: number | null; warnings: string[] } | null>(null);
+  useEffect(() => {
+    aiAccount().then((a) => a && setAi({ left: creditLeft(content.ai, a.days), warnings: aiWarnings(content.ai, a.days, a.key ? a.key.expiresAt : content.ai.keyExpires, Date.now()) }));
+  }, [content.ai]);
   const tiles: { screen: Screen; icon: React.ReactNode; title: string; text: string; note?: React.ReactNode }[] = [
     {
       screen: "inbox",
@@ -251,6 +260,13 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
       text: "An AI chat on the website that answers visitors from your FAQ.",
       note: <ScheduleStatus state={content.faq.enabled ? "live" : "off"} label={content.faq.enabled ? "On" : "Turned off"} />,
     },
+    {
+      screen: "ai",
+      icon: <SparkleIcon className="size-6" />,
+      title: "AI credit",
+      text: "What’s left of your AI credit, what it’s spent on, and when the key expires.",
+      note: ai?.warnings.length ? <span className="text-red-800">Needs attention</span> : ai?.left != null ? `About $${Math.max(0, ai.left).toFixed(2)} left` : undefined,
+    },
     { screen: "apartments", icon: <BuildingIcon className="size-6" />, title: "Apartments", text: "Mark apartments available or rented, set prices, dates and plans.", note: `${available} marked available` },
     {
       screen: "sun",
@@ -274,6 +290,11 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
   ];
   return (
     <>
+      {ai?.warnings.map((w) => (
+        <button key={w} onClick={() => go("ai")} className="mb-3 flex w-full items-start gap-2 rounded-md bg-[#f4e1df] px-4 py-3 text-left text-red-900 ring-1 ring-red-200">
+          <AlertIcon className="mt-0.5 size-5 shrink-0" /> {w}
+        </button>
+      ))}
       <h1 className="font-display text-4xl text-ink">Welcome</h1>
       <p className="mt-2 text-lg text-brown-soft">What would you like to do? Click a box to start. Everything saves by itself.</p>
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
