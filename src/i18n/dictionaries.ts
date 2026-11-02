@@ -287,7 +287,7 @@ const fr = {
       parking: { title: "Stationnement intérieur + bornes VÉ", text: "Places chauffées au sous-sol avec recharge pour véhicules électriques." },
       storage: { title: "Casiers de rangement", text: "Pour les vélos, les skis et tout ce qui ne rentre pas dans le placard." },
       pets: { title: "Animaux bienvenus", text: "Chiens et chats font partie de la famille." },
-      more: { title: "Accessible et pratique :", text: "Entrée accessible avec rampe et porte à ouverture automatique, ascenseurs, espaces pour bicyclettes et caméras de surveillance." },
+      more: { title: "Accessible et pratique :", text: "Entrée accessible avec rampe et porte à ouverture automatique, ascenseurs, casiers de rangement, espaces pour bicyclettes, caméras de surveillance, et vos animaux sont les bienvenus." },
     },
     suiteItems: [
       "Laveuse et sécheuse dans chaque logement",
@@ -627,7 +627,7 @@ const en: Dictionary = {
       parking: { title: "Indoor parking + EV charging", text: "Heated underground spots with electric vehicle chargers." },
       storage: { title: "Storage lockers", text: "For bikes, skis and everything that doesn't fit in the closet." },
       pets: { title: "Pet friendly", text: "Dogs and cats are part of the family." },
-      more: { title: "Accessible and easy:", text: "Wheelchair-accessible entrance with a ramp and automatic door opener, elevators, bicycle room and video surveillance." },
+      more: { title: "Accessible and easy:", text: "Wheelchair-accessible entrance with a ramp and automatic door opener, elevators, storage lockers, bicycle room, video surveillance, and pets are welcome." },
     },
     suiteItems: [
       "In-suite washer and dryer",

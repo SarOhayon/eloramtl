@@ -62,18 +62,6 @@ function PhotoCard({ photo, locale, title, text, className = "" }: { photo: Phot
   );
 }
 
-function IconCard({ title, text, icon }: { title: string; text: string; icon: string }) {
-  return (
-    <div className="flex flex-col justify-between rounded-lg bg-cream-deep p-6 ring-1 ring-brown/10">
-      <span className="text-3xl" aria-hidden="true">{icon}</span>
-      <div className="mt-8">
-        <p className="font-display text-2xl text-brown">{title}</p>
-        <p className="mt-1 text-sm text-brown/80">{text}</p>
-      </div>
-    </div>
-  );
-}
-
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
@@ -173,9 +161,7 @@ async function Body({ locale }: { locale: Locale }) {
               <PhotoCard photo={amen.gym} locale={locale} title={a.gym.title} text={a.gym.text} className="lg:col-span-2" />
               <PhotoCard photo={amen.terrace} locale={locale} title={a.terrace.title} text={a.terrace.text} />
               <PhotoCard photo={amen.lounge} locale={locale} title={a.lounge.title} text={a.lounge.text} />
-              <PhotoCard photo={amen.parking} locale={locale} title={a.parking.title} text={a.parking.text} className="lg:col-span-2" />
-              <IconCard icon="📦" title={a.storage.title} text={a.storage.text} />
-              <IconCard icon="🐾" title={a.pets.title} text={a.pets.text} />
+              <PhotoCard photo={amen.parking} locale={locale} title={a.parking.title} text={a.parking.text} className="lg:col-span-4" />
             </div>
             <p className="mt-4 text-sm text-brown/75">
               <span className="font-medium text-brown">{a.more.title}</span> {a.more.text}
