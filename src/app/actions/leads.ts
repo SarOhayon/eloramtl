@@ -1,12 +1,13 @@
 "use server";
 
 import { UNITS } from "@/data/building";
+import { todayInMontreal } from "@/data/content";
 import { isAdmin } from "@/lib/adminAuth";
 import { getContent } from "@/lib/content";
 import { runDueJobs } from "@/lib/jobs";
 import { sendFollowUp, sendShowingEmails } from "@/lib/autoEmail";
 import { addLead, changeLead, changeLeads, readLeads, type Lead, type LeadStatus } from "@/lib/leads";
-import { sendCheatSheet, type CheatSheetResult } from "@/lib/briefs";
+import { readMorningStatus, sendCheatSheet, sendMorningBrief, type CheatSheetResult } from "@/lib/briefs";
 import { extractLead, importInboxLeads, inboxConfigured, readInboxState, type ExtractedLead, type InboxState } from "@/lib/inboxLeads";
 import { montrealToUtc } from "@/lib/showingSlots";
 
@@ -192,4 +193,21 @@ export async function sendCheatSheetNow(id: string, manual = false): Promise<Che
     console.error("[leads] cheat sheet", err);
     return { sent: false, reason: "Something went wrong. Try the button again." };
   });
+}
+
+// The morning brief: when it last went out, and a button to send today's right away.
+export async function morningStatus(): Promise<{ lastMorningAt?: string; scheduler: boolean } | null> {
+  if (!(await isAdmin())) return null;
+  return { lastMorningAt: (await readMorningStatus()).lastMorningAt, scheduler: Boolean(process.env.CRON_SECRET) };
+}
+
+export async function sendMorningBriefNow(): Promise<{ ok: boolean; at?: string; error?: string }> {
+  if (!(await isAdmin())) return { ok: false, error: "Please sign in again." };
+  try {
+    await sendMorningBrief(todayInMontreal());
+    return { ok: true, at: new Date().toISOString() };
+  } catch (err) {
+    console.error("[leads] morning brief", err);
+    return { ok: false, error: "It couldn't be sent. Check the email settings and try again." };
+  }
 }

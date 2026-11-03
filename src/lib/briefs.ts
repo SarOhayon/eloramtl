@@ -89,7 +89,11 @@ async function ask<T extends z.ZodType>(feature: AiFeature, schema: T, system: s
 // ---------------- Morning brief ----------------
 
 const BRIEF_STATE = "jobs/brief.json";
-type BriefState = { lastMorning?: string; facts?: string[]; lastFaq?: string };
+type BriefState = { lastMorning?: string; lastMorningAt?: string; facts?: string[]; lastFaq?: string };
+export const readMorningStatus = async () => {
+  const s = await readBriefState();
+  return { lastMorning: s.lastMorning, lastMorningAt: s.lastMorningAt };
+};
 async function readBriefState(): Promise<BriefState> {
   try {
     const raw = await getFile(BRIEF_STATE);
@@ -100,12 +104,13 @@ async function readBriefState(): Promise<BriefState> {
 }
 const saveBriefState = async (patch: BriefState) => putFile(BRIEF_STATE, JSON.stringify({ ...(await readBriefState()), ...patch }), "application/json");
 
-// Today (YYYY-MM-DD) if the brief is due: from 7:30 a.m. until noon, once a day.
+// Today (YYYY-MM-DD) if the brief is due: once a day from 7:30 a.m. The site only wakes up when someone
+// visits (or the outside scheduler calls /api/cron), so a late brief still goes out, until 9 p.m.
 export async function morningDue(): Promise<string | null> {
   const wall = new Date(wallClock(new Date()));
   const minutes = wall.getUTCHours() * 60 + wall.getUTCMinutes();
   const today = wall.toISOString().slice(0, 10);
-  if (minutes < 7 * 60 + 30 || minutes >= 12 * 60) return null;
+  if (minutes < 7 * 60 + 30 || minutes >= 21 * 60) return null;
   return (await readBriefState()).lastMorning === today ? null : today;
 }
 
@@ -115,7 +120,7 @@ const BriefAI = z.object({
 });
 
 export async function sendMorningBrief(today: string) {
-  await saveBriefState({ lastMorning: today }); // claim it first, so two visits don't both send
+  await saveBriefState({ lastMorning: today, lastMorningAt: new Date().toISOString() }); // claim it first, so two visits don't both send
   const [content, leads, state] = await Promise.all([getContent(), readLeads(), readBriefState()]);
   const now = Date.now();
   const showings = leads.filter((l) => l.showing?.date === today && l.status !== "closed").sort((a, b) => a.showing!.time.localeCompare(b.showing!.time));
@@ -155,7 +160,8 @@ export async function sendMorningBrief(today: string) {
   const keyInfo = await lookUpAiKey();
   const heads = aiWarnings(content.ai, await readAiUsage(), keyInfo.key ? keyInfo.key.expiresAt : content.ai.keyExpires, now);
   await sendTeamNotice({
-    subject: `☀️ Your day at Elora: ${showings.length} showing${showings.length === 1 ? "" : "s"}, ${fresh.length} new lead${fresh.length === 1 ? "" : "s"}`,
+    // No "lead" or "inquiry" in the subject, so mail rules that file leads away don't catch it.
+    subject: `☀️ Your day at Elora · ${date}`,
     heading: `Good morning! ${date}`,
     rows: [
       ["Showings today", String(showings.length)],

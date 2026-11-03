@@ -81,7 +81,10 @@ export async function importInboxLeads(): Promise<{ ok: boolean; added: number; 
           for await (const msg of client.fetch(uids, { uid: true, envelope: true }, { uid: true })) {
             const from = msg.envelope?.from?.map((a) => `${a.name ?? ""} ${a.address ?? ""}`).join(" ") ?? "";
             const subject = msg.envelope?.subject ?? "";
-            if (leadFolder || LEAD_SENDERS.test(from) || LEAD_SENDERS.test(subject) || (LEAD_SUBJECTS.test(subject) && !/@eloramtl\.com/i.test(from))) candidates.push(msg.uid);
+            // The site's own emails (new-inquiry and application notices, morning brief, TEST copies)
+            // are about people already in the admin, so they're never added again.
+            const ours = /@eloramtl\.com\b/i.test(from) || (config.auth.user && from.toLowerCase().includes(config.auth.user.toLowerCase()));
+            if (!ours && (leadFolder || LEAD_SENDERS.test(from) || LEAD_SENDERS.test(subject) || LEAD_SUBJECTS.test(subject))) candidates.push(msg.uid);
             else lastSeen = Math.max(lastSeen, msg.uid);
           }
         }

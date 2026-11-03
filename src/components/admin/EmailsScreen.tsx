@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { morningStatus, sendMorningBriefNow } from "@/app/actions/leads";
 import { DEFAULT_CONTENT, type AutoEmails, type SiteContent } from "@/data/content";
 import { MailIcon } from "./AdminIcons";
 import { EmailEditor } from "./EmailEditor";
-import { ScreenTitle, Step, Switch, field, type Update } from "./ui";
+import { ScreenTitle, Step, Switch, field, softBtn, type Update } from "./ui";
 
 const D = DEFAULT_CONTENT;
 
@@ -85,6 +87,7 @@ export function EmailsScreen({ content, update }: { content: SiteContent; update
 
         <Step n={5} title="Morning brief" help="Every day at 7:30 a.m., to the leasing inbox: today’s showings with the suites to show each person, new leads from the last 24 hours with suggested suites, who needs a follow-up, and a fun fact of the day.">
           <Switch on={e.morning.enabled} onChange={(v) => setEmails({ morning: { enabled: v } })} label={e.morning.enabled ? "On" : "Off"} />
+          <MorningStatus />
         </Step>
 
         <Step n={6} title="Pre-tour cheat sheet" help="When you check someone in for their showing (“Came”), the leasing inbox gets a one-glance sheet: who they are, budget, move-in, pets, what they asked, the suites to show and two talking points.">
@@ -92,5 +95,41 @@ export function EmailsScreen({ content, update }: { content: SiteContent; update
         </Step>
       </div>
     </>
+  );
+}
+
+const sentAt = new Intl.DateTimeFormat("en-CA", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Montreal" });
+
+// When the last brief went out, and a button to send today's now.
+function MorningStatus() {
+  const [status, setStatus] = useState<{ lastMorningAt?: string; scheduler: boolean } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  useEffect(() => {
+    morningStatus().then(setStatus);
+  }, []);
+  const send = async () => {
+    setBusy(true);
+    setMsg("");
+    const res = await sendMorningBriefNow();
+    setMsg(res.ok ? "Sent to the leasing inbox." : (res.error ?? ""));
+    if (res.ok) setStatus((s) => (s ? { ...s, lastMorningAt: res.at } : s));
+    setBusy(false);
+  };
+  return (
+    <div className="mt-4 space-y-2 text-sm">
+      <p className="text-brown-soft">
+        Last sent: {status?.lastMorningAt ? sentAt.format(new Date(status.lastMorningAt)) : "not yet"}
+      </p>
+      {status && !status.scheduler && (
+        <p className="rounded-md bg-gold-light/60 px-3 py-2 text-brown">
+          The website wakes up only when someone visits it, so on a quiet morning the brief can come late. To get it at 7:30 sharp, set up the free scheduler (CRON_SECRET + cron-job.org).
+        </p>
+      )}
+      <button className={softBtn} onClick={send} disabled={busy}>
+        {busy ? "Sending…" : "Send today’s brief now"}
+      </button>
+      {msg && <span className="ml-3 text-brown">{msg}</span>}
+    </div>
   );
 }
