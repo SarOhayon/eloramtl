@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
-import { whatsappLink } from "@/data/building";
+import { INSTAGRAM_URL, whatsappLink } from "@/data/building";
+import { ApplyDialog } from "./ApplyDialog";
+import { InstagramIcon, WhatsAppIcon } from "./icons";
 import { Wordmark } from "./Wordmark";
-import { WhatsAppIcon } from "./icons";
 
 export function Header({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
@@ -32,15 +33,15 @@ export function Header({ locale }: { locale: Locale }) {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${
-        solid ? "bg-cream/95 text-brown shadow-[0_1px_0_rgba(74,54,40,0.12)] backdrop-blur" : "bg-transparent text-cream"
+        solid ? "bg-cream/95 text-brown shadow-[0_1px_0_rgba(80,61,50,0.12)] backdrop-blur" : "bg-cream text-brown"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
         <Link href={`/${locale}`} className="shrink-0" aria-label="Elora">
-          <Wordmark className="h-6 w-auto lg:h-7" />
+          <Wordmark className="h-10 w-auto lg:h-11" />
         </Link>
 
-        <nav className="hidden items-center gap-8 text-sm tracking-wide lg:flex" aria-label="Main">
+        <nav className="hidden items-center gap-8 text-sm uppercase tracking-[0.06em] lg:flex" aria-label="Main">
           {links.map((l) => (
             <a key={l.href} href={l.href} className="opacity-90 transition hover:opacity-100 hover:underline hover:underline-offset-8">
               {l.label}
@@ -53,19 +54,32 @@ export function Header({ locale }: { locale: Locale }) {
             href={`/${other}`}
             hrefLang={other}
             aria-label={t.nav.switchLabel}
-            className="rounded-full px-3 py-2 text-sm font-medium tracking-wider transition hover:bg-black/5"
+            className="rounded-sm px-3 py-2 text-sm font-medium tracking-wider transition hover:bg-black/5"
           >
             {t.nav.switchTo}
           </Link>
           <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t.nav.instagram}
+            className="hidden size-10 items-center justify-center rounded-sm transition hover:text-gold xl:inline-flex"
+          >
+            <InstagramIcon className="size-5" />
+          </a>
+          <a
             href={whatsappLink(t.contact.whatsappText)}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden items-center gap-2 rounded-full bg-brown px-5 py-2.5 text-sm font-medium text-cream transition hover:bg-brown-deep sm:inline-flex"
+            className="hidden items-center gap-2 rounded-sm px-4 py-3 text-sm uppercase tracking-[0.06em] ring-1 ring-brown/25 transition hover:ring-gold md:inline-flex"
           >
-            <WhatsAppIcon className="size-4" />
-            {t.nav.cta}
+            <WhatsAppIcon className="size-4 text-whatsapp" />
+            {t.nav.whatsapp}
           </a>
+          <ApplyDialog
+            locale={locale}
+            className="inline-flex items-center rounded-sm bg-action px-4 py-2.5 text-xs font-medium uppercase tracking-[0.14em] text-white transition hover:bg-action-deep sm:px-6 sm:py-3 sm:text-sm"
+          />
           <button
             type="button"
             className="inline-flex size-10 items-center justify-center rounded-full lg:hidden"
@@ -93,6 +107,15 @@ export function Header({ locale }: { locale: Locale }) {
               {l.label}
             </a>
           ))}
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 text-sm uppercase tracking-[0.12em] text-brown"
+          >
+            <InstagramIcon className="size-5 text-gold" />
+            @eloramtl
+          </a>
         </nav>
       )}
     </header>

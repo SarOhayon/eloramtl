@@ -2,15 +2,16 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
-import { GALLERY, type PhotoCategory } from "@/data/photos";
+import { isUploaded } from "@/data/content";
+import type { Photo, PhotoCategory } from "@/data/photos";
 import { getDictionary, type Locale } from "@/i18n/dictionaries";
 import { ChevronIcon } from "./icons";
 
-export function Gallery({ locale }: { locale: Locale }) {
+export function Gallery({ locale, photos: all }: { locale: Locale; photos: Photo[] }) {
   const t = getDictionary(locale);
   const [filter, setFilter] = useState<PhotoCategory | "all">("all");
   const [open, setOpen] = useState<number | null>(null);
-  const photos = GALLERY.filter((p) => filter === "all" || p.category === filter);
+  const photos = all.filter((p) => filter === "all" || p.category === filter);
 
   const step = useCallback(
     (d: number) => setOpen((i) => (i === null ? i : (i + d + photos.length) % photos.length)),
@@ -41,7 +42,7 @@ export function Gallery({ locale }: { locale: Locale }) {
             type="button"
             aria-pressed={filter === k}
             onClick={() => setFilter(k)}
-            className={`rounded-full px-4 py-2 text-sm transition ${
+            className={`rounded-sm px-4 py-2 text-sm transition ${
               filter === k ? "bg-brown text-cream" : "bg-cream text-brown ring-1 ring-brown/15 hover:ring-brown/40"
             }`}
           >
@@ -56,10 +57,11 @@ export function Gallery({ locale }: { locale: Locale }) {
             key={p.src}
             type="button"
             onClick={() => setOpen(i)}
-            className={`group relative block overflow-hidden rounded-2xl ${i % 6 === 0 ? "col-span-2 row-span-2" : ""}`}
+            className={`group relative block overflow-hidden rounded-lg ${i % 6 === 0 ? "col-span-2 row-span-2" : ""}`}
           >
             <Image
               src={p.src}
+              unoptimized={isUploaded(p.src)}
               alt={p.alt[locale]}
               fill
               sizes={i % 6 === 0 ? "(min-width: 1024px) 50vw, 100vw" : "(min-width: 1024px) 25vw, 50vw"}
@@ -83,11 +85,12 @@ export function Gallery({ locale }: { locale: Locale }) {
           <div className="relative w-full max-w-6xl" onClick={(e) => e.stopPropagation()}>
             <Image
               src={photos[open].src}
+              unoptimized={isUploaded(photos[open].src)}
               alt={photos[open].alt[locale]}
               width={2000}
               height={1333}
               sizes="100vw"
-              className="max-h-[80vh] w-full rounded-xl object-contain"
+              className="max-h-[80vh] w-full rounded-md object-contain"
             />
             <p className="mt-3 text-center text-sm text-cream/80">
               {photos[open].alt[locale]} · {open + 1}/{photos.length}
