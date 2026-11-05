@@ -11,6 +11,7 @@ import type { InboxState } from "@/lib/inboxLeads";
 import type { Lead, LeadKind, LeadStatus } from "@/lib/leads";
 import { BellIcon, CalendarIcon, InboxIcon, MailIcon, PlusIcon, SparkleIcon, TableIcon } from "./AdminIcons";
 import { Attendance } from "./Attendance";
+import { ChevronIcon } from "../icons";
 import { ScreenTitle, Switch, bigBtn, field, softBtn, useNow, type Update } from "./ui";
 
 const STATUS: { key: LeadStatus; label: string; on: string }[] = [
@@ -38,6 +39,8 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
   const [error, setError] = useState(false);
   const [opened, setOpened] = useState<string[]>([]); // closed cards shown again
   const [moved, setMoved] = useState(""); // name of someone just moved to Leased tenants
+  const [expanded, setExpanded] = useState<string[]>([]); // cards opened (they start folded)
+  const toggle = (id: string) => setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
 
   useEffect(() => {
     listLeads().then((l) => (l ? setLeads(l) : setError(true)));
@@ -56,10 +59,13 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
   const open = leads?.filter((l) => l.status !== "leased");
   const shown = open?.filter((l) => filter === "all" || l.status === filter) ?? [];
   const tenants = leads?.filter((l) => l.status === "leased").length ?? 0;
+  const dupes = duplicatesOf(leads ?? []);
   const now = useNow();
   const toFollow = (leads ?? []).filter((l) => needsFollowUp(l, now)).sort((a, b) => daysSinceUpdate(b, now) - daysSinceUpdate(a, now));
   const jump = (id: string) => {
     setFilter("all");
+    setOpened((o) => (o.includes(id) ? o : [...o, id]));
+    setExpanded((e) => (e.includes(id) ? e : [...e, id]));
     window.setTimeout(() => document.getElementById(`lead-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   };
   const count = (s: LeadStatus) => leads?.filter((l) => l.status === s).length ?? 0;
@@ -93,6 +99,16 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
           🎉 Leased tenants ({tenants}) →
         </button>
       </div>
+      {shown.length > 0 && (
+        <div className="mb-3 flex justify-end gap-3 text-sm">
+          <button className="font-medium text-brown underline underline-offset-4" onClick={() => setExpanded(shown.map((l) => l.id))}>
+            Open all
+          </button>
+          <button className="font-medium text-brown underline underline-offset-4" onClick={() => setExpanded([])}>
+            Fold all
+          </button>
+        </div>
+      )}
       {moved && (
         <p className="mb-4 rounded-md bg-[#e3eee4] px-4 py-3 text-[#2f5a38]" role="status">
           🎉 {moved} moved to <button onClick={onTenants} className="font-medium underline underline-offset-4">Leased tenants</button>.
@@ -128,31 +144,65 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
 
         <ul className="min-w-0 space-y-4">
           {shown.map((l) => (
-            <li key={l.id} id={`lead-${l.id}`} className={`relative scroll-mt-28 overflow-hidden rounded-lg bg-cream p-5 shadow-sm ring-1 ${l.status === "new" ? "ring-gold" : "ring-sand"}`}>
+            <li key={l.id} id={`lead-${l.id}`} className={`relative scroll-mt-28 overflow-hidden rounded-lg bg-cream shadow-sm ring-1 ${l.status === "new" ? "ring-gold" : "ring-sand"}`}>
               {/* Closed: the card is blurred out of the way, one click shows it again. */}
               {l.status === "closed" && !opened.includes(l.id) && (
                 <button
                   onClick={() => setOpened((o) => [...o, l.id])}
-                  className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-cream/40 backdrop-blur-[3px] transition hover:bg-cream/20"
+                  className="absolute inset-0 z-10 flex items-center justify-center gap-3 bg-cream/40 backdrop-blur-[3px] transition hover:bg-cream/20"
                 >
                   <span className="rounded-full bg-brown px-4 py-1.5 font-medium text-white shadow">Closed · {l.name}</span>
                   <span className="text-sm text-brown underline underline-offset-4">Click to view</span>
                 </button>
               )}
+              {/* Folded: one line per person; click to open the whole card. */}
+              <button onClick={() => toggle(l.id)} aria-expanded={expanded.includes(l.id)} className="flex w-full items-center gap-3 px-5 py-4 text-left">
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-display text-2xl text-ink">{l.name}</span>
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${STATUS.find((x) => x.key === l.status)?.on ?? ""}`}>{STATUS.find((x) => x.key === l.status)?.label}</span>
+                    <span className="rounded-full bg-cream-deep px-2.5 py-0.5 text-xs font-medium text-brown">{KIND[l.kind]}</span>
+                    {l.source && <span className="rounded-full bg-gold-light/60 px-2.5 py-0.5 text-xs font-medium text-brown">{l.source}</span>}
+                    {dupes[l.id]?.length ? <span className="rounded-full bg-[#f4e1df] px-2.5 py-0.5 text-xs font-medium text-red-900">⚠ Possible duplicate ({dupes[l.id].length + 1})</span> : null}
+                    {needsFollowUp(l, now) && <BellIcon className="size-4 text-gold" aria-label="Time to follow up" />}
+                  </span>
+                  <span className="mt-0.5 block truncate text-sm text-brown-soft">
+                    {[l.showing && `Showing ${dayOf(l.showing.date)} at ${l.showing.time}`, l.type, l.moveIn && `Move-in ${dayOf(l.moveIn)}`, l.phone || l.email].filter(Boolean).join(" · ")}
+                  </span>
+                </span>
+                <span className="hidden shrink-0 text-sm text-brown-soft sm:block">{when.format(new Date(l.createdAt))}</span>
+                <ChevronIcon dir="down" className={`size-5 shrink-0 text-brown-soft transition-transform ${expanded.includes(l.id) ? "rotate-180" : ""}`} />
+              </button>
+              {expanded.includes(l.id) && (
+              <div className="border-t border-sand px-5 pb-5 pt-4">
               {needsFollowUp(l, now) && (
                 <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-gold-light px-3 py-1 text-sm text-brown">
                   <BellIcon className="size-4" /> No update in {daysSinceUpdate(l, now)} days: time to follow up
                 </p>
               )}
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="font-display text-3xl text-ink">{l.name}</h2>
-                <p className="text-sm text-brown-soft">
-                  <span className="mr-2 rounded-full bg-cream-deep px-3 py-1 font-medium text-brown">{KIND[l.kind]}</span>
-                  {l.source && <span className="mr-2 rounded-full bg-gold-light/60 px-3 py-1 font-medium text-brown">{l.source}</span>}
-                  {when.format(new Date(l.createdAt))}
-                </p>
-              </div>
-
+              {dupes[l.id]?.length ? (
+                <div className="mb-3 rounded-md bg-[#f4e1df] px-4 py-3 text-sm text-red-900">
+                  <p className="font-medium">Same email or phone as:</p>
+                  <ul className="mt-1 space-y-0.5">
+                    {dupes[l.id].map((d) => (
+                      <li key={d.id}>
+                        {d.name} · {KIND[d.kind]}
+                        {d.source ? ` (${d.source})` : ""} · {when.format(new Date(d.createdAt))} · {STATUS.find((x) => x.key === d.status)?.label}{" "}
+                        {d.status !== "leased" && (
+                          <button className="ml-1 font-medium underline underline-offset-2" onClick={() => jump(d.id)}>
+                            Show
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  {l.status !== "closed" && (
+                    <button className="mt-2 font-medium underline underline-offset-2" onClick={() => change(l.id, { status: "closed", note: [l.note, "Duplicate submission."].filter(Boolean).join("\n") })}>
+                      Close this one as a duplicate
+                    </button>
+                  )}
+                </div>
+              ) : null}
               <ShowingBox lead={l} onLeads={setLeads} />
 
               <dl className="mt-3 grid gap-x-6 gap-y-1 text-brown sm:grid-cols-2">
@@ -208,6 +258,8 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
               <NoteField value={l.note ?? ""} onSave={(note) => change(l.id, { note })} />
               <UnitsToShow lead={l} content={content} onSave={(units) => change(l.id, { units })} />
               <Suggestions lead={l} content={content} onLeads={setLeads} />
+              </div>
+              )}
             </li>
           ))}
         </ul>
@@ -235,6 +287,20 @@ function NoteField({ value, onSave }: { value: string; onSave: (v: string) => vo
 }
 
 const TYPES = dictionaries.en.types;
+
+// People who sent more than one submission (same email, or same phone number), by inquiry.
+function duplicatesOf(leads: Lead[]): Record<string, Lead[]> {
+  const keys = (l: Lead) => [l.email.trim().toLowerCase(), l.phone.replace(/\D/g, "").slice(-10)].filter((k, i) => (i === 0 ? k.includes("@") : k.length === 10));
+  const byKey = new Map<string, Lead[]>();
+  for (const l of leads) for (const k of keys(l)) byKey.set(k, [...(byKey.get(k) ?? []), l]);
+  const out: Record<string, Lead[]> = {};
+  for (const l of leads) {
+    const others = new Map<string, Lead>();
+    for (const k of keys(l)) for (const o of byKey.get(k) ?? []) if (o.id !== l.id) others.set(o.id, o);
+    if (others.size) out[l.id] = [...others.values()];
+  }
+  return out;
+}
 
 // Suites picked to show this person, from a drop-down (as many as needed). Only seen here in the admin.
 function UnitsToShow({ lead, content, onSave }: { lead: Lead; content: SiteContent; onSave: (units: string[]) => void }) {

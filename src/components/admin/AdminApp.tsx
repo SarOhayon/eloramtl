@@ -50,6 +50,7 @@ import { aiWarnings, creditLeft } from "@/lib/aiAlerts";
 import { SunIcon } from "../icons";
 import { BilingualFields, ScheduleStatus, ScreenTitle, Step, Switch, bigBtn, field, softBtn, type Update, type Upload } from "./ui";
 import { Wordmark } from "../Wordmark";
+import { BackToTop } from "../BackToTop";
 
 // A deliberately simple admin: a home screen with big buttons, one task per screen,
 // plain-English help and automatic saving.
@@ -135,6 +136,7 @@ export function AdminApp({ initial }: { initial: SiteContent }) {
 
   return (
     <div className="min-h-svh pb-24 text-base">
+      <BackToTop label="Back to top" />
       <header className="sticky top-0 z-30 border-b border-sand bg-cream/95 backdrop-blur">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <button onClick={() => setScreen("home")} className="flex items-center gap-3" aria-label="Home">
