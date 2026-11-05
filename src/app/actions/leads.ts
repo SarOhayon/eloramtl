@@ -11,7 +11,7 @@ import { readMorningStatus, sendCheatSheet, sendMorningBrief, type CheatSheetRes
 import { extractLead, importInboxLeads, inboxConfigured, readInboxState, type ExtractedLead, type InboxState } from "@/lib/inboxLeads";
 import { montrealToUtc } from "@/lib/showingSlots";
 
-const STATUSES: LeadStatus[] = ["new", "contacted", "toured", "leased", "closed"];
+const STATUSES: LeadStatus[] = ["new", "contacted", "toured", "applied", "leased", "closed"];
 
 export async function listLeads(): Promise<Lead[] | null> {
   if (!(await isAdmin())) return null;

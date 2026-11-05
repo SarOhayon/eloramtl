@@ -18,6 +18,7 @@ const STATUS: { key: LeadStatus; label: string; on: string }[] = [
   { key: "new", label: "New", on: "bg-gold text-white ring-gold" },
   { key: "contacted", label: "Contacted", on: "bg-brown-soft text-white ring-brown-soft" },
   { key: "toured", label: "Toured", on: "bg-action text-white ring-action" },
+  { key: "applied", label: "Applied", on: "bg-[#5b6f8c] text-white ring-[#5b6f8c]" },
   { key: "leased", label: "Leased", on: "bg-[#3b6b45] text-white ring-[#3b6b45]" },
   { key: "closed", label: "Closed", on: "bg-sand text-brown ring-sand" },
 ];

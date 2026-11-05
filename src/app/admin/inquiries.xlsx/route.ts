@@ -4,7 +4,7 @@ import { readLeads } from "@/lib/leads";
 
 // Every inquiry, application and showing as an Excel file (Inquiries → Download to Excel).
 const KIND = { inquiry: "Inquiry", application: "Application", showing: "Showing" };
-const STATUS = { new: "New", contacted: "Contacted", toured: "Toured", leased: "Leased", closed: "Closed" };
+const STATUS = { new: "New", contacted: "Contacted", toured: "Toured", applied: "Applied", leased: "Leased", closed: "Closed" };
 const local = new Intl.DateTimeFormat("en-CA", { dateStyle: "short", timeStyle: "short", hourCycle: "h23", timeZone: "America/Montreal" });
 
 export async function GET() {

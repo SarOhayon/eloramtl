@@ -5,7 +5,7 @@ import { getFile, putFile } from "./storage";
 // Kept in one file (leads/index.json); the site gets a handful a day, so a single list is plenty.
 
 export type LeadKind = "inquiry" | "application" | "showing";
-export type LeadStatus = "new" | "contacted" | "toured" | "leased" | "closed";
+export type LeadStatus = "new" | "contacted" | "toured" | "applied" | "leased" | "closed"; // applied: sent or filled an application
 export type Lead = {
   id: string;
   createdAt: string; // ISO
@@ -55,8 +55,8 @@ export async function findByToken(token: string): Promise<Lead | null> {
 const write = (leads: Lead[]) => putFile(KEY, JSON.stringify(leads.slice(0, MAX)), "application/json");
 
 // Adds a lead (newest first). Returns false if it couldn't be stored.
-export async function addLead(lead: Omit<Lead, "id" | "createdAt" | "status"> & { createdAt?: string }): Promise<Lead | null> {
-  const full: Lead = { bookToken: randomBytes(12).toString("base64url"), createdAt: new Date().toISOString(), ...lead, id: `${Date.now()}-${randomBytes(3).toString("hex")}`, status: "new" };
+export async function addLead(lead: Omit<Lead, "id" | "createdAt" | "status"> & { createdAt?: string; status?: LeadStatus }): Promise<Lead | null> {
+  const full: Lead = { bookToken: randomBytes(12).toString("base64url"), createdAt: new Date().toISOString(), ...lead, id: `${Date.now()}-${randomBytes(3).toString("hex")}`, status: lead.status ?? "new" };
   try {
     // Newest first, also for leads added later with an earlier date (e.g. from the mailbox).
     await write([full, ...(await readLeads())].sort((a, b) => b.createdAt.localeCompare(a.createdAt)));

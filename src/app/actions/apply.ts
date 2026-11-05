@@ -30,7 +30,7 @@ export async function submitApplication(_prev: ApplyState, formData: FormData): 
 
   // Saved for the admin inbox and emailed; either one is enough to count as received.
   const [saved, sent] = await Promise.all([
-    addLead({ kind: "application", name: app.name, email: app.email, phone: app.phone, moveIn: app.moveIn, comments: app.comments || undefined, lang: app.lang === "fr" ? "fr" : "en" }),
+    addLead({ kind: "application", status: "applied", name: app.name, email: app.email, phone: app.phone, moveIn: app.moveIn, comments: app.comments || undefined, lang: app.lang === "fr" ? "fr" : "en" }),
     sendTeamNotice({
       subject: `Elora application: ${app.name} (move-in ${app.moveIn})`,
       heading: `New application from ${app.name}`,
