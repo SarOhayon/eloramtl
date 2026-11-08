@@ -8,6 +8,7 @@ import { UNIT_TYPES, type UnitType } from "@/data/building";
 import { todayInMontreal } from "@/data/content";
 import { dictionaries } from "@/i18n/dictionaries";
 import { getContent } from "./content";
+import { logActivity } from "./activity";
 import { addLead, readLeads } from "./leads";
 import { getFile, putFile } from "./storage";
 
@@ -110,6 +111,7 @@ export async function importInboxLeads(): Promise<{ ok: boolean; added: number; 
               if (lead) {
                 const saved = await addLead({ ...lead, kind: "inquiry", sourceId, createdAt: (mail.date ?? new Date()).toISOString() });
                 if (saved) {
+                  await logActivity({ leadId: saved.id, name: saved.name, what: `New lead from ${saved.source ?? "email"}`, by: "site" });
                   added++;
                   known.add(sourceId);
                 }

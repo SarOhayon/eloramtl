@@ -41,6 +41,7 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
   const [opened, setOpened] = useState<string[]>([]); // closed cards shown again
   const [moved, setMoved] = useState(""); // name of someone just moved to Leased tenants
   const [expanded, setExpanded] = useState<string[]>([]); // cards opened (they start folded)
+  const [query, setQuery] = useState("");
   const toggle = (id: string) => setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
 
   useEffect(() => {
@@ -58,7 +59,9 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
 
   // Leased people live in Leased tenants, not here.
   const open = leads?.filter((l) => l.status !== "leased");
-  const shown = open?.filter((l) => filter === "all" || l.status === filter) ?? [];
+  const found = (l: Lead) => matches(l, query);
+  const shown = open?.filter((l) => (filter === "all" || l.status === filter) && found(l)) ?? [];
+  const leasedFound = query.trim() ? (leads ?? []).filter((l) => l.status === "leased" && found(l)) : [];
   const tenants = leads?.filter((l) => l.status === "leased").length ?? 0;
   const dupes = duplicatesOf(leads ?? []);
   const now = useNow();
@@ -100,6 +103,34 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
           🎉 Leased tenants ({tenants}) →
         </button>
       </div>
+      <label className="relative mb-4 block">
+        <span className="sr-only">Search</span>
+        <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-brown-soft" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
+          <circle cx="11" cy="11" r="6.5" />
+          <path d="m20 20-4.2-4.2" />
+        </svg>
+        <input
+          type="search"
+          className={`${field} pl-12`}
+          placeholder="Search by name, phone, email, suite, source, note…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </label>
+      {query.trim() && (
+        <p className="mb-3 text-sm text-brown-soft">
+          {shown.length} result{shown.length === 1 ? "" : "s"}
+          {filter !== "all" ? " in this tab" : ""}
+          {leasedFound.length > 0 && (
+            <>
+              {" "}· also in{" "}
+              <button onClick={onTenants} className="font-medium text-brown underline underline-offset-4">
+                Leased tenants: {leasedFound.map((l) => l.name).join(", ")}
+              </button>
+            </>
+          )}
+        </p>
+      )}
       {shown.length > 0 && (
         <div className="mb-3 flex justify-end gap-3 text-sm">
           <button className="font-medium text-brown underline underline-offset-4" onClick={() => setExpanded(shown.map((l) => l.id))}>
@@ -117,7 +148,7 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
       )}
 
       {!leads && !error && <p className="text-brown-soft">Loading…</p>}
-      {leads && shown.length === 0 && <p className="rounded-lg bg-cream p-6 text-brown-soft ring-1 ring-sand">Nothing here yet.</p>}
+      {leads && shown.length === 0 && <p className="rounded-lg bg-cream p-6 text-brown-soft ring-1 ring-sand">{query.trim() ? "Nobody matches that search." : "Nothing here yet."}</p>}
 
       <div className="grid items-start gap-6 lg:grid-cols-[1fr_250px]">
         <aside className="rounded-lg bg-cream p-4 shadow-sm ring-1 ring-gold/50 lg:sticky lg:top-28 lg:order-last">
@@ -288,6 +319,16 @@ function NoteField({ value, onSave }: { value: string; onSave: (v: string) => vo
 }
 
 const TYPES = dictionaries.en.types;
+
+// Search: every word must appear somewhere in the person's details. Phone numbers match on digits,
+// so "514 555" finds "(514) 555-0142".
+function matches(l: Lead, query: string) {
+  const words = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return true;
+  const hay = [l.name, l.email, l.phone, l.type, l.moveIn, l.source, l.comments, l.note, l.status, l.kind, ...(l.units ?? []), l.leasedUnit, l.showing?.date].filter(Boolean).join(" ").toLowerCase();
+  const digits = (l.phone ?? "").replace(/\D/g, "");
+  return words.every((w) => hay.includes(w) || (/\d/.test(w) && w.replace(/\D/g, "").length >= 3 && digits.includes(w.replace(/\D/g, ""))));
+}
 
 // People who sent more than one submission (same email, or same phone number), by inquiry.
 function duplicatesOf(leads: Lead[]): Record<string, Lead[]> {

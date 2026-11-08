@@ -1,6 +1,7 @@
 "use server";
 
 import { UNITS } from "@/data/building";
+import { logActivity } from "@/lib/activity";
 import { todayInMontreal } from "@/data/content";
 import { isAdmin } from "@/lib/adminAuth";
 import { getContent } from "@/lib/content";
@@ -34,19 +35,32 @@ export async function updateLead(id: string, patch: { status?: LeadStatus; note?
     clean.units = units.length ? units : undefined;
   }
   try {
-    return await changeLead(String(id), clean);
+    const before = (await readLeads()).find((l) => l.id === String(id));
+    const leads = await changeLead(String(id), clean);
+    if (leads && before) {
+      const what: string[] = [];
+      if (clean.status && clean.status !== before.status) what.push(`Status: ${STATUS_WORD[before.status]} → ${STATUS_WORD[clean.status]}`);
+      if (clean.note !== undefined && clean.note !== (before.note ?? "")) what.push(clean.note ? `Note: “${clean.note.slice(0, 160)}”` : "Cleared the note");
+      if ("units" in clean && (clean.units ?? []).join() !== (before.units ?? []).join()) what.push(clean.units?.length ? `Units to show: ${clean.units.join(", ")}` : "Cleared the units to show");
+      if ("leasedUnit" in clean && clean.leasedUnit && clean.leasedUnit !== before.leasedUnit) what.push(`Leased suite ${clean.leasedUnit}`);
+      if (patch.snooze) what.push("Follow-up reminder snoozed");
+      await logActivity(...what.map((w) => ({ leadId: before.id, name: before.name, what: w, by: "you" as const })));
+    }
+    return leads;
   } catch (err) {
     console.error("[leads] update failed", err);
     return null;
   }
 }
 
+const STATUS_WORD: Record<LeadStatus, string> = { new: "New", contacted: "Contacted", toured: "Toured", applied: "Applied", leased: "Leased", closed: "Closed" };
+
 // Marks whether someone came to their showing (from 15 minutes before it starts). Coming moves them
 // to Toured and schedules the follow-up email; a no-show or an undo cancels a follow-up not yet sent.
 export async function markAttendance(id: string, attendance: "came" | "no-show" | null): Promise<Lead[] | null> {
   if (!(await isAdmin())) return null;
   const { emails } = await getContent();
-  return changeLeads((l) => {
+  const leads = await changeLeads((l) => {
     if (l.id !== String(id) || !l.showing) return null;
     if (Date.now() < montrealToUtc(l.showing.date, l.showing.time).getTime() - 15 * 60e3) return null;
     const followUp = l.followUp?.sentAt
@@ -60,6 +74,9 @@ export async function markAttendance(id: string, attendance: "came" | "no-show" 
       ...(attendance === "came" && (l.status === "new" || l.status === "contacted") ? { status: "toured" as const } : {}),
     };
   });
+  const l = leads?.find((x) => x.id === String(id));
+  if (l) await logActivity({ leadId: l.id, name: l.name, what: attendance === "came" ? `Checked in for the ${l.showing?.time} showing (came)` : attendance === "no-show" ? `No-show at the ${l.showing?.time} showing` : "Cleared the check-in", by: "you" });
+  return leads;
 }
 
 // The follow-up goes out at 10 a.m. (Montréal), a few days after the showing.
@@ -99,6 +116,7 @@ export async function addShowingByHand(input: {
   });
   if (!lead) return { ok: false, error: "Couldn't save it. Try again." };
   if (input.confirm) await sendShowingEmails(lead, { team: false });
+  await logActivity({ leadId: lead.id, name: lead.name, what: `Added a showing by hand: ${input.date} at ${input.time}`, by: "you" });
   return { ok: true, leads: await readLeads() };
 }
 
@@ -107,6 +125,7 @@ export async function sendFollowUpNow(id: string): Promise<Lead[] | null> {
   if (!(await isAdmin())) return null;
   const lead = (await readLeads()).find((l) => l.id === String(id));
   if (!lead || lead.attendance !== "came" || !(await sendFollowUp(lead))) return null;
+  await logActivity({ leadId: lead.id, name: lead.name, what: "Sent the follow-up email", by: "you" });
   return changeLead(lead.id, { followUp: { due: lead.followUp?.due ?? new Date().toISOString(), sentAt: new Date().toISOString() } });
 }
 
@@ -129,6 +148,7 @@ export async function scheduleShowing(id: string, date: string, time: string, co
   const lead = leads?.find((l) => l.id === String(id));
   if (!leads || !lead) return { ok: false, error: "This inquiry no longer exists." };
   if (confirm) await sendShowingEmails(lead, { team: false });
+  await logActivity({ leadId: lead.id, name: lead.name, what: `Booked a showing for them: ${date} at ${time}`, by: "you" });
   return { ok: true, leads };
 }
 
@@ -167,6 +187,7 @@ export async function addInquiryByHand(input: { name: string; email: string; pho
     lang: input.lang === "fr" ? "fr" : "en",
   });
   if (!lead) return { ok: false, error: "Couldn't save it. Try again." };
+  await logActivity({ leadId: lead.id, name: lead.name, what: `Added an inquiry by hand (${lead.source})`, by: "you" });
   return { ok: true, leads: await readLeads() };
 }
 

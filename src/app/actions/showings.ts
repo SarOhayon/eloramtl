@@ -1,5 +1,6 @@
 "use server";
 
+import { logActivity } from "@/lib/activity";
 import { sendShowingEmails } from "@/lib/autoEmail";
 import { getContent } from "@/lib/content";
 import { changeLead, findByToken, readLeads } from "@/lib/leads";
@@ -27,6 +28,7 @@ export async function bookByLink(_prev: BookState, formData: FormData): Promise<
   const saved = await changeLead(lead.id, { showing, attendance: undefined, followUp: undefined });
   if (!saved) return { status: "error" };
   await countEvent("showing");
+  await logActivity({ leadId: lead.id, name: lead.name, what: `Booked a showing from their email link: ${date} at ${time}`, by: "site" });
   await sendShowingEmails({ ...lead, showing }, { team: true });
   return { status: "booked", when: showing };
 }

@@ -2,6 +2,7 @@ import { UNITS } from "@/data/building";
 import { sendFollowUp, sendTeamNotice } from "./autoEmail";
 import { getContent } from "./content";
 import { importInboxLeads } from "./inboxLeads";
+import { logActivity } from "./activity";
 import { markWeeklyFaq, morningDue, readFaqSuggestions, sendMorningBrief, suggestFaqAnswers, weeklyFaqDue } from "./briefs";
 import { changeLeads, readLeads, type Lead } from "./leads";
 import { wallClock } from "./showingSlots";
@@ -57,6 +58,7 @@ async function sendFollowUps(leads: Lead[]) {
   const due = leads.filter((l) => l.showing && l.attendance === "came" && l.status !== "closed" && l.followUp && !l.followUp.sentAt && Date.parse(l.followUp.due) <= now && now - Date.parse(l.followUp.due) < 7 * 864e5);
   const sent = new Set<string>();
   for (const l of due) if (await sendFollowUp(l)) sent.add(l.id);
+  await logActivity(...due.filter((l) => sent.has(l.id)).map((l) => ({ leadId: l.id, name: l.name, what: "Follow-up email sent (automatic)", by: "site" as const })));
   if (sent.size) {
     const at = new Date().toISOString();
     await changeLeads((l) => (sent.has(l.id) && l.followUp ? { followUp: { ...l.followUp, sentAt: at } } : null));

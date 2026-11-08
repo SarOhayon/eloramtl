@@ -1,6 +1,7 @@
 "use server";
 
 import { autoReply, sendTeamNotice } from "@/lib/autoEmail";
+import { logActivity } from "@/lib/activity";
 import { addLead } from "@/lib/leads";
 import { countEvent } from "@/lib/stats";
 
@@ -32,6 +33,7 @@ export async function submitContact(_prev: ContactState, formData: FormData): Pr
     }),
   ]);
   if (!saved && !sent) return { status: "error", values: v };
+  if (saved) await logActivity({ leadId: saved.id, name: saved.name, what: "Sent an inquiry from the website", by: "site" });
   await Promise.all([countEvent("inquiry"), autoReply(saved || { name: v.name, email: v.email, lang })]);
   return { status: "sent" };
 }

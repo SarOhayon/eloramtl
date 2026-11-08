@@ -45,6 +45,7 @@ import { SunScreen } from "./SunScreen";
 import { AiScreen } from "./AiScreen";
 import { TenantsScreen } from "./TenantsScreen";
 import { ThemeToggle } from "./ThemeToggle";
+import { DailyReport } from "./DailyReport";
 import { aiAccount } from "@/app/actions/ai";
 import { aiWarnings, creditLeft } from "@/lib/aiAlerts";
 import { SunIcon } from "../icons";
@@ -323,6 +324,7 @@ function Home({ content, go }: { content: SiteContent; go: (s: Screen) => void }
         <button onClick={() => go("showings")} className="mt-2 text-sm font-medium text-brown underline underline-offset-4">
           Check people in, cancel or add a showing →
         </button>
+        <DailyReport />
       </div>
       <p className="mt-8 text-lg text-brown-soft">What would you like to do? Click a box to start. Everything saves by itself.</p>
       <div className="mt-8 grid gap-4 sm:grid-cols-2">

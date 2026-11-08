@@ -1,6 +1,7 @@
 "use server";
 
 import { autoReply, sendTeamNotice } from "@/lib/autoEmail";
+import { logActivity } from "@/lib/activity";
 import { addLead } from "@/lib/leads";
 import { countEvent } from "@/lib/stats";
 
@@ -45,6 +46,7 @@ export async function submitApplication(_prev: ApplyState, formData: FormData): 
     }),
   ]);
   if (!saved && !sent) return { status: "error", values: app };
+  if (saved) await logActivity({ leadId: saved.id, name: saved.name, what: "Applied on the website", by: "site" });
   await Promise.all([countEvent("application"), autoReply(saved || { name: app.name, email: app.email, lang: app.lang === "fr" ? "fr" : "en" })]);
   return { status: "sent" };
 }
