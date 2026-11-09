@@ -46,6 +46,8 @@ function merge(saved: Saved): SiteContent {
       morning: { ...d.emails.morning, ...saved.emails?.morning },
       cheatSheet: { ...d.emails.cheatSheet, ...saved.emails?.cheatSheet },
       testMode: saved.emails?.testMode ?? d.emails.testMode,
+      testAddresses: saved.emails?.testAddresses ?? d.emails.testAddresses,
+      emailOutsideLeads: saved.emails?.emailOutsideLeads ?? d.emails.emailOutsideLeads,
     },
     faq: { ...d.faq, ...saved.faq },
     sun: { ...d.sun, ...saved.sun },

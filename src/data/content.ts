@@ -58,7 +58,9 @@ export type AutoEmails = {
   weekly: { enabled: boolean }; // Monday 8 a.m. summary to the leasing inbox
   morning: { enabled: boolean }; // 7:30 a.m. brief to the leasing inbox, every day
   cheatSheet: { enabled: boolean }; // pre-tour cheat sheet to the leasing inbox at check-in
-  testMode: boolean; // while the site is being set up: emails meant for clients go to the leasing inbox instead
+  testMode: boolean; // while the site is being set up: emails meant for clients go to the leasing inbox instead…
+  testAddresses: string[]; // …except these (your own test emails), which get the real emails like a client
+  emailOutsideLeads: boolean; // email people from the mailbox import or added by hand (off: never)
 };
 
 // The chat assistant on the website: questions and answers it uses (plus live facts).
@@ -180,6 +182,8 @@ export const DEFAULT_CONTENT: SiteContent = {
     morning: { enabled: true },
     cheatSheet: { enabled: true },
     testMode: true,
+    testAddresses: [],
+    emailOutsideLeads: false,
   },
   faq: { enabled: false, items: DEFAULT_FAQ },
   // Estimated from chemin Bates: the top of the plan looks north-west. Check with a compass.

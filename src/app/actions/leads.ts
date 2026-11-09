@@ -7,6 +7,7 @@ import { isAdmin } from "@/lib/adminAuth";
 import { getContent } from "@/lib/content";
 import { runDueJobs } from "@/lib/jobs";
 import { sendFollowUp, sendShowingEmails } from "@/lib/autoEmail";
+import { outsideLead } from "@/lib/followUp";
 import { addLead, changeLead, changeLeads, readLeads, type Lead, type LeadStatus } from "@/lib/leads";
 import { readMorningStatus, sendCheatSheet, sendMorningBrief, type CheatSheetResult } from "@/lib/briefs";
 import { extractLead, importInboxLeads, inboxConfigured, readInboxState, type ExtractedLead, type InboxState } from "@/lib/inboxLeads";
@@ -63,9 +64,11 @@ export async function markAttendance(id: string, attendance: "came" | "no-show" 
   const leads = await changeLeads((l) => {
     if (l.id !== String(id) || !l.showing) return null;
     if (Date.now() < montrealToUtc(l.showing.date, l.showing.time).getTime() - 15 * 60e3) return null;
+    // People from your inbox or added by hand get no follow-up email (unless turned on).
+    const mayEmail = emails.emailOutsideLeads || !outsideLead(l);
     const followUp = l.followUp?.sentAt
       ? l.followUp
-      : attendance === "came"
+      : attendance === "came" && mayEmail
         ? { due: followUpDue(l.showing.date, emails.followUp.days) }
         : undefined;
     return {
@@ -112,7 +115,7 @@ export async function addShowingByHand(input: {
     type: String(input.type ?? "").slice(0, 60) || undefined,
     lang: input.lang === "fr" ? "fr" : "en",
     showing: { date: input.date, time: input.time },
-    comments: "Added by hand in the admin.",
+    source: "Added by hand",
   });
   if (!lead) return { ok: false, error: "Couldn't save it. Try again." };
   if (input.confirm) await sendShowingEmails(lead, { team: false });

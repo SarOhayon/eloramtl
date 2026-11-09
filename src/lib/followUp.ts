@@ -6,3 +6,7 @@ const OPEN: LeadStatus[] = ["new", "contacted", "toured", "applied"];
 
 export const daysSinceUpdate = (l: Lead, now: number) => Math.floor((now - Date.parse(l.statusAt ?? l.createdAt)) / 864e5);
 export const needsFollowUp = (l: Lead, now: number) => OPEN.includes(l.status) && daysSinceUpdate(l, now) >= FOLLOW_UP_AFTER_DAYS;
+
+// People who came from the mailbox import (Rentsync, Apartments.com…) or were added by hand: they
+// get no automatic emails unless that's turned on (Automatic emails).
+export const outsideLead = (l: Pick<Lead, "source" | "comments">) => Boolean(l.source) || /^Added by hand/i.test(l.comments ?? "");

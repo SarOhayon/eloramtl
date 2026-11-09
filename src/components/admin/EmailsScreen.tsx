@@ -24,10 +24,21 @@ export function EmailsScreen({ content, update }: { content: SiteContent; update
       <section className={`mb-6 rounded-lg p-5 ring-1 ${e.testMode ? "bg-gold-light/50 ring-gold" : "bg-cream ring-sand"}`}>
         <p className="font-display text-2xl text-ink">Test mode</p>
         <p className="mt-1 text-brown-soft">
-          While the website is being set up: every email meant for a client (auto-reply, booking confirmation, follow-up) comes to your inbox instead, marked “TEST · would have gone to …”. Turn it off when you go live.
+          While the website is being set up: every email meant for a client (auto-reply, booking confirmation, follow-up) comes to your inbox instead, marked “TEST · would have gone to …”, except your test addresses below, which get the real thing. Turn it off when you go live.
         </p>
         <div className="mt-3">
-          <Switch on={e.testMode} onChange={(v) => setEmails({ testMode: v })} label={e.testMode ? "ON: clients receive nothing" : "OFF: emails go to clients"} />
+          <Switch on={e.testMode} onChange={(v) => setEmails({ testMode: v })} label={e.testMode ? "ON: only your test addresses get real emails" : "OFF: emails go to clients"} />
+        </div>
+        <TestAddresses list={e.testAddresses} onChange={(testAddresses) => setEmails({ testAddresses })} />
+      </section>
+
+      <section className="mb-6 rounded-lg bg-cream p-5 ring-1 ring-sand">
+        <p className="font-display text-2xl text-ink">People from your inbox or added by hand</p>
+        <p className="mt-1 text-brown-soft">
+          Leads read from your email (Rentsync, Apartments.com, Zumper…) and people you add yourself never get automatic emails: no confirmation when you book them a showing, no follow-up. People who use the website’s forms get the emails above.
+        </p>
+        <div className="mt-3">
+          <Switch on={e.emailOutsideLeads} onChange={(v) => setEmails({ emailOutsideLeads: v })} label={e.emailOutsideLeads ? "They get emails too" : "Never email them (recommended)"} />
         </div>
       </section>
       <div className="space-y-6">
@@ -130,6 +141,37 @@ function MorningStatus() {
         {busy ? "Sending…" : "Send today’s brief now"}
       </button>
       {msg && <span className="ml-3 text-brown">{msg}</span>}
+    </div>
+  );
+}
+
+// Your own addresses for testing: in Test mode they still get the real emails, like a client would.
+function TestAddresses({ list, onChange }: { list: string[]; onChange: (l: string[]) => void }) {
+  const [draft, setDraft] = useState("");
+  const add = () => {
+    const v = draft.trim().toLowerCase();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && !list.includes(v)) onChange([...list, v]);
+    setDraft("");
+  };
+  return (
+    <div className="mt-4">
+      <p className="text-sm font-medium text-brown">Test addresses (get the real emails, like a client)</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {list.map((a) => (
+          <span key={a} className="inline-flex items-center gap-1.5 rounded-full bg-white py-1 pl-3 pr-1.5 text-sm ring-1 ring-sand">
+            {a}
+            <button aria-label={`Remove ${a}`} onClick={() => onChange(list.filter((x) => x !== a))} className="inline-flex size-6 items-center justify-center rounded-full text-brown-soft hover:text-brown">
+              ×
+            </button>
+          </span>
+        ))}
+      </div>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <input type="email" className={`${field} max-w-xs py-2`} placeholder="you@example.com" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
+        <button className={softBtn} onClick={add}>
+          Add
+        </button>
+      </div>
     </div>
   );
 }

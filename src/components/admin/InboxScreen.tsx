@@ -6,7 +6,7 @@ import { suggestUnits } from "@/app/actions/suggest";
 import { UNITS, UNIT_TYPES, formatPrice } from "@/data/building";
 import { todayInMontreal, type SiteContent } from "@/data/content";
 import { dictionaries } from "@/i18n/dictionaries";
-import { FOLLOW_UP_AFTER_DAYS, daysSinceUpdate, needsFollowUp } from "@/lib/followUp";
+import { FOLLOW_UP_AFTER_DAYS, daysSinceUpdate, needsFollowUp, outsideLead } from "@/lib/followUp";
 import type { InboxState } from "@/lib/inboxLeads";
 import type { Lead, LeadKind, LeadStatus } from "@/lib/leads";
 import { BellIcon, CalendarIcon, InboxIcon, MailIcon, PlusIcon, SparkleIcon, TableIcon } from "./AdminIcons";
@@ -235,7 +235,7 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
                   )}
                 </div>
               ) : null}
-              <ShowingBox lead={l} onLeads={setLeads} />
+              <ShowingBox lead={l} onLeads={setLeads} canEmail={content.emails.emailOutsideLeads || !outsideLead(l)} />
 
               <dl className="mt-3 grid gap-x-6 gap-y-1 text-brown sm:grid-cols-2">
                 {l.phone && (
@@ -475,7 +475,7 @@ function Suggestions({ lead, content, onLeads }: { lead: Lead; content: SiteCont
 
 // The person's showing (with check-in), or a button to book one for them: any day and time,
 // no limits, e.g. after talking with them by phone.
-function ShowingBox({ lead, onLeads }: { lead: Lead; onLeads: (l: Lead[]) => void }) {
+function ShowingBox({ lead, onLeads, canEmail }: { lead: Lead; onLeads: (l: Lead[]) => void; canEmail: boolean }) {
   const [editing, setEditing] = useState(false);
   const [date, setDate] = useState(lead.showing?.date ?? todayInMontreal());
   const [time, setTime] = useState(lead.showing?.time ?? "10:00");
@@ -486,7 +486,7 @@ function ShowingBox({ lead, onLeads }: { lead: Lead; onLeads: (l: Lead[]) => voi
   const save = async () => {
     setBusy(true);
     setError("");
-    const res = await scheduleShowing(lead.id, date, time, confirmEmail);
+    const res = await scheduleShowing(lead.id, date, time, canEmail && confirmEmail);
     setBusy(false);
     if (!res.ok) return setError(res.error);
     onLeads(res.leads);
@@ -512,10 +512,14 @@ function ShowingBox({ lead, onLeads }: { lead: Lead; onLeads: (l: Lead[]) => voi
             <span className="mb-1 block text-sm font-medium">Time</span>
             <input type="time" className={`${field} w-36`} value={time} onChange={(e) => setTime(e.target.value)} />
           </label>
-          <label className="mb-3 flex items-center gap-2 text-sm">
-            <input type="checkbox" className="size-4 accent-[#503d32]" checked={confirmEmail} onChange={(e) => setConfirmEmail(e.target.checked)} />
-            Email them the confirmation
-          </label>
+          {canEmail ? (
+            <label className="mb-3 flex items-center gap-2 text-sm">
+              <input type="checkbox" className="size-4 accent-[#503d32]" checked={confirmEmail} onChange={(e) => setConfirmEmail(e.target.checked)} />
+              Email them the confirmation
+            </label>
+          ) : (
+            <p className="mb-3 text-sm text-brown-soft">No email is sent: they came from your inbox or were added by hand.</p>
+          )}
           <div className="mb-1 flex gap-2">
             <button onClick={save} disabled={busy || !date || !time} className="rounded-md bg-action px-4 py-2.5 text-sm font-medium text-white hover:bg-action-deep disabled:opacity-50">
               {busy ? "Saving…" : lead.showing ? "Save the new time" : "Book the showing"}

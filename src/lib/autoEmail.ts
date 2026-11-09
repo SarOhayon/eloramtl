@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { fillHtmlTemplate, fillTemplate, scheduleState, type EmailTemplate, type SiteContent } from "@/data/content";
 import { getContent } from "./content";
 import type { Lead } from "./leads";
+import { outsideLead } from "./followUp";
 import { sendMail, type Attachment } from "./mail";
 import { montrealToUtc, showingWords } from "./showingSlots";
 
@@ -36,14 +37,26 @@ export function emailBlanks(content: SiteContent, lang: Lang, person: { name: st
   return { name: person.name, date: person.date ?? "", time: person.time ?? "", promotion, address: ADDRESS, phone: PHONE_MAIN_DISPLAY, website: `${base}/${lang}`, logo: `cid:${EMAIL_LOGO_CID}` };
 }
 
-// Sends one of the admin-editable emails to a visitor, in their language.
-export async function sendTemplate(t: EmailTemplate, lang: Lang, to: string, blanks: Record<string, string>, attachments: Attachment[] = []) {
+
+// Whether a client email may go out to this person (Automatic emails → Who gets emails): never to
+// people from your inbox or added by hand (unless turned on); in Test mode, only your test addresses.
+export async function clientEmailAllowed(lead: Pick<Lead, "source" | "comments" | "email">) {
+  const { emails } = await getContent();
+  if (!lead.email.trim()) return { ok: false, reason: "They have no email address." };
+  if (outsideLead(lead) && !emails.emailOutsideLeads) return { ok: false, reason: "No email: this person came from your inbox or was added by hand." };
+  return { ok: true };
+}
+
+// Sends one of the admin-editable emails to a visitor, in their language. `lead` applies the rules
+// above; in Test mode, emails to anyone but your test addresses come to the leasing inbox instead.
+export async function sendTemplate(t: EmailTemplate, lang: Lang, to: string, blanks: Record<string, string>, attachments: Attachment[] = [], lead?: Pick<Lead, "source" | "comments" | "email">) {
   // Leads added by hand may have only a phone number.
   if (!to.trim()) return false;
+  if (lead && !(await clientEmailAllowed(lead)).ok) return false;
   const html = t.html[lang].trim() ? fillHtmlTemplate(t.html[lang], blanks) : "";
   const inbox = process.env.MAIL_TO || INBOX_EMAIL;
-  // Test mode (Automatic emails): nothing reaches a client; it comes to the leasing inbox instead.
-  const test = (await getContent()).emails.testMode;
+  const { emails } = await getContent();
+  const test = emails.testMode && !emails.testAddresses.includes(to.trim().toLowerCase());
   return sendMail({
     to: test ? inbox : to,
     fromName: "Elora MTL",
@@ -65,7 +78,7 @@ export async function autoReply(lead: Pick<Lead, "name" | "email" | "lang" | "bo
   if (!content.emails.autoReply.enabled) return;
   const base = await siteBase();
   const booking = content.showings.enabled ? bookingLink(lead, base) : "";
-  await sendTemplate(content.emails.autoReply, lead.lang, lead.email, { ...emailBlanks(content, lead.lang, { name: lead.name }, base), booking });
+  await sendTemplate(content.emails.autoReply, lead.lang, lead.email, { ...emailBlanks(content, lead.lang, { name: lead.name }, base), booking }, [], { email: lead.email });
 }
 
 // The logo travels inside the email (not as a link), so it shows even before the site's domain is live.
@@ -167,7 +180,7 @@ export async function sendShowingEmails(lead: Lead, { team, confirm = true }: { 
         attachments,
       }),
     // Wording set in the admin (Automatic emails → Showing confirmation).
-    confirm && sendTemplate(content.showings.email, lead.lang, lead.email, emailBlanks(content, lead.lang, { name: lead.name, date, time }, await siteBase()), attachments),
+    confirm && sendTemplate(content.showings.email, lead.lang, lead.email, emailBlanks(content, lead.lang, { name: lead.name, date, time }, await siteBase()), attachments, lead),
   ]);
 }
 
@@ -176,7 +189,7 @@ export async function sendFollowUp(lead: Lead) {
   if (!lead.showing) return false;
   const content = await getContent();
   const { date, time } = showingWords(lead.showing.date, lead.showing.time, lead.lang);
-  return sendTemplate(content.emails.followUp, lead.lang, lead.email, emailBlanks(content, lead.lang, { name: lead.name, date, time }, await siteBase()));
+  return sendTemplate(content.emails.followUp, lead.lang, lead.email, emailBlanks(content, lead.lang, { name: lead.name, date, time }, await siteBase()), [], lead);
 }
 
 // A calendar invite for the showing, with a 30-minute reminder.

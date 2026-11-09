@@ -132,7 +132,7 @@ export function ShowingsScreen({ content, update }: { content: SiteContent; upda
           )}
         </Step>
 
-        <Upcoming showings={s} />
+        <Upcoming showings={s} canEmail={content.emails.emailOutsideLeads} />
       </div>
     </>
   );
@@ -140,7 +140,7 @@ export function ShowingsScreen({ content, update }: { content: SiteContent; upda
 
 // Booked showings: today and coming up (soonest first), and the last two weeks to mark who came.
 // Cancelling frees the time for someone else.
-function Upcoming({ showings }: { showings: Showings }) {
+function Upcoming({ showings, canEmail }: { showings: Showings; canEmail: boolean }) {
   const [leads, setLeads] = useState<Lead[] | null>(null);
   useEffect(() => {
     listLeads().then(setLeads);
@@ -184,7 +184,7 @@ function Upcoming({ showings }: { showings: Showings }) {
   return (
     <>
       <WeekSchedule leads={booked} showings={showings} loading={!leads} />
-      <AddByHand onLeads={setLeads} />
+      <AddByHand onLeads={setLeads} canEmail={canEmail} />
       <Step title="Today and coming up" help="Everyone who booked a time. From 15 minutes before a showing, mark whether they came: people who came get the follow-up email.">
         {!leads ? <p className="text-brown-soft">Loading…</p> : upcoming.length === 0 ? <p className="text-brown-soft">No showings booked yet.</p> : <ul className="divide-y divide-sand">{upcoming.map((l) => row(l, true))}</ul>}
       </Step>
@@ -198,7 +198,7 @@ function Upcoming({ showings }: { showings: Showings }) {
 }
 
 // Add a showing booked by phone (or a test): any day and time, even right now.
-function AddByHand({ onLeads }: { onLeads: (l: Lead[]) => void }) {
+function AddByHand({ onLeads, canEmail }: { onLeads: (l: Lead[]) => void; canEmail: boolean }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
@@ -228,11 +228,11 @@ function AddByHand({ onLeads }: { onLeads: (l: Lead[]) => void }) {
             e.preventDefault();
             setBusy(true);
             setMsg("");
-            const res = await addShowingByHand(form);
+            const res = await addShowingByHand({ ...form, confirm: canEmail && form.confirm });
             setBusy(false);
             if (!res.ok) return setMsg(res.error);
             onLeads(res.leads);
-            setMsg(`Added${form.confirm ? `, and the confirmation was sent to ${form.email}` : ""}.`);
+            setMsg(`Added${canEmail && form.confirm ? `, and the confirmation was sent to ${form.email}` : ""}.`);
             set({ name: "", email: "", phone: "" });
           }}
         >
@@ -263,10 +263,14 @@ function AddByHand({ onLeads }: { onLeads: (l: Lead[]) => void }) {
             <span className="mb-1 block font-medium">Time</span>
             <input className={field} type="time" required value={form.time} onChange={(e) => set({ time: e.target.value })} />
           </label>
-          <label className="flex items-center gap-3 sm:col-span-2">
-            <input type="checkbox" className="size-5 accent-[#503d32]" checked={form.confirm} onChange={(e) => set({ confirm: e.target.checked })} />
-            Send them the confirmation email
-          </label>
+          {canEmail ? (
+            <label className="flex items-center gap-3 sm:col-span-2">
+              <input type="checkbox" className="size-5 accent-[#503d32]" checked={form.confirm} onChange={(e) => set({ confirm: e.target.checked })} />
+              Send them the confirmation email
+            </label>
+          ) : (
+            <p className="text-sm text-brown-soft sm:col-span-2">No email is sent to people you add by hand (Automatic emails → Who gets emails).</p>
+          )}
           <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
             <button className={bigBtn} disabled={busy}>
               {busy ? "Adding…" : "Add the showing"}

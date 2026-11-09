@@ -191,6 +191,8 @@ function cleanEmails(e: Partial<AutoEmails> | undefined): AutoEmails {
     morning: { enabled: e?.morning?.enabled !== false },
     cheatSheet: { enabled: e?.cheatSheet?.enabled !== false },
     testMode: e?.testMode !== false,
+    testAddresses: [...new Set((Array.isArray(e?.testAddresses) ? e.testAddresses : []).map((x) => str(x, 200).trim().toLowerCase()).filter((x) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x)))].slice(0, 20),
+    emailOutsideLeads: e?.emailOutsideLeads === true,
   };
 }
 
