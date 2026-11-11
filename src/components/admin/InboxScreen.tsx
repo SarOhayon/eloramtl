@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { addInquiryByHand, checkInboxNow, inboxStatus, listLeads, readPastedLead, scheduleShowing, updateLead } from "@/app/actions/leads";
+import { addInquiryByHand, cancelShowing, checkInboxNow, inboxStatus, listLeads, markViewed, readPastedLead, scheduleShowing, updateLead } from "@/app/actions/leads";
 import { suggestUnits } from "@/app/actions/suggest";
 import { UNITS, UNIT_TYPES, formatPrice } from "@/data/building";
 import { todayInMontreal, type SiteContent } from "@/data/content";
@@ -42,7 +42,18 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
   const [moved, setMoved] = useState(""); // name of someone just moved to Leased tenants
   const [expanded, setExpanded] = useState<string[]>([]); // cards opened (they start folded)
   const [query, setQuery] = useState("");
-  const toggle = (id: string) => setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
+  const [before, setBefore] = useState<Record<string, string | undefined>>({}); // "last opened" before this visit
+  const toggle = (id: string) => {
+    const opening = !expanded.includes(id);
+    setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
+    if (opening) seen(id);
+  };
+  // Notes that you opened the card, keeping the previous time to show inside it.
+  const seen = (id: string) => {
+    const prev = leads?.find((l) => l.id === id)?.viewedAt;
+    setBefore((b) => (id in b ? b : { ...b, [id]: prev }));
+    markViewed(id).then((at) => at && setLeads((ls) => ls?.map((l) => (l.id === id ? { ...l, viewedAt: at } : l)) ?? ls));
+  };
 
   useEffect(() => {
     listLeads().then((l) => (l ? setLeads(l) : setError(true)));
@@ -70,6 +81,7 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
     setFilter("all");
     setOpened((o) => (o.includes(id) ? o : [...o, id]));
     setExpanded((e) => (e.includes(id) ? e : [...e, id]));
+    seen(id);
     window.setTimeout(() => document.getElementById(`lead-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   };
   const count = (s: LeadStatus) => leads?.filter((l) => l.status === s).length ?? 0;
@@ -202,11 +214,17 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
                     {[l.showing && `Showing ${dayOf(l.showing.date)} at ${l.showing.time}`, l.type, l.moveIn && `Move-in ${dayOf(l.moveIn)}`, l.phone || l.email].filter(Boolean).join(" · ")}
                   </span>
                 </span>
-                <span className="hidden shrink-0 text-sm text-brown-soft sm:block">{when.format(new Date(l.createdAt))}</span>
+                <span className="hidden shrink-0 text-right text-sm text-brown-soft sm:block">
+                  {when.format(new Date(l.createdAt))}
+                  <span className={`block text-xs ${l.viewedAt ? "" : "font-medium text-gold"}`}>{l.viewedAt ? `Opened ${openedAgo(l.viewedAt)}` : "Not opened yet"}</span>
+                </span>
                 <ChevronIcon dir="down" className={`size-5 shrink-0 text-brown-soft transition-transform ${expanded.includes(l.id) ? "rotate-180" : ""}`} />
               </button>
               {expanded.includes(l.id) && (
               <div className="border-t border-sand px-5 pb-5 pt-4">
+              <p className="mb-3 text-xs text-brown-soft">
+                {before[l.id] ? `Last opened before now: ${openedAgo(before[l.id]!)}` : "First time you open this card."}
+              </p>
               {needsFollowUp(l, now) && (
                 <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-gold-light px-3 py-1 text-sm text-brown">
                   <BellIcon className="size-4" /> No update in {daysSinceUpdate(l, now)} days: time to follow up
@@ -287,7 +305,7 @@ export function InboxScreen({ content, update, onTenants }: { content: SiteConte
                   </button>
                 ))}
               </div>
-              <NoteField value={l.note ?? ""} onSave={(note) => change(l.id, { note })} />
+              <NoteField key={l.note ?? ""} value={l.note ?? ""} onSave={(note) => change(l.id, { note })} />
               <UnitsToShow lead={l} content={content} onSave={(units) => change(l.id, { units })} />
               <Suggestions lead={l} content={content} onLeads={setLeads} />
               </div>
@@ -319,6 +337,11 @@ function NoteField({ value, onSave }: { value: string; onSave: (v: string) => vo
 }
 
 const TYPES = dictionaries.en.types;
+const openedFmt = new Intl.DateTimeFormat("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Montreal" });
+const openedAgo = (iso: string) => {
+  const mins = (Date.now() - Date.parse(iso)) / 60e3;
+  return mins < 2 ? "just now" : mins < 60 ? `${Math.round(mins)} min ago` : openedFmt.format(new Date(iso));
+};
 
 // Search: every word must appear somewhere in the person's details. Phone numbers match on digits,
 // so "514 555" finds "(514) 555-0142".
@@ -537,9 +560,25 @@ function ShowingBox({ lead, onLeads, canEmail }: { lead: Lead; onLeads: (l: Lead
               <p className="font-medium text-brown">
                 Showing: {dayOf(lead.showing.date)} at {lead.showing.time}
               </p>
-              <button onClick={() => setEditing(true)} className="text-sm font-medium text-brown underline underline-offset-4">
-                Change the time
-              </button>
+              <span className="flex gap-4">
+                <button onClick={() => setEditing(true)} className="text-sm font-medium text-brown underline underline-offset-4">
+                  Change the time
+                </button>
+                <button
+                  disabled={busy}
+                  onClick={async () => {
+                    if (!confirm(`Cancel ${lead.name}'s showing on ${dayOf(lead.showing!.date)} at ${lead.showing!.time}? The time becomes free again and their file stays open. They aren't emailed.`)) return;
+                    setBusy(true);
+                    const next = await cancelShowing(lead.id);
+                    setBusy(false);
+                    if (next) onLeads(next);
+                    else setError("Couldn't cancel it. Refresh the page and try again.");
+                  }}
+                  className="text-sm font-medium text-red-800 underline underline-offset-4 disabled:opacity-50"
+                >
+                  Cancel this showing
+                </button>
+              </span>
             </div>
             <Attendance lead={lead} onLeads={onLeads} />
           </>

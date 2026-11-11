@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { addShowingByHand, listLeads, updateLead } from "@/app/actions/leads";
+import { addShowingByHand, cancelShowing, listLeads } from "@/app/actions/leads";
 import { todayInMontreal, type ShowingHours, type Showings, type SiteContent, type Weekday } from "@/data/content";
 import type { Lead } from "@/lib/leads";
 import { ArrowLeftIcon, CalendarIcon, CloseIcon, PlusIcon } from "./AdminIcons";
@@ -154,8 +154,8 @@ function Upcoming({ showings, canEmail }: { showings: Showings; canEmail: boolea
   const past = booked.filter((l) => l.showing!.date < today && l.showing!.date >= twoWeeksAgo).sort((a, b) => key(b).localeCompare(key(a)));
 
   const cancel = async (l: Lead) => {
-    if (!confirm(`Cancel ${l.name}'s showing? The time becomes free again. (They aren't emailed automatically; let them know.)`)) return;
-    const next = await updateLead(l.id, { status: "closed" });
+    if (!confirm(`Cancel ${l.name}'s showing? The time becomes free again and their file stays open in Inquiries. (They aren't emailed; let them know.)`)) return;
+    const next = await cancelShowing(l.id);
     if (next) setLeads(next);
   };
 

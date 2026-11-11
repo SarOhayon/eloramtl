@@ -235,3 +235,28 @@ export async function sendMorningBriefNow(): Promise<{ ok: boolean; at?: string;
     return { ok: false, error: "It couldn't be sent. Check the email settings and try again." };
   }
 }
+
+// Opening a card in Inquiries notes the time ("Last opened"). Returns the time saved.
+export async function markViewed(id: string): Promise<string | null> {
+  if (!(await isAdmin())) return null;
+  const at = new Date().toISOString();
+  return (await changeLead(String(id), { viewedAt: at })) ? at : null;
+}
+
+// Cancels a booked showing (they cancelled): the time is free again and the inquiry stays open,
+// with a note. Nobody is emailed.
+export async function cancelShowing(id: string): Promise<Lead[] | null> {
+  if (!(await isAdmin())) return null;
+  const lead = (await readLeads()).find((l) => l.id === String(id));
+  if (!lead?.showing) return null;
+  const was = `${lead.showing.date} at ${lead.showing.time}`;
+  const leads = await changeLead(lead.id, {
+    showing: undefined,
+    attendance: undefined,
+    followUp: lead.followUp?.sentAt ? lead.followUp : undefined,
+    cheatSheetAt: undefined,
+    note: [lead.note, `Showing on ${was} cancelled.`].filter(Boolean).join("\n"),
+  });
+  if (leads) await logActivity({ leadId: lead.id, name: lead.name, what: `Cancelled the showing on ${was}`, by: "you" });
+  return leads;
+}

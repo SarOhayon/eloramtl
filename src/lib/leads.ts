@@ -30,6 +30,7 @@ export type Lead = {
   sourceId?: string; // the lead email's Message-ID, so it's only added once
   cheatSheetAt?: string; // ISO: when the pre-tour cheat sheet was emailed to the team
   leasedUnit?: string; // the suite they leased (Leased tenants)
+  viewedAt?: string; // ISO: when the team last opened this card in the admin
 };
 export type Suggestion = { at: string; summary: string; picks: { unit: string; reason: string }[]; ask: string };
 
@@ -67,7 +68,7 @@ export async function addLead(lead: Omit<Lead, "id" | "createdAt" | "status"> & 
   }
 }
 
-type Patch = Partial<Pick<Lead, "status" | "statusAt" | "note" | "suggestion" | "attendance" | "followUp" | "showing" | "units" | "cheatSheetAt" | "leasedUnit">>;
+type Patch = Partial<Pick<Lead, "status" | "statusAt" | "note" | "suggestion" | "attendance" | "followUp" | "showing" | "units" | "cheatSheetAt" | "leasedUnit" | "viewedAt">>;
 
 // Changes one lead; a field set to undefined is removed.
 export async function changeLead(id: string, patch: Patch): Promise<Lead[] | null> {
