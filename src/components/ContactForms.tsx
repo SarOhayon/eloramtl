@@ -1,0 +1,97 @@
+"use client";
+
+import { useActionState } from "react";
+import { submitContact, type ContactState } from "@/app/actions/contact";
+import { UNIT_TYPES } from "@/data/building";
+import { getDictionary, type Locale } from "@/i18n/dictionaries";
+
+export const field =
+  "w-full rounded-sm border-0 bg-white px-4 py-3 text-brown ring-1 ring-brown/15 placeholder:text-brown-soft/60 focus:outline-none focus:ring-2 focus:ring-action";
+
+
+export function Field({ label, required, children, wide }: { label: string; required?: boolean; children: React.ReactNode; wide?: boolean }) {
+  return (
+    <label className={`block ${wide ? "sm:col-span-2" : ""}`}>
+      <span className="mb-1.5 block text-sm font-medium">
+        {label}
+        {required && <span className="text-action" aria-hidden="true"> *</span>}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+export function InquiryForm({ locale, initialType }: { locale: Locale; initialType?: string }) {
+  const t = getDictionary(locale);
+  const f = t.forms;
+  const [state, formAction, pending] = useActionState<ContactState, FormData>(submitContact, { status: "idle" });
+  const v = state.values ?? {};
+
+  if (state.status === "sent") {
+    return (
+      <div role="status" className="py-6">
+        <h3 className="font-display text-3xl">{f.sentTitle}</h3>
+        <p className="mt-2 text-brown/85">{f.sentText}</p>
+      </div>
+    );
+  }
+
+  return (
+    <form action={formAction}>
+      <input type="hidden" name="lang" value={locale} />
+      <h3 className="font-display text-3xl">{f.inquiry.title}</h3>
+      <p className="mt-1 text-sm text-brown-soft">{f.lead}</p>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <Field label={f.fullName} required wide>
+          <input name="name" className={field} autoComplete="name" required defaultValue={v.name} />
+        </Field>
+        <Field label={f.email} required>
+          <input name="email" type="email" className={field} autoComplete="email" required defaultValue={v.email} />
+        </Field>
+        <Field label={f.phone} required>
+          <input name="phone" type="tel" className={field} autoComplete="tel" required defaultValue={v.phone} />
+        </Field>
+
+        <Field label={f.inquiry.type}>
+          <select name="type" className={field} defaultValue={v.type ?? initialType ?? ""}>
+            <option value="">{f.inquiry.any}</option>
+            {UNIT_TYPES.map((k) => (
+              <option key={k} value={t.types[k]}>
+                {t.types[k]}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label={f.inquiry.moveIn} required>
+          <input name="moveIn" type="date" className={field} required defaultValue={v.moveIn} />
+        </Field>
+        <Field label={f.inquiry.comments} wide>
+          <textarea name="comments" rows={4} className={field} placeholder={f.inquiry.commentsHint} defaultValue={v.comments} />
+        </Field>
+      </div>
+
+      {(state.status === "invalid" || state.status === "error") && (
+        <p className="mt-4 text-sm text-red-800" role="alert">
+          {state.status === "invalid" ? f.invalid : f.error}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={pending}
+        className="mt-6 inline-flex w-full items-center justify-center rounded-sm bg-action px-6 py-4 text-sm font-medium uppercase tracking-[0.18em] text-white transition hover:bg-action-deep disabled:opacity-60"
+      >
+        {pending ? f.sending : f.submit}
+      </button>
+    </form>
+  );
+}
+
+export function ContactForms({ locale }: { locale: Locale }) {
+  return (
+    <div id="visit" className="rounded-lg bg-cream p-6 text-brown shadow-xl shadow-black/10 sm:p-8">
+      <InquiryForm locale={locale} />
+    </div>
+  );
+}
